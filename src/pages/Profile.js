@@ -238,13 +238,13 @@ export default function Profile() {
       title: 'Preferences',
       items: [
         { icon: isDark ? <Sun size={18} color="#FFB300" /> : <Moon size={18} color="#1A73E8" />, label: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode', sub: isDark ? 'Currently dark theme' : 'Currently light theme', bg: isDark ? 'rgba(255,179,0,0.1)' : 'rgba(26,115,232,0.1)', action: toggleTheme },
-        { icon: <Bell size={18} color="#FF4444" />, label: 'Notifications', sub: 'Manage your notifications', bg: 'rgba(255,68,68,0.1)', action: () => {} },
+        { icon: <Bell size={18} color="#FF4444" />, label: 'Notifications', sub: 'Manage your notifications', bg: 'rgba(255,68,68,0.1)', action: () => navigate('/notifications') },
       ]
     },
     {
       title: 'Support',
       items: [
-        { icon: <HelpCircle size={18} color="#888" />, label: 'Help & Support', sub: 'FAQs and contact us', bg: 'rgba(136,136,136,0.1)', action: () => {} },
+        { icon: <HelpCircle size={18} color="#888" />, label: 'Help & Support', sub: 'FAQs and contact us', bg: 'rgba(136,136,136,0.1)', action: () => navigate('/notifications') },
       ]
     }
   ];

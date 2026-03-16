@@ -12,6 +12,8 @@ import KYC from './pages/KYC';
 import AdminDashboard from './pages/AdminDashboard';
 import QRCodePage from './pages/QRCode';
 import History from './pages/History';
+import Notifications from './pages/Notifications';
+
 const LoadingSpinner = () => (
   <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0F4FF' }}>
     <div style={{ width: '40px', height: '40px', border: '3px solid #E0E6F0', borderTop: '3px solid #1A73E8', borderRadius: '50%' }} />
@@ -49,6 +51,7 @@ function App() {
             <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/qr" element={<PrivateRoute><QRCodePage /></PrivateRoute>} />
             <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
+            <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
           </Routes>
         </Router>
       </AuthProvider>

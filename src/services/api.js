@@ -39,3 +39,9 @@ export const billService = {
 };
 
 export default api;
+export const notificationService = {
+  getAll: () => api.get('/api/notifications/'),
+  markRead: (id) => api.post(`/api/notifications/read/${id}`),
+  markAllRead: () => api.post('/api/notifications/read-all'),
+  clear: () => api.delete('/api/notifications/clear'),
+};
