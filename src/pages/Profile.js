@@ -13,7 +13,6 @@ import {
   Phone, Calendar, CreditCard as IdCard, X
 } from 'lucide-react';
 
-// ── MODAL ──
 const Modal = ({ show, onClose, children, colors }) => (
   <AnimatePresence>
     {show && (
@@ -36,7 +35,6 @@ const Modal = ({ show, onClose, children, colors }) => (
   </AnimatePresence>
 );
 
-// ── OTP INPUT ──
 const OtpInput = ({ value, onChange, colors }) => (
   <div style={{ position: 'relative', marginBottom: '4px' }}>
     <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '12px', border: `2px solid ${value.length === 6 ? '#1A73E8' : colors.border}`, borderRadius: '14px', background: colors.inputBg, transition: 'border-color 0.2s' }}>
@@ -60,7 +58,6 @@ const OtpInput = ({ value, onChange, colors }) => (
   </div>
 );
 
-// ── PIN INPUT ──
 const PinInput = ({ value, onChange, label, colors }) => (
   <div style={{ marginBottom: '4px' }}>
     <div style={{ position: 'relative' }}>
@@ -94,7 +91,6 @@ const PinInput = ({ value, onChange, label, colors }) => (
   </div>
 );
 
-// ── ERROR BOX ──
 const ErrorBox = ({ msg }) => msg ? (
   <motion.div
     style={{ background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '10px', padding: '10px 14px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}
@@ -126,7 +122,6 @@ export default function Profile() {
   const [pwError, setPwError] = useState('');
   const [pwEmail, setPwEmail] = useState('');
   const [pwCountdown, setPwCountdown] = useState(0);
-  const [devPwOtp, setDevPwOtp] = useState('');
 
   const [showChangePin, setShowChangePin] = useState(false);
   const [pinStep, setPinStep] = useState(1);
@@ -137,7 +132,6 @@ export default function Profile() {
   const [pinError, setPinError] = useState('');
   const [pinEmail, setPinEmail] = useState('');
   const [pinCountdown, setPinCountdown] = useState(0);
-  const [devPinOtp, setDevPinOtp] = useState('');
 
   useEffect(() => { loadData(); }, []);
 
@@ -175,7 +169,6 @@ export default function Profile() {
     try {
       const res = await api.post('/api/otp/send', { purpose: 'change_password' });
       setPwEmail(res.data.email); setPwStep(2); setPwCountdown(60);
-      if (res.data.dev_otp) setDevPwOtp(res.data.dev_otp);
     } catch (err) { setPwError(err.response?.data?.error || 'Failed to send OTP'); }
     setPwLoading(false);
   };
@@ -189,7 +182,7 @@ export default function Profile() {
       await api.post('/api/otp/change-password', { otp: pwOtp, new_password: newPassword });
       showToast('Password changed successfully!');
       setShowChangePassword(false);
-      setPwStep(1); setPwOtp(''); setNewPassword(''); setConfirmPassword(''); setPwEmail(''); setPwCountdown(0); setDevPwOtp('');
+      setPwStep(1); setPwOtp(''); setNewPassword(''); setConfirmPassword(''); setPwEmail(''); setPwCountdown(0);
     } catch (err) { setPwError(err.response?.data?.error || 'Failed'); }
     setPwLoading(false);
   };
@@ -199,7 +192,6 @@ export default function Profile() {
     try {
       const res = await api.post('/api/otp/send', { purpose: 'change_pin' });
       setPinEmail(res.data.email); setPinStep(2); setPinCountdown(60);
-      if (res.data.dev_otp) setDevPinOtp(res.data.dev_otp);
     } catch (err) { setPinError(err.response?.data?.error || 'Failed to send OTP'); }
     setPinLoading(false);
   };
@@ -213,7 +205,7 @@ export default function Profile() {
       await api.post('/api/otp/change-pin', { otp: pinOtp, new_pin: newPin });
       showToast('PIN changed successfully!');
       setShowChangePin(false);
-      setPinStep(1); setPinOtp(''); setNewPin(''); setConfirmPin(''); setPinEmail(''); setPinCountdown(0); setDevPinOtp('');
+      setPinStep(1); setPinOtp(''); setNewPin(''); setConfirmPin(''); setPinEmail(''); setPinCountdown(0);
     } catch (err) { setPinError(err.response?.data?.error || 'Failed'); }
     setPinLoading(false);
   };
@@ -252,7 +244,6 @@ export default function Profile() {
   return (
     <div style={{ minHeight: '100vh', maxWidth: '480px', margin: '0 auto', background: colors.bg }}>
 
-      {/* Toast */}
       <AnimatePresence>
         {toast.msg && (
           <motion.div
@@ -345,9 +336,7 @@ export default function Profile() {
           <h3 style={{ color: '#fff', fontSize: '17px', fontWeight: 'bold', margin: '0 0 2px 0' }}>Personal Information</h3>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', margin: 0 }}>Your registered account details</p>
         </div>
-
         <div style={{ padding: '16px' }}>
-          {/* Avatar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '12px', background: colors.actionBg, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <span style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>{balance?.full_name?.charAt(0).toUpperCase()}</span>
@@ -357,8 +346,6 @@ export default function Profile() {
               <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>{user?.email}</p>
             </div>
           </div>
-
-          {/* Info rows */}
           {[
             { icon: <User size={15} color="#1A73E8" />, label: 'Full Name', value: balance?.full_name || 'N/A', bg: 'rgba(26,115,232,0.1)' },
             { icon: <Mail size={15} color="#9C27B0" />, label: 'Email Address', value: user?.email || 'N/A', bg: 'rgba(156,39,176,0.1)' },
@@ -368,9 +355,7 @@ export default function Profile() {
             { icon: <CreditCard size={15} color="#9C27B0" />, label: 'Wallet ID', value: balance?.wallet_number || 'N/A', bg: 'rgba(156,39,176,0.1)', copyable: true },
           ].map((row, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', borderBottom: i < 5 ? `1px solid ${colors.border}` : 'none' }}>
-              <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {row.icon}
-              </div>
+              <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{row.icon}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ color: colors.textSecondary, fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 2px 0' }}>{row.label}</p>
                 <p style={{ color: colors.text, fontSize: '13px', fontWeight: '600', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</p>
@@ -382,8 +367,6 @@ export default function Profile() {
               )}
             </div>
           ))}
-
-          {/* KYC Status */}
           <div style={{ marginTop: '14px', padding: '12px', background: kycInfo?.status === 'approved' ? 'rgba(0,200,83,0.08)' : 'rgba(255,179,0,0.08)', borderRadius: '10px', border: `1px solid ${kycInfo?.status === 'approved' ? 'rgba(0,200,83,0.2)' : 'rgba(255,179,0,0.2)'}`, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Shield size={16} color={kycInfo?.status === 'approved' ? '#00C853' : '#FFB300'} />
             <div>
@@ -395,19 +378,15 @@ export default function Profile() {
               </p>
             </div>
           </div>
-
           <motion.button
             style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', marginTop: '14px', boxShadow: '0 4px 16px rgba(26,115,232,0.3)' }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setShowPersonalInfo(false)}
-          >
-            Close
-          </motion.button>
+            whileTap={{ scale: 0.97 }} onClick={() => setShowPersonalInfo(false)}
+          >Close</motion.button>
         </div>
       </Modal>
 
       {/* ── CHANGE PASSWORD MODAL ── */}
-      <Modal show={showChangePassword} onClose={() => { setShowChangePassword(false); setPwStep(1); setPwOtp(''); setNewPassword(''); setConfirmPassword(''); setPwError(''); setDevPwOtp(''); }} colors={colors}>
+      <Modal show={showChangePassword} onClose={() => { setShowChangePassword(false); setPwStep(1); setPwOtp(''); setNewPassword(''); setConfirmPassword(''); setPwError(''); }} colors={colors}>
         <div style={{ background: 'linear-gradient(135deg, #1A73E8, #0052CC)', padding: '18px 20px 16px', textAlign: 'center' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
             <Key size={24} color="#fff" />
@@ -422,7 +401,6 @@ export default function Profile() {
             ))}
           </div>
         </div>
-
         <div style={{ padding: '16px' }}>
           <AnimatePresence mode="wait">
             {pwStep === 1 && (
@@ -444,10 +422,9 @@ export default function Profile() {
                   whileTap={{ scale: 0.97 }} onClick={sendPasswordOtp} disabled={pwLoading}>
                   {pwLoading ? <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1, repeat: Infinity }}>Sending...</motion.span> : <><Mail size={15} color="#fff" /> Send Verification Code</>}
                 </motion.button>
-                <motion.button style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => { setShowChangePassword(false); setPwStep(1); setPwOtp(''); setNewPassword(''); setConfirmPassword(''); setPwError(''); setDevPwOtp(''); }}>Cancel</motion.button>
+                <motion.button style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => { setShowChangePassword(false); setPwStep(1); setPwOtp(''); setNewPassword(''); setConfirmPassword(''); setPwError(''); }}>Cancel</motion.button>
               </motion.div>
             )}
-
             {pwStep === 2 && (
               <motion.div key="pw-s2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
                 <div style={{ background: 'rgba(0,200,83,0.08)', border: '1px solid rgba(0,200,83,0.2)', borderRadius: '10px', padding: '8px 12px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -457,13 +434,6 @@ export default function Profile() {
                     <p style={{ color: colors.textSecondary, fontSize: '10px', margin: 0 }}>Check inbox & spam</p>
                   </div>
                 </div>
-
-                {devPwOtp && (
-                  <motion.div style={{ background: colors.actionBg, border: `2px dashed ${colors.border}`, borderRadius: '12px', padding: '10px', marginBottom: '12px', textAlign: 'center' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <p style={{ color: colors.textSecondary, fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0' }}>🔧 Dev OTP</p>
-                    <p style={{ color: '#1A73E8', fontSize: '24px', fontWeight: 'bold', letterSpacing: '10px', fontFamily: 'monospace', margin: 0 }}>{devPwOtp}</p>
-                  </motion.div>
-                )}
 
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0', textAlign: 'center' }}>Enter 6-Digit Code</p>
                 <OtpInput value={pwOtp} onChange={setPwOtp} colors={colors} />
@@ -501,9 +471,7 @@ export default function Profile() {
                     }
                   </div>
                 )}
-
                 <ErrorBox msg={pwError} />
-
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <motion.button style={{ flex: 1, padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => setPwStep(1)}>Back</motion.button>
                   <motion.button style={{ flex: 2, padding: '12px', background: pwOtp.length === 6 && newPassword && confirmPassword ? 'linear-gradient(135deg, #1A73E8, #0052CC)' : colors.actionBg, color: pwOtp.length === 6 && newPassword && confirmPassword ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
@@ -518,7 +486,7 @@ export default function Profile() {
       </Modal>
 
       {/* ── CHANGE PIN MODAL ── */}
-      <Modal show={showChangePin} onClose={() => { setShowChangePin(false); setPinStep(1); setPinOtp(''); setNewPin(''); setConfirmPin(''); setPinError(''); setDevPinOtp(''); }} colors={colors}>
+      <Modal show={showChangePin} onClose={() => { setShowChangePin(false); setPinStep(1); setPinOtp(''); setNewPin(''); setConfirmPin(''); setPinError(''); }} colors={colors}>
         <div style={{ background: 'linear-gradient(135deg, #1A73E8, #0052CC)', padding: '18px 20px 16px', textAlign: 'center' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
             <Shield size={24} color="#fff" />
@@ -533,7 +501,6 @@ export default function Profile() {
             ))}
           </div>
         </div>
-
         <div style={{ padding: '16px' }}>
           <AnimatePresence mode="wait">
             {pinStep === 1 && (
@@ -555,10 +522,9 @@ export default function Profile() {
                   whileTap={{ scale: 0.97 }} onClick={sendPinOtp} disabled={pinLoading}>
                   {pinLoading ? <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1, repeat: Infinity }}>Sending...</motion.span> : <><Mail size={15} color="#fff" /> Send Verification Code</>}
                 </motion.button>
-                <motion.button style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => { setShowChangePin(false); setPinStep(1); setPinOtp(''); setNewPin(''); setConfirmPin(''); setPinError(''); setDevPinOtp(''); }}>Cancel</motion.button>
+                <motion.button style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => { setShowChangePin(false); setPinStep(1); setPinOtp(''); setNewPin(''); setConfirmPin(''); setPinError(''); }}>Cancel</motion.button>
               </motion.div>
             )}
-
             {pinStep === 2 && (
               <motion.div key="pin-s2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
                 <div style={{ background: 'rgba(0,200,83,0.08)', border: '1px solid rgba(0,200,83,0.2)', borderRadius: '10px', padding: '8px 12px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -568,13 +534,6 @@ export default function Profile() {
                     <p style={{ color: colors.textSecondary, fontSize: '10px', margin: 0 }}>Check inbox & spam</p>
                   </div>
                 </div>
-
-                {devPinOtp && (
-                  <motion.div style={{ background: colors.actionBg, border: `2px dashed ${colors.border}`, borderRadius: '12px', padding: '10px', marginBottom: '12px', textAlign: 'center' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <p style={{ color: colors.textSecondary, fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0' }}>🔧 Dev OTP</p>
-                    <p style={{ color: '#1A73E8', fontSize: '24px', fontWeight: 'bold', letterSpacing: '10px', fontFamily: 'monospace', margin: 0 }}>{devPinOtp}</p>
-                  </motion.div>
-                )}
 
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0', textAlign: 'center' }}>Enter 6-Digit Code</p>
                 <OtpInput value={pinOtp} onChange={setPinOtp} colors={colors} />
@@ -594,7 +553,6 @@ export default function Profile() {
                   label={confirmPin.length === 4 ? (confirmPin === newPin ? '✓ PINs match' : '✗ PINs do not match') : 'Re-enter PIN'} />
 
                 <ErrorBox msg={pinError} />
-
                 <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                   <motion.button style={{ flex: 1, padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => setPinStep(1)}>Back</motion.button>
                   <motion.button style={{ flex: 2, padding: '12px', background: pinOtp.length === 6 && newPin.length === 4 && confirmPin.length === 4 ? 'linear-gradient(135deg, #1A73E8, #0052CC)' : colors.actionBg, color: pinOtp.length === 6 && newPin.length === 4 && confirmPin.length === 4 ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}

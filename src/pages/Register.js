@@ -11,7 +11,6 @@ import {
 
 const API_URL = 'https://web-production-91d7.up.railway.app';
 
-// ── OTP Input Component ──
 const OtpInput = ({ value, onChange, colors }) => (
   <div style={{ position: 'relative', marginBottom: '4px' }}>
     <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', padding: '16px', border: `2px solid ${value.length === 6 ? '#1A73E8' : '#CBD5E0'}`, borderRadius: '16px', background: '#EEF2FF', transition: 'all 0.2s', boxShadow: value.length === 6 ? '0 0 0 3px rgba(26,115,232,0.08)' : 'none' }}>
@@ -40,19 +39,15 @@ export default function Register() {
   const { colors, isDark } = useTheme();
   const navigate = useNavigate();
 
-  // Step 1 state
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '', pin: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [pin, setPin] = useState('');
 
-  // Step 2 state
   const [otp, setOtp] = useState('');
-  const [devOtp, setDevOtp] = useState('');
   const [countdown, setCountdown] = useState(0);
 
-  // Common state
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -70,19 +65,17 @@ export default function Register() {
     setError('');
   };
 
-  // Step 1 — Send OTP
   const handleInitiate = async (e) => {
     e.preventDefault();
     if (pin.length !== 4) { setError('PIN must be exactly 4 digits'); return; }
     setLoading(true); setError('');
     try {
-      const res = await axios.post(`${API_URL}/api/auth/register/initiate`, {
+      await axios.post(`${API_URL}/api/auth/register/initiate`, {
         ...form,
         pin,
         email: form.email.trim().toLowerCase()
       });
       setRegisteredEmail(form.email.trim().toLowerCase());
-      setDevOtp(res.data.dev_otp || '');
       setStep(2);
       setCountdown(60);
     } catch (err) {
@@ -91,7 +84,6 @@ export default function Register() {
     setLoading(false);
   };
 
-  // Step 2 — Verify OTP
   const handleVerify = async () => {
     if (otp.length !== 6) { setError('Please enter the 6-digit code'); return; }
     setLoading(true); setError('');
@@ -100,7 +92,6 @@ export default function Register() {
         email: registeredEmail,
         otp
       });
-      // Success — go to login
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.error || 'Verification failed');
@@ -108,14 +99,12 @@ export default function Register() {
     setLoading(false);
   };
 
-  // Resend OTP
   const handleResend = async () => {
     setLoading(true); setError('');
     try {
-      const res = await axios.post(`${API_URL}/api/auth/register/resend-otp`, {
+      await axios.post(`${API_URL}/api/auth/register/resend-otp`, {
         email: registeredEmail
       });
-      setDevOtp(res.data.dev_otp || '');
       setCountdown(60);
       setOtp('');
     } catch (err) {
@@ -156,10 +145,10 @@ export default function Register() {
             </div>
 
             <h1 style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
-              {step === 1 ? 'Create Account' : 'Verify Email'}
+              {step === 1 ? 'Create Account' : 'Verify Your Email'}
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', margin: '0 0 16px 0' }}>
-              {step === 1 ? 'Join PayEase — your smart digital wallet' : `Enter the code sent to ${registeredEmail}`}
+              {step === 1 ? 'Join PayEase — your smart digital wallet' : `Code sent to ${registeredEmail}`}
             </p>
 
             {/* Step indicator */}
@@ -290,11 +279,11 @@ export default function Register() {
                     </motion.div>
                   )}
 
-                  {/* Terms */}
+                  {/* Info notice */}
                   <div style={{ background: colors.actionBg, borderRadius: '12px', padding: '10px 14px', marginBottom: '16px', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                     <CheckCircle size={14} color="#1A73E8" style={{ flexShrink: 0, marginTop: '1px' }} />
                     <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, lineHeight: '1.5' }}>
-                      A verification code will be sent to your email to confirm your account.
+                      A 6-digit verification code will be sent to your email address to confirm your account.
                     </p>
                   </div>
 
@@ -335,32 +324,25 @@ export default function Register() {
                   transition={{ duration: 0.2 }}
                 >
                   {/* Email sent confirmation */}
-                  <div style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: '12px', padding: '12px 16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <CheckCircle size={18} color="#16A34A" style={{ flexShrink: 0 }} />
+                  <div style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: '12px', padding: '14px 16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(22,163,74,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <CheckCircle size={20} color="#16A34A" />
+                    </div>
                     <div>
-                      <p style={{ color: '#16A34A', fontSize: '13px', fontWeight: '600', margin: 0 }}>Verification code sent!</p>
-                      <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>Check your inbox: {registeredEmail}</p>
+                      <p style={{ color: '#16A34A', fontSize: '13px', fontWeight: '700', margin: '0 0 2px 0' }}>Verification code sent!</p>
+                      <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>Check your inbox at {registeredEmail}</p>
                     </div>
                   </div>
-
-                  {/* Dev OTP */}
-                  {devOtp && (
-                    <motion.div
-                      style={{ background: colors.actionBg, border: `2px dashed ${colors.border}`, borderRadius: '14px', padding: '12px', marginBottom: '20px', textAlign: 'center' }}
-                      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                    >
-                      <p style={{ color: colors.textSecondary, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px 0' }}>🔧 Dev Mode OTP</p>
-                      <p style={{ color: '#1A73E8', fontSize: '28px', fontWeight: 'bold', letterSpacing: '10px', fontFamily: 'monospace', margin: 0 }}>{devOtp}</p>
-                    </motion.div>
-                  )}
 
                   <p style={{ color: colors.text, fontSize: '13px', fontWeight: '600', margin: '0 0 10px 0', textAlign: 'center' }}>Enter 6-Digit Verification Code</p>
                   <OtpInput value={otp} onChange={setOtp} colors={colors} />
 
                   {/* Resend */}
-                  <div style={{ textAlign: 'center', margin: '10px 0 20px' }}>
+                  <div style={{ textAlign: 'center', margin: '12px 0 20px' }}>
                     {countdown > 0
-                      ? <span style={{ color: colors.textSecondary, fontSize: '13px' }}>Resend code in <strong style={{ color: colors.text }}>{countdown}s</strong></span>
+                      ? <span style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                          Resend code in <strong style={{ color: colors.text }}>{countdown}s</strong>
+                        </span>
                       : <motion.span
                           style={{ color: '#1A73E8', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                           whileTap={{ scale: 0.95 }} onClick={handleResend}
@@ -383,7 +365,8 @@ export default function Register() {
 
                   <motion.button
                     style={{ width: '100%', padding: '13px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '14px', cursor: 'pointer' }}
-                    whileTap={{ scale: 0.97 }} onClick={() => { setStep(1); setOtp(''); setError(''); setDevOtp(''); }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => { setStep(1); setOtp(''); setError(''); }}
                   >
                     ← Back to Registration
                   </motion.button>
