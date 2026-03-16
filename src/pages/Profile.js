@@ -10,7 +10,8 @@ import {
   ChevronRight, LogOut, Key, CreditCard,
   HelpCircle, FileText, Copy, CheckCircle,
   Lock, Mail, Eye, EyeOff, RefreshCw, AlertCircle,
-  Phone, Calendar, CreditCard as IdCard, X
+  Phone, Calendar, CreditCard as IdCard,
+  BarChart2, MapPin, Smartphone, AlertTriangle
 } from 'lucide-react';
 
 const Modal = ({ show, onClose, children, colors }) => (
@@ -215,8 +216,10 @@ export default function Profile() {
       title: 'Account',
       items: [
         { icon: <User size={18} color="#1A73E8" />, label: 'Personal Information', sub: 'View your profile details', bg: 'rgba(26,115,232,0.1)', action: () => setShowPersonalInfo(true) },
-        { icon: <CreditCard size={18} color="#9C27B0" />, label: 'Wallet Address', sub: balance?.wallet_number || 'Tap to copy', bg: 'rgba(156,39,176,0.1)', action: copyWallet, rightIcon: <Copy size={14} color="#9C27B0" /> },
+        { icon: <CreditCard size={18} color="#7C3AED" />, label: 'Virtual Card', sub: 'Your PayEase demo card', bg: 'rgba(124,58,237,0.1)', action: () => navigate('/virtual-card') },
+        { icon: <BarChart2 size={18} color="#0891B2" />, label: 'Spending Insights', sub: 'Track your spending habits', bg: 'rgba(8,145,178,0.1)', action: () => navigate('/insights') },
         { icon: <FileText size={18} color="#FF6B35" />, label: 'KYC Verification', sub: kycInfo?.status === 'approved' ? '✓ Verified' : 'Verify your identity', bg: 'rgba(255,107,53,0.1)', action: () => navigate('/kyc') },
+        { icon: <Copy size={18} color="#9C27B0" />, label: 'Wallet Address', sub: balance?.wallet_number || 'Tap to copy', bg: 'rgba(156,39,176,0.1)', action: copyWallet, rightIcon: <Copy size={14} color="#9C27B0" /> },
       ]
     },
     {
@@ -224,6 +227,9 @@ export default function Profile() {
       items: [
         { icon: <Key size={18} color="#00C853" />, label: 'Change Password', sub: 'Update your account password', bg: 'rgba(0,200,83,0.1)', action: () => setShowChangePassword(true) },
         { icon: <Shield size={18} color="#1A73E8" />, label: 'Change PIN', sub: 'Update your 4-digit transaction PIN', bg: 'rgba(26,115,232,0.1)', action: () => setShowChangePin(true) },
+        { icon: <Smartphone size={18} color="#DC2626" />, label: 'Active Sessions', sub: 'Manage logged-in devices', bg: 'rgba(220,38,38,0.1)', action: () => showToast('Feature coming soon!', 'error') },
+        { icon: <AlertTriangle size={18} color="#CA8A04" />, label: 'Fraud Alerts', sub: 'Security notifications', bg: 'rgba(202,138,4,0.1)', action: () => navigate('/notifications') },
+        { icon: <MapPin size={18} color="#7C3AED" />, label: 'Login Locations', sub: 'View recent login activity', bg: 'rgba(124,58,237,0.1)', action: () => showToast('Feature coming soon!', 'error') },
       ]
     },
     {
@@ -300,7 +306,7 @@ export default function Profile() {
         </motion.div>
       </motion.div>
 
-      {/* Menu */}
+      {/* Menu Sections */}
       {menuSections.map((section, si) => (
         <motion.div key={si} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + si * 0.05 }} style={{ margin: '0 16px 10px' }}>
           <p style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 6px 4px', color: colors.textSecondary }}>{section.title}</p>
@@ -434,17 +440,14 @@ export default function Profile() {
                     <p style={{ color: colors.textSecondary, fontSize: '10px', margin: 0 }}>Check inbox & spam</p>
                   </div>
                 </div>
-
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0', textAlign: 'center' }}>Enter 6-Digit Code</p>
                 <OtpInput value={pwOtp} onChange={setPwOtp} colors={colors} />
-
                 <div style={{ textAlign: 'center', margin: '6px 0 12px' }}>
                   {pwCountdown > 0
                     ? <span style={{ color: colors.textSecondary, fontSize: '11px' }}>Resend in <strong style={{ color: colors.text }}>{pwCountdown}s</strong></span>
                     : <motion.span style={{ color: '#1A73E8', fontSize: '11px', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }} whileTap={{ scale: 0.95 }} onClick={sendPasswordOtp}><RefreshCw size={11} /> Resend Code</motion.span>
                   }
                 </div>
-
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>New Password</p>
                 <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${newPassword ? '#1A73E8' : colors.border}`, borderRadius: '10px', padding: '0 12px', background: colors.inputBg, marginBottom: '8px' }}>
                   <Lock size={14} color={colors.textSecondary} style={{ flexShrink: 0, marginRight: '8px' }} />
@@ -453,7 +456,6 @@ export default function Profile() {
                     {showNewPw ? <EyeOff size={14} color={colors.textSecondary} /> : <Eye size={14} color={colors.textSecondary} />}
                   </motion.div>
                 </div>
-
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>Confirm Password</p>
                 <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${confirmPassword ? (confirmPassword === newPassword ? '#00C853' : '#FF4444') : colors.border}`, borderRadius: '10px', padding: '0 12px', background: colors.inputBg, marginBottom: '6px' }}>
                   <Lock size={14} color={colors.textSecondary} style={{ flexShrink: 0, marginRight: '8px' }} />
@@ -462,7 +464,6 @@ export default function Profile() {
                     {showConfirmPw ? <EyeOff size={14} color={colors.textSecondary} /> : <Eye size={14} color={colors.textSecondary} />}
                   </motion.div>
                 </div>
-
                 {confirmPassword.length > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '10px' }}>
                     {confirmPassword === newPassword
@@ -534,24 +535,19 @@ export default function Profile() {
                     <p style={{ color: colors.textSecondary, fontSize: '10px', margin: 0 }}>Check inbox & spam</p>
                   </div>
                 </div>
-
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0', textAlign: 'center' }}>Enter 6-Digit Code</p>
                 <OtpInput value={pinOtp} onChange={setPinOtp} colors={colors} />
-
                 <div style={{ textAlign: 'center', margin: '6px 0 12px' }}>
                   {pinCountdown > 0
                     ? <span style={{ color: colors.textSecondary, fontSize: '11px' }}>Resend in <strong style={{ color: colors.text }}>{pinCountdown}s</strong></span>
                     : <motion.span style={{ color: '#1A73E8', fontSize: '11px', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }} whileTap={{ scale: 0.95 }} onClick={sendPinOtp}><RefreshCw size={11} /> Resend Code</motion.span>
                   }
                 </div>
-
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0', textAlign: 'center' }}>New 4-Digit PIN</p>
                 <PinInput value={newPin} onChange={setNewPin} label="Enter your new PIN" colors={colors} />
-
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '12px 0 6px 0', textAlign: 'center' }}>Confirm New PIN</p>
                 <PinInput value={confirmPin} onChange={setConfirmPin} colors={colors}
                   label={confirmPin.length === 4 ? (confirmPin === newPin ? '✓ PINs match' : '✗ PINs do not match') : 'Re-enter PIN'} />
-
                 <ErrorBox msg={pinError} />
                 <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                   <motion.button style={{ flex: 1, padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => setPinStep(1)}>Back</motion.button>

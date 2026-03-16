@@ -9,7 +9,7 @@ import {
   ArrowUpRight, ArrowDownLeft, ChevronRight,
   Sun, Moon, Bell, FileText, CheckCircle,
   Download, Share2, Printer, X, Wallet,
-  TrendingUp, Plus
+  TrendingUp, Plus, BarChart2, CreditCard as CardIco
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -112,7 +112,7 @@ export default function Dashboard() {
     <style>* { margin:0; padding:0; box-sizing:border-box; } body { font-family:-apple-system,sans-serif; background:#f0f4ff; display:flex; justify-content:center; padding:40px 20px; } .r { background:#fff; border-radius:20px; width:100%; max-width:400px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.12); } .h { background:linear-gradient(135deg,#1A73E8,#0052CC); padding:28px; text-align:center; } .logo { color:#fff; font-size:22px; font-weight:bold; margin-bottom:12px; } .check { color:#fff; font-size:32px; margin-bottom:8px; } .status { color:#fff; font-size:17px; font-weight:bold; } .amt { color:#fff; font-size:32px; font-weight:bold; margin-top:10px; } .b { padding:20px; } .row { display:flex; justify-content:space-between; padding:11px 0; border-bottom:1px solid #f0f4ff; } .row:last-child { border-bottom:none; } .l { color:#888; font-size:13px; } .v { font-weight:600; font-size:13px; color:#1A1A2E; } .f { background:#f8faff; border-top:1px solid #e0e6f0; padding:14px; text-align:center; } .f p { color:#888; font-size:11px; margin-bottom:3px; } @media print { body { background:white; } .r { box-shadow:none; } }</style></head>
     <body><div class="r"><div class="h"><div class="logo">PayEase</div><div class="check">✓</div><div class="status">${receiptData.status}</div><div class="amt">PKR ${receiptData.amount?.toLocaleString()}</div></div>
     <div class="b"><div class="row"><span class="l">Type</span><span class="v">${receiptData.type}</span></div><div class="row"><span class="l">To</span><span class="v">${receiptData.toName || receiptData.to}</span></div><div class="row"><span class="l">Reference</span><span class="v">${receiptData.ref}</span></div><div class="row"><span class="l">Date</span><span class="v">${receiptData.date}</span></div><div class="row"><span class="l">Status</span><span class="v" style="color:#00C853">✓ ${receiptData.status}</span></div></div>
-    <div class="f"><p>Thank you for using PayEase</p><p style="color:#1A73E8;font-weight:bold">payease-frontend.vercel.app</p></div></div></body></html>`;
+    <div class="f"><p>Thank you for using PayEase</p><p style="color:#1A73E8;font-weight:bold">payease.space</p></div></div></body></html>`;
     const win = window.open('', '_blank');
     win.document.write(html);
     win.document.close();
@@ -120,7 +120,7 @@ export default function Dashboard() {
   };
 
   const handleShareReceipt = () => {
-    const text = `✅ PayEase Receipt\n\nType: ${receiptData?.type}\nAmount: PKR ${receiptData?.amount?.toLocaleString()}\nRef: ${receiptData?.ref}\nDate: ${receiptData?.date}\nStatus: ${receiptData?.status}\n\npayease-frontend.vercel.app`;
+    const text = `✅ PayEase Receipt\n\nType: ${receiptData?.type}\nAmount: PKR ${receiptData?.amount?.toLocaleString()}\nRef: ${receiptData?.ref}\nDate: ${receiptData?.date}\nStatus: ${receiptData?.status}\n\npayease.space`;
     if (navigator.share) navigator.share({ title: 'PayEase Receipt', text });
     else { navigator.clipboard.writeText(text); showToast('Receipt copied!'); }
   };
@@ -137,6 +137,8 @@ export default function Dashboard() {
     { icon: <Plus size={20} color="#16A34A" />, label: 'Deposit', bg: 'rgba(22,163,74,0.1)', action: () => setShowDeposit(true) },
     { icon: <FileText size={20} color="#EA580C" />, label: 'Bills', bg: 'rgba(234,88,12,0.1)', action: () => navigate('/bills') },
     { icon: <QrCode size={20} color="#7C3AED" />, label: 'QR', bg: 'rgba(124,58,237,0.1)', action: () => navigate('/qr') },
+    { icon: <BarChart2 size={20} color="#0891B2" />, label: 'Insights', bg: 'rgba(8,145,178,0.1)', action: () => navigate('/insights') },
+    { icon: <CardIco size={20} color="#CA8A04" />, label: 'Card', bg: 'rgba(202,138,4,0.1)', action: () => navigate('/virtual-card') },
   ];
 
   const navTabs = [
@@ -185,7 +187,6 @@ export default function Dashboard() {
             {isDark ? <Sun size={17} color="#CA8A04" /> : <Moon size={17} color="#1A73E8" />}
           </motion.div>
 
-          {/* Bell with badge */}
           <motion.div
             style={{ width: '36px', height: '36px', borderRadius: '10px', background: colors.actionBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
             whileTap={{ scale: 0.9 }} onClick={() => navigate('/notifications')}
@@ -218,7 +219,6 @@ export default function Dashboard() {
           style={{ background: 'linear-gradient(135deg, #1A73E8 0%, #0052CC 100%)', borderRadius: '20px', padding: '24px', boxShadow: '0 12px 40px rgba(26,115,232,0.3)', position: 'relative', overflow: 'hidden' }}
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         >
-          {/* Decorative circles */}
           <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
           <div style={{ position: 'absolute', bottom: '-30px', left: '30px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
 
@@ -240,25 +240,20 @@ export default function Dashboard() {
             </motion.div>
           </div>
 
-          {/* Stats row */}
           <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
             <div style={{ flex: 1, background: 'rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px 12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
                 <ArrowDownLeft size={12} color="rgba(255,255,255,0.7)" />
                 <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Money In</span>
               </div>
-              <p style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', margin: 0 }}>
-                PKR {totalIn.toLocaleString()}
-              </p>
+              <p style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', margin: 0 }}>PKR {totalIn.toLocaleString()}</p>
             </div>
             <div style={{ flex: 1, background: 'rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px 12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
                 <ArrowUpRight size={12} color="rgba(255,255,255,0.7)" />
                 <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Money Out</span>
               </div>
-              <p style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', margin: 0 }}>
-                PKR {totalOut.toLocaleString()}
-              </p>
+              <p style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', margin: 0 }}>PKR {totalOut.toLocaleString()}</p>
             </div>
           </div>
 
@@ -282,18 +277,18 @@ export default function Dashboard() {
         style={{ margin: '14px 16px', background: colors.card, borderRadius: '16px', padding: '16px 8px', border: `1px solid ${colors.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
         initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '8px' }}>
           {quickActions.map((item, i) => (
             <motion.div
               key={i}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', flex: 1 }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '72px' }}
               whileTap={{ scale: 0.88 }} onClick={item.action}
-              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.05 }}
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.04 }}
             >
               <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {item.icon}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0, fontWeight: '600' }}>{item.label}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0, fontWeight: '600', textAlign: 'center' }}>{item.label}</p>
             </motion.div>
           ))}
         </div>
@@ -304,7 +299,6 @@ export default function Dashboard() {
         style={{ margin: '0 16px 16px', background: colors.card, borderRadius: '16px', border: `1px solid ${colors.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden' }}
         initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
       >
-        {/* Section Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 16px 12px' }}>
           <h3 style={{ color: colors.text, fontSize: '15px', fontWeight: '700', margin: 0 }}>Recent Activity</h3>
           <motion.div
@@ -429,8 +423,6 @@ export default function Dashboard() {
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
             >
               <div style={{ width: '36px', height: '4px', background: colors.border, borderRadius: '2px', margin: '0 auto 20px' }} />
-
-              {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '24px' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(22,163,74,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Plus size={24} color="#16A34A" />
@@ -441,7 +433,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Amount Input */}
               <div style={{ marginBottom: '16px' }}>
                 <p style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: '600', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Amount (PKR)</p>
                 <div style={{ display: 'flex', alignItems: 'center', border: `2px solid ${depositAmount ? '#1A73E8' : colors.border}`, borderRadius: '14px', padding: '0 16px', background: colors.inputBg, transition: 'all 0.2s', boxShadow: depositAmount ? '0 0 0 3px rgba(26,115,232,0.08)' : 'none' }}>
@@ -455,7 +446,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Quick amounts */}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                 {[500, 1000, 5000, 10000].map(amt => (
                   <motion.button
@@ -502,7 +492,6 @@ export default function Dashboard() {
               exit={{ scale: 0.85, opacity: 0, y: 30 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             >
-              {/* Close */}
               <motion.div
                 style={{ position: 'absolute', top: '14px', right: '14px', width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
                 whileTap={{ scale: 0.9 }} onClick={() => setShowReceipt(false)}
@@ -510,7 +499,6 @@ export default function Dashboard() {
                 <X size={14} color="#fff" />
               </motion.div>
 
-              {/* Receipt Header */}
               <div style={{ background: 'linear-gradient(135deg, #1A73E8, #0052CC)', padding: '24px', textAlign: 'center' }}>
                 <motion.div
                   style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', border: '2px solid rgba(255,255,255,0.3)' }}
@@ -530,7 +518,6 @@ export default function Dashboard() {
                 </span>
               </div>
 
-              {/* Details */}
               <div style={{ padding: '16px 20px' }}>
                 {[
                   { label: 'Type', value: receiptData.type },
@@ -552,7 +539,6 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {/* Action Buttons */}
               <div style={{ display: 'flex', gap: '1px', borderTop: `1px solid ${colors.border}` }}>
                 <motion.button
                   style={{ flex: 1, padding: '13px', background: colors.actionBg, color: colors.text, border: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', borderRight: `1px solid ${colors.border}` }}

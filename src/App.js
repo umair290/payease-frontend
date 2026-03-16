@@ -13,6 +13,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import QRCodePage from './pages/QRCode';
 import History from './pages/History';
 import Notifications from './pages/Notifications';
+import Insights from './pages/Insights';
+import VirtualCard from './pages/VirtualCard';
 
 const LoadingSpinner = () => (
   <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0F4FF' }}>
@@ -52,6 +54,8 @@ function App() {
             <Route path="/qr" element={<PrivateRoute><QRCodePage /></PrivateRoute>} />
             <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
             <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
+            <Route path="/insights" element={<PrivateRoute><Insights /></PrivateRoute>} />
+            <Route path="/virtual-card" element={<PrivateRoute><VirtualCard /></PrivateRoute>} />
           </Routes>
         </Router>
       </AuthProvider>
