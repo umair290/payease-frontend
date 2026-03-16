@@ -21,7 +21,6 @@ const ForgotModal = ({ show, onClose }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [devOtp, setDevOtp] = useState('');
   const [countdown, setCountdown] = useState(0);
   const [success, setSuccess] = useState(false);
 
@@ -34,7 +33,7 @@ const ForgotModal = ({ show, onClose }) => {
 
   const resetForm = () => {
     setStep(1); setEmail(''); setOtp(''); setNewPassword('');
-    setConfirmPassword(''); setError(''); setDevOtp('');
+    setConfirmPassword(''); setError('');
     setCountdown(0); setSuccess(false);
     setShowPw(false); setShowConfirm(false);
   };
@@ -45,8 +44,7 @@ const ForgotModal = ({ show, onClose }) => {
     if (!email) { setError('Please enter your email'); return; }
     setLoading(true); setError('');
     try {
-      const res = await axios.post(`${API_URL}/api/otp/forgot-password/send`, { email });
-      setDevOtp(res.data.dev_otp || '');
+      await axios.post(`${API_URL}/api/otp/forgot-password/send`, { email });
       setStep(2);
       setCountdown(60);
     } catch (err) {
@@ -218,16 +216,16 @@ const ForgotModal = ({ show, onClose }) => {
                   {step === 2 && (
                     <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
 
-                      {/* Dev OTP */}
-                      {devOtp && (
-                        <motion.div
-                          style={{ background: '#EEF2FF', border: '1.5px dashed #1A73E8', borderRadius: '12px', padding: '8px 12px', marginBottom: '12px', textAlign: 'center' }}
-                          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                        >
-                          <p style={{ color: '#64748B', fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 3px 0' }}>🔧 Dev Mode OTP</p>
-                          <p style={{ color: '#1A73E8', fontSize: '22px', fontWeight: 'bold', letterSpacing: '10px', fontFamily: 'monospace', margin: 0 }}>{devOtp}</p>
-                        </motion.div>
-                      )}
+                      {/* Email sent confirmation */}
+                      <div style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(22,163,74,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <CheckCircle size={16} color="#16A34A" />
+                        </div>
+                        <div>
+                          <p style={{ color: '#16A34A', fontSize: '12px', fontWeight: '700', margin: 0 }}>Code sent!</p>
+                          <p style={{ color: '#888', fontSize: '11px', margin: 0 }}>Check inbox & spam at {email}</p>
+                        </div>
+                      </div>
 
                       {/* OTP Boxes */}
                       <p style={{ color: '#1A1A2E', fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0', textAlign: 'center' }}>Enter 6-Digit Verification Code</p>
@@ -236,14 +234,7 @@ const ForgotModal = ({ show, onClose }) => {
                           {[0, 1, 2, 3, 4, 5].map(i => (
                             <motion.div
                               key={i}
-                              style={{
-                                width: '30px', height: '36px', borderRadius: '10px',
-                                border: `2px solid ${i < otp.length ? '#1A73E8' : '#94A3B8'}`,
-                                background: i < otp.length ? 'rgba(26,115,232,0.12)' : '#E2E8F0',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'all 0.15s',
-                                boxShadow: i < otp.length ? '0 2px 8px rgba(26,115,232,0.2)' : 'inset 0 1px 3px rgba(0,0,0,0.08)',
-                              }}
+                              style={{ width: '30px', height: '36px', borderRadius: '10px', border: `2px solid ${i < otp.length ? '#1A73E8' : '#94A3B8'}`, background: i < otp.length ? 'rgba(26,115,232,0.12)' : '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', boxShadow: i < otp.length ? '0 2px 8px rgba(26,115,232,0.2)' : 'inset 0 1px 3px rgba(0,0,0,0.08)' }}
                               animate={{ scale: i === otp.length - 1 ? [1, 1.12, 1] : 1 }}
                               transition={{ duration: 0.15 }}
                             >
@@ -262,7 +253,7 @@ const ForgotModal = ({ show, onClose }) => {
                       </div>
 
                       {/* Resend */}
-                      <div style={{ textAlign: 'center', margin: '4px 0 10px' }}>
+                      <div style={{ textAlign: 'center', margin: '4px 0 12px' }}>
                         {countdown > 0
                           ? <span style={{ color: '#94A3B8', fontSize: '11px' }}>Resend in <strong style={{ color: '#1A1A2E' }}>{countdown}s</strong></span>
                           : <motion.span style={{ color: '#1A73E8', fontSize: '11px', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }} whileTap={{ scale: 0.95 }} onClick={sendOtp}>
