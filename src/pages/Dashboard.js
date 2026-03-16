@@ -233,8 +233,8 @@ export default function Dashboard() {
               </motion.h2>
             </div>
             <motion.div
-              style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-              whileTap={{ scale: 0.9 }} onClick={() => setHideBalance(!hideBalance)}
+              style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', zIndex: 2 }}
+              whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); setHideBalance(!hideBalance); }}
             >
               {hideBalance ? <Eye size={16} color="rgba(255,255,255,0.8)" /> : <EyeOff size={16} color="rgba(255,255,255,0.8)" />}
             </motion.div>

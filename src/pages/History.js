@@ -69,18 +69,6 @@ export default function History() {
     return d.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const formatDate = (dateStr) => {
-    const d = parseDate(dateStr);
-    if (!d) return '';
-    const now = new Date();
-    const diff = Math.floor((now - d) / 60000);
-    if (diff < 1) return 'Just now';
-    if (diff < 60) return `${diff}m ago`;
-    if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
-    if (diff < 2880) return 'Yesterday';
-    return d.toLocaleDateString('en-PK', { day: 'numeric', month: 'short' });
-  };
-
   const formatFullDate = (dateStr) => {
     const d = parseDate(dateStr);
     if (!d) return 'N/A';
@@ -136,22 +124,25 @@ export default function History() {
         body { font-family:-apple-system,BlinkMacSystemFont,sans-serif; background:#f0f4ff; display:flex; justify-content:center; padding:40px 20px; }
         .receipt { background:#fff; border-radius:20px; width:100%; max-width:400px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.12); }
         .header { background:linear-gradient(135deg,#1A73E8,#0052CC); padding:28px; text-align:center; }
-        .logo { color:#fff; font-size:22px; font-weight:bold; margin-bottom:14px; }
+        .logo { color:#fff; font-size:26px; font-weight:bold; margin-bottom:14px; letter-spacing:-0.5px; }
+        .tagline { color:rgba(255,255,255,0.6); font-size:11px; margin-bottom:16px; }
         .check { width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.2); display:inline-flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:10px; }
         .status { color:#fff; font-size:17px; font-weight:bold; }
-        .amount { color:#fff; font-size:32px; font-weight:bold; margin-top:10px; }
+        .amount { color:#fff; font-size:34px; font-weight:bold; margin-top:10px; }
         .body { padding:22px; }
         .row { display:flex; justify-content:space-between; padding:11px 0; border-bottom:1px solid #f0f4ff; }
         .row:last-child { border-bottom:none; }
         .label { color:#888; font-size:13px; }
         .value { font-weight:600; font-size:13px; color:#1A1A2E; text-align:right; max-width:60%; }
         .footer { background:#f8faff; border-top:1px solid #e0e6f0; padding:16px; text-align:center; }
+        .footer-logo { color:#1A73E8; font-size:18px; font-weight:bold; margin-bottom:4px; }
         .footer p { color:#888; font-size:11px; margin-bottom:3px; }
         @media print { body { background:white; } .receipt { box-shadow:none; } }
       </style></head>
       <body><div class="receipt">
         <div class="header">
           <div class="logo">PayEase</div>
+          <div class="tagline">Digital Wallet & Payment Services</div>
           <div class="check">✓</div>
           <div class="status">${tx.direction === 'credit' ? 'Money Received' : tx.type === 'deposit' ? 'Deposit' : 'Money Sent'}</div>
           <div class="amount">${tx.direction === 'credit' ? '+' : '-'} PKR ${tx.amount?.toLocaleString()}</div>
@@ -163,11 +154,12 @@ export default function History() {
           <div class="row"><span class="label">To</span><span class="value">${tx.to_wallet || 'N/A'}</span></div>
           <div class="row"><span class="label">Date</span><span class="value">${formatFullDate(tx.date)}</span></div>
           <div class="row"><span class="label">Time</span><span class="value">${formatFullTime(tx.date)}</span></div>
-          <div class="row"><span class="label">Status</span><span class="value" style="color:#00C853">✓ ${tx.status}</span></div>
+          <div class="row"><span class="label">Status</span><span class="value" style="color:#16A34A">✓ ${tx.status}</span></div>
         </div>
         <div class="footer">
-          <p>Thank you for using PayEase</p>
-          <p style="color:#1A73E8;font-weight:bold">payease-frontend.vercel.app</p>
+          <div class="footer-logo">PayEase</div>
+          <p>Digital Wallet & Payment Services</p>
+          <p>payease-frontend.vercel.app</p>
         </div>
       </div></body></html>
     `;
@@ -189,50 +181,74 @@ export default function History() {
     const pageH = doc.internal.pageSize.getHeight();
     const margin = 14;
 
+    // ── HEADER ──
     doc.setFillColor(26, 115, 232);
-    doc.rect(0, 0, pageW, 42, 'F');
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(margin, 7, 10, 10, 1.5, 1.5, 'F');
-    doc.setTextColor(26, 115, 232);
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PE', margin + 1.8, 13.5);
+    doc.rect(0, 0, pageW, 44, 'F');
+
+    // PayEase Logo — big, clean, no square
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.text('PayEase', margin + 13, 14);
-    doc.setFontSize(8);
+    doc.setFontSize(26);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PayEase', margin, 16);
+
+    // Tagline
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
-    doc.text('Digital Wallet & Payment Services', margin + 13, 20);
+    doc.setTextColor(200, 220, 255);
+    doc.text('Digital Wallet & Payment Services', margin, 23);
+
+    // Decorative underline
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(0.4);
+    doc.line(margin, 26, margin + 58, 26);
+
+    // Statement title right side
+    doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('ACCOUNT STATEMENT', pageW - margin, 12, { align: 'right' });
+    doc.text('ACCOUNT STATEMENT', pageW - margin, 13, { align: 'right' });
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, pageW - margin, 18, { align: 'right' });
-    doc.text(`Ref: PE-${Date.now().toString().slice(-8)}`, pageW - margin, 23, { align: 'right' });
-    doc.setDrawColor(255, 255, 255);
-    doc.setLineWidth(0.2);
-    doc.line(margin, 27, pageW - margin, 27);
+    doc.setTextColor(200, 220, 255);
+    const genDate = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+    doc.text(`Generated: ${genDate}`, pageW - margin, 19, { align: 'right' });
+    doc.text(`Ref: PE-${Date.now().toString().slice(-8)}`, pageW - margin, 24, { align: 'right' });
+
+    // Account info row
+    doc.setTextColor(255, 255, 255);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
     doc.text(`${userInfo?.full_name || 'N/A'}`, margin, 33);
     doc.setFont('helvetica', 'normal');
+    doc.setTextColor(200, 220, 255);
     doc.text(`Wallet: ${userInfo?.wallet_number || 'N/A'}`, margin, 38.5);
     doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
     doc.text(`Balance: PKR ${Number(userInfo?.balance || 0).toLocaleString('en-PK')}`, pageW - margin, 33, { align: 'right' });
     doc.setFont('helvetica', 'normal');
+    doc.setTextColor(200, 220, 255);
     doc.text('Period: All Transactions', pageW - margin, 38.5, { align: 'right' });
 
-    let y = 50;
+    let y = 52;
+
+    // ── SUMMARY BOX ──
     doc.setFillColor(243, 246, 255);
     doc.setDrawColor(200, 215, 250);
     doc.setLineWidth(0.3);
     doc.roundedRect(margin, y, pageW - margin * 2, 30, 2, 2, 'FD');
+
     doc.setTextColor(26, 115, 232);
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.text('STATEMENT SUMMARY', margin + 4, y + 7);
-    const c1 = margin + 4, c2 = pageW / 2 + 4, lw = 38;
+
+    const c1 = margin + 4;
+    const c2 = pageW / 2 + 4;
+    const lw = 38;
+
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(80, 80, 80);
@@ -240,22 +256,27 @@ export default function History() {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 140, 60);
     doc.text(`PKR ${Number(stats.totalIn).toLocaleString('en-PK')}`, c1 + lw, y + 15);
+
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(80, 80, 80);
     doc.text('Total Money Out:', c2, y + 15);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(190, 70, 0);
     doc.text(`PKR ${Number(stats.totalOut).toLocaleString('en-PK')}`, c2 + lw, y + 15);
+
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(80, 80, 80);
     doc.text(`Total Transactions: ${stats.count}`, c1, y + 24);
+
     const net = stats.totalIn - stats.totalOut;
     doc.text('Net Flow:', c2, y + 24);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(net >= 0 ? 0 : 190, net >= 0 ? 140 : 0, net >= 0 ? 60 : 0);
-    doc.text(`PKR ${Number(Math.abs(net)).toLocaleString('en-PK')} ${net >= 0 ? '(+)' : '(-)'} `, c2 + 22, y + 24);
+    doc.text(`PKR ${Number(Math.abs(net)).toLocaleString('en-PK')} ${net >= 0 ? '(+)' : '(-)'}`, c2 + 22, y + 24);
 
     y += 38;
+
+    // ── TABLE TITLE ──
     doc.setTextColor(26, 115, 232);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
@@ -265,6 +286,7 @@ export default function History() {
     doc.line(margin, y + 2, margin + 58, y + 2);
     y += 7;
 
+    // ── TABLE ──
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
@@ -273,44 +295,90 @@ export default function History() {
         const d = parseDate(tx.date);
         const dateStr = d ? d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
         const timeStr = d ? d.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-        return [
-          i + 1, dateStr, timeStr,
-          tx.description || (tx.direction === 'credit' ? 'Money Received' : 'Money Sent'),
-          tx.type ? tx.type.charAt(0).toUpperCase() + tx.type.slice(1) : 'N/A',
-          tx.direction === 'debit' ? Number(tx.amount).toLocaleString('en-PK') : '-',
-          tx.direction === 'credit' ? Number(tx.amount).toLocaleString('en-PK') : '-',
-          'Success',
-        ];
+        const desc = tx.description || (tx.direction === 'credit' ? 'Money Received' : 'Money Sent');
+        const type = tx.type ? tx.type.charAt(0).toUpperCase() + tx.type.slice(1) : 'N/A';
+        const debit = tx.direction === 'debit' ? Number(tx.amount).toLocaleString('en-PK') : '-';
+        const credit = tx.direction === 'credit' ? Number(tx.amount).toLocaleString('en-PK') : '-';
+        return [i + 1, dateStr, timeStr, desc, type, debit, credit, 'Success'];
       }),
-      headStyles: { fillColor: [26, 115, 232], textColor: [255, 255, 255], fontSize: 7.5, fontStyle: 'bold', halign: 'center', cellPadding: { top: 4, bottom: 4, left: 2, right: 2 } },
-      bodyStyles: { fontSize: 7.2, textColor: [40, 40, 40], cellPadding: { top: 3, bottom: 3, left: 2, right: 2 }, lineColor: [220, 228, 245], lineWidth: 0.1 },
+      headStyles: {
+        fillColor: [26, 115, 232],
+        textColor: [255, 255, 255],
+        fontSize: 7.5,
+        fontStyle: 'bold',
+        halign: 'center',
+        cellPadding: { top: 4, bottom: 4, left: 2, right: 2 },
+      },
+      bodyStyles: {
+        fontSize: 7.2,
+        textColor: [40, 40, 40],
+        cellPadding: { top: 3, bottom: 3, left: 2, right: 2 },
+        lineColor: [220, 228, 245],
+        lineWidth: 0.1,
+      },
       alternateRowStyles: { fillColor: [245, 248, 255] },
-      columnStyles: { 0: { halign: 'center', cellWidth: 8 }, 1: { halign: 'center', cellWidth: 22 }, 2: { halign: 'center', cellWidth: 16 }, 3: { cellWidth: 'auto' }, 4: { halign: 'center', cellWidth: 18 }, 5: { halign: 'right', cellWidth: 24 }, 6: { halign: 'right', cellWidth: 24 }, 7: { halign: 'center', cellWidth: 16 } },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 8 },
+        1: { halign: 'center', cellWidth: 22 },
+        2: { halign: 'center', cellWidth: 16 },
+        3: { cellWidth: 'auto' },
+        4: { halign: 'center', cellWidth: 18 },
+        5: { halign: 'right', cellWidth: 24 },
+        6: { halign: 'right', cellWidth: 24 },
+        7: { halign: 'center', cellWidth: 16 },
+      },
       didParseCell: (data) => {
         if (data.section === 'body') {
-          if (data.column.index === 5 && data.cell.raw !== '-') { data.cell.styles.textColor = [190, 70, 0]; data.cell.styles.fontStyle = 'bold'; }
-          if (data.column.index === 6 && data.cell.raw !== '-') { data.cell.styles.textColor = [0, 140, 60]; data.cell.styles.fontStyle = 'bold'; }
-          if (data.column.index === 7) { data.cell.styles.textColor = [0, 140, 60]; data.cell.styles.fontStyle = 'bold'; }
+          if (data.column.index === 5 && data.cell.raw !== '-') {
+            data.cell.styles.textColor = [190, 70, 0];
+            data.cell.styles.fontStyle = 'bold';
+          }
+          if (data.column.index === 6 && data.cell.raw !== '-') {
+            data.cell.styles.textColor = [0, 140, 60];
+            data.cell.styles.fontStyle = 'bold';
+          }
+          if (data.column.index === 7) {
+            data.cell.styles.textColor = [0, 140, 60];
+            data.cell.styles.fontStyle = 'bold';
+          }
         }
       },
       showFoot: 'lastPage',
-      foot: [['', '', '', '', 'TOTALS', `PKR ${Number(stats.totalOut).toLocaleString('en-PK')}`, `PKR ${Number(stats.totalIn).toLocaleString('en-PK')}`, `${stats.count} Txns`]],
-      footStyles: { fillColor: [20, 90, 180], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold', halign: 'center', cellPadding: { top: 4, bottom: 4, left: 2, right: 2 } },
+      foot: [[
+        '', '', '', '', 'TOTALS',
+        `PKR ${Number(stats.totalOut).toLocaleString('en-PK')}`,
+        `PKR ${Number(stats.totalIn).toLocaleString('en-PK')}`,
+        `${stats.count} Txns`,
+      ]],
+      footStyles: {
+        fillColor: [20, 90, 180],
+        textColor: [255, 255, 255],
+        fontSize: 8,
+        fontStyle: 'bold',
+        halign: 'center',
+        cellPadding: { top: 4, bottom: 4, left: 2, right: 2 },
+      },
     });
 
+    // ── FOOTER ──
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
       doc.setFillColor(26, 115, 232);
       doc.rect(0, pageH - 14, pageW, 14, 'F');
-      doc.setFontSize(7);
+      doc.setFontSize(8);
       doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PayEase', margin, pageH - 5.5);
       doc.setFont('helvetica', 'normal');
-      doc.text('PayEase Digital Wallet | System generated statement | Does not require signature', margin, pageH - 6);
-      doc.text(`Page ${i} of ${totalPages}`, pageW - margin, pageH - 6, { align: 'right' });
+      doc.setTextColor(200, 220, 255);
+      doc.text('| Digital Wallet | System generated statement | Does not require signature', margin + 20, pageH - 5.5);
+      doc.setTextColor(255, 255, 255);
+      doc.text(`Page ${i} of ${totalPages}`, pageW - margin, pageH - 5.5, { align: 'right' });
     }
 
-    doc.save(`PayEase_Statement_${(userInfo?.full_name || 'User').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    const fileName = `PayEase_Statement_${(userInfo?.full_name || 'User').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(fileName);
   };
 
   const groupedTransactions = filtered.reduce((groups, tx) => {
@@ -362,7 +430,7 @@ export default function History() {
 
         {/* Search Bar */}
         <div style={{ padding: '0 16px 10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', background: colors.actionBg, borderRadius: '12px', padding: '0 14px', border: `1px solid ${colors.border}`, transition: 'border-color 0.2s' }}>
+          <div style={{ display: 'flex', alignItems: 'center', background: colors.actionBg, borderRadius: '12px', padding: '0 14px', border: `1px solid ${colors.border}` }}>
             <Search size={15} color={colors.textSecondary} style={{ flexShrink: 0, marginRight: '10px' }} />
             <input
               style={{ flex: 1, padding: '11px 0', border: 'none', background: 'transparent', color: colors.text, fontSize: '14px', outline: 'none' }}
@@ -470,7 +538,7 @@ export default function History() {
                 {txs.map((tx, i) => (
                   <motion.div
                     key={i}
-                    style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderBottom: i < txs.length - 1 ? `1px solid ${colors.border}` : 'none', cursor: 'pointer', transition: 'background 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderBottom: i < txs.length - 1 ? `1px solid ${colors.border}` : 'none', cursor: 'pointer' }}
                     whileTap={{ scale: 0.99 }}
                     onClick={() => setSelectedTx(tx)}
                   >
@@ -544,7 +612,7 @@ export default function History() {
               </div>
 
               <div style={{ padding: '20px' }}>
-                {/* Transaction Details */}
+                {/* Details */}
                 <div style={{ background: colors.actionBg, borderRadius: '16px', overflow: 'hidden', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
                   {[
                     { label: 'Transaction Type', value: selectedTx.type?.toUpperCase() },
@@ -562,7 +630,7 @@ export default function History() {
                   ))}
                 </div>
 
-                {/* Action Buttons */}
+                {/* Print + Share */}
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                   <motion.button
                     style={{ flex: 1, padding: '13px', background: colors.actionBg, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
