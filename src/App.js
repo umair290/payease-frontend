@@ -15,9 +15,9 @@ import History from './pages/History';
 import Notifications from './pages/Notifications';
 import Insights from './pages/Insights';
 import VirtualCard from './pages/VirtualCard';
+import Onboarding from './pages/Onboarding';
 import useSessionTimeout from './hooks/useSessionTimeout';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
-
 
 const LoadingSpinner = () => (
   <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0F4FF' }}>
@@ -43,7 +43,7 @@ const AdminRoute = ({ children }) => {
 function SessionManager({ children }) {
   const { logout, token } = useAuth();
   const [showWarning, setShowWarning] = useState(false);
-  const [countdown, setCountdown] = useState(300);
+  const [countdown,   setCountdown]   = useState(300);
   const countdownRef = useRef(null);
 
   const startCountdown = useCallback(() => {
@@ -51,10 +51,7 @@ function SessionManager({ children }) {
     clearInterval(countdownRef.current);
     countdownRef.current = setInterval(() => {
       setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(countdownRef.current);
-          return 0;
-        }
+        if (prev <= 1) { clearInterval(countdownRef.current); return 0; }
         return prev - 1;
       });
     }, 1000);
@@ -83,16 +80,13 @@ function SessionManager({ children }) {
   }, [resetTimers]);
 
   useEffect(() => {
-    if (countdown === 0 && showWarning) {
-      handleTimeout();
-    }
+    if (countdown === 0 && showWarning) handleTimeout();
   }, [countdown, showWarning, handleTimeout]);
 
   useEffect(() => {
     return () => clearInterval(countdownRef.current);
   }, []);
 
-  // Don't show session modal if not logged in
   if (!token) return <>{children}</>;
 
   return (
@@ -112,21 +106,26 @@ function AppRoutes() {
   return (
     <SessionManager>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-        <Route path="/kyc" element={<PrivateRoute><KYC /></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/bills" element={<PrivateRoute><Bills /></PrivateRoute>} />
-        <Route path="/send" element={<PrivateRoute><SendMoney /></PrivateRoute>} />
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/qr" element={<PrivateRoute><QRCodePage /></PrivateRoute>} />
-        <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
-        <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
-        <Route path="/insights" element={<PrivateRoute><Insights /></PrivateRoute>} />
+        {/* ── Public routes — no login required ── */}
+        <Route path="/login"      element={<Login />} />
+        <Route path="/register"   element={<Register />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/"           element={<Navigate to="/login" />} />
+
+        {/* ── Private routes — login required ── */}
+        <Route path="/dashboard"    element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/profile"      element={<PrivateRoute><Profile /></PrivateRoute>} />
+        <Route path="/bills"        element={<PrivateRoute><Bills /></PrivateRoute>} />
+        <Route path="/send"         element={<PrivateRoute><SendMoney /></PrivateRoute>} />
+        <Route path="/kyc"          element={<PrivateRoute><KYC /></PrivateRoute>} />
+        <Route path="/qr"           element={<PrivateRoute><QRCodePage /></PrivateRoute>} />
+        <Route path="/history"      element={<PrivateRoute><History /></PrivateRoute>} />
+        <Route path="/notifications"element={<PrivateRoute><Notifications /></PrivateRoute>} />
+        <Route path="/insights"     element={<PrivateRoute><Insights /></PrivateRoute>} />
         <Route path="/virtual-card" element={<PrivateRoute><VirtualCard /></PrivateRoute>} />
-        
+
+        {/* ── Admin route ── */}
+        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       </Routes>
     </SessionManager>
   );
