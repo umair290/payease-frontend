@@ -14,24 +14,24 @@ import {
 } from 'lucide-react';
 
 // ── Animated Counter ──
-function AnimatedNumber({ value, prefix = '', duration = 1200 }) {
+function AnimatedNumber({ value, duration = 1200 }) {
   const [display, setDisplay] = useState(0);
   const prev = useRef(0);
   useEffect(() => {
-    const start = prev.current;
-    const end   = value;
+    const start     = prev.current;
+    const end       = value;
     const startTime = performance.now();
     const tick = (now) => {
-      const elapsed = now - startTime;
+      const elapsed  = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
+      const ease     = 1 - Math.pow(1 - progress, 3);
       setDisplay(Math.floor(start + (end - start) * ease));
       if (progress < 1) requestAnimationFrame(tick);
       else { setDisplay(end); prev.current = end; }
     };
     requestAnimationFrame(tick);
   }, [value, duration]);
-  return <>{prefix}{display.toLocaleString()}</>;
+  return <>{display.toLocaleString()}</>;
 }
 
 export default function Dashboard() {
@@ -39,26 +39,26 @@ export default function Dashboard() {
   const { isDark, toggleTheme, colors } = useTheme();
   const navigate = useNavigate();
 
-  const [balance,      setBalance]      = useState(null);
-  const [transactions, setTransactions] = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [hideBalance,  setHideBalance]  = useState(false);
-  const [activeTab,    setActiveTab]    = useState('home');
-  const [showDeposit,  setShowDeposit]  = useState(false);
-  const [depositAmount,setDepositAmount]= useState('');
-  const [actionLoading,setActionLoading]= useState(false);
-  const [toast,        setToast]        = useState({ msg: '', type: '' });
-  const [unreadCount,  setUnreadCount]  = useState(0);
-  const [showReceipt,  setShowReceipt]  = useState(false);
-  const [receiptData,  setReceiptData]  = useState(null);
-  const [greeting,     setGreeting]     = useState('');
-  const [avatarSrc,    setAvatarSrc]    = useState(null);
+  const [balance,       setBalance]       = useState(null);
+  const [transactions,  setTransactions]  = useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [hideBalance,   setHideBalance]   = useState(false);
+  const [activeTab,     setActiveTab]     = useState('home');
+  const [showDeposit,   setShowDeposit]   = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [toast,         setToast]         = useState({ msg: '', type: '' });
+  const [unreadCount,   setUnreadCount]   = useState(0);
+  const [showReceipt,   setShowReceipt]   = useState(false);
+  const [receiptData,   setReceiptData]   = useState(null);
+  const [greeting,      setGreeting]      = useState('');
+  const [avatarSrc,     setAvatarSrc]     = useState(null);
 
   useEffect(() => {
     const h = new Date().getHours();
-    if (h < 12) setGreeting('Good morning');
+    if (h < 12)      setGreeting('Good morning');
     else if (h < 17) setGreeting('Good afternoon');
-    else setGreeting('Good evening');
+    else             setGreeting('Good evening');
     const saved = localStorage.getItem('payease_avatar');
     if (saved) setAvatarSrc(saved);
     loadData();
@@ -108,13 +108,13 @@ export default function Dashboard() {
       setDepositAmount('');
       await loadData();
       setReceiptData({
-        type:    'Deposit',
-        amount:  parseFloat(depositAmount),
-        to:      balance?.wallet_number,
-        toName:  balance?.full_name,
-        date:    new Date().toLocaleString('en-PK'),
-        ref:     'DEP' + Date.now().toString().slice(-8),
-        status:  'Successful'
+        type:   'Deposit',
+        amount: parseFloat(depositAmount),
+        to:     balance?.wallet_number,
+        toName: balance?.full_name,
+        date:   new Date().toLocaleString('en-PK'),
+        ref:    'DEP' + Date.now().toString().slice(-8),
+        status: 'Successful'
       });
       setShowReceipt(true);
     } catch (err) {
@@ -142,18 +142,20 @@ export default function Dashboard() {
     else { navigator.clipboard.writeText(text); showToast('Receipt copied!'); }
   };
 
+  // ── Loading Screen ──
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: isDark ? '#0A0F1E' : '#F0F4FF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+    <div style={{ minHeight: '100vh', background: isDark ? '#0A0F1E' : '#F0F4FF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
       <motion.div
-        style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 32px rgba(26,115,232,0.4)' }}
-        animate={{ scale: [1, 1.1, 1], opacity: [1, 0.8, 1] }}
+        style={{ width: '60px', height: '60px', borderRadius: '18px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 40px rgba(26,115,232,0.4)' }}
+        animate={{ scale: [1, 1.08, 1], opacity: [1, 0.85, 1] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >
-        <span style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>P</span>
+        <span style={{ color: '#fff', fontSize: '26px', fontWeight: '800' }}>P</span>
       </motion.div>
       <div style={{ display: 'flex', gap: '6px' }}>
         {[0, 1, 2].map(i => (
-          <motion.div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#1A73E8' }}
+          <motion.div key={i}
+            style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#1A73E8' }}
             animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
             transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
           />
@@ -163,12 +165,12 @@ export default function Dashboard() {
   );
 
   const quickActions = [
-    { icon: <Send size={20} color="#fff" />,     label: 'Send',     grad: 'linear-gradient(135deg,#1A73E8,#0052CC)', shadow: 'rgba(26,115,232,0.4)',   action: () => navigate('/send') },
-    { icon: <Plus size={20} color="#fff" />,     label: 'Deposit',  grad: 'linear-gradient(135deg,#16A34A,#15803D)', shadow: 'rgba(22,163,74,0.4)',    action: () => setShowDeposit(true) },
-    { icon: <FileText size={20} color="#fff" />, label: 'Bills',    grad: 'linear-gradient(135deg,#EA580C,#C2410C)', shadow: 'rgba(234,88,12,0.4)',    action: () => navigate('/bills') },
-    { icon: <BarChart2 size={20} color="#fff" />,label: 'Insights', grad: 'linear-gradient(135deg,#0891B2,#0E7490)', shadow: 'rgba(8,145,178,0.4)',    action: () => navigate('/insights') },
-    { icon: <CardIco size={20} color="#fff" />,  label: 'Card',     grad: 'linear-gradient(135deg,#CA8A04,#A16207)', shadow: 'rgba(202,138,4,0.4)',    action: () => navigate('/virtual-card') },
-    { icon: <Clock size={20} color="#fff" />,    label: 'History',  grad: 'linear-gradient(135deg,#7C3AED,#5B21B6)', shadow: 'rgba(124,58,237,0.4)',   action: () => navigate('/history') },
+    { icon: <Send size={20} color="#fff" />,      label: 'Send',     grad: 'linear-gradient(135deg,#1A73E8,#0052CC)', shadow: 'rgba(26,115,232,0.4)',  action: () => navigate('/send') },
+    { icon: <Plus size={20} color="#fff" />,      label: 'Deposit',  grad: 'linear-gradient(135deg,#16A34A,#15803D)', shadow: 'rgba(22,163,74,0.4)',   action: () => setShowDeposit(true) },
+    { icon: <FileText size={20} color="#fff" />,  label: 'Bills',    grad: 'linear-gradient(135deg,#EA580C,#C2410C)', shadow: 'rgba(234,88,12,0.4)',   action: () => navigate('/bills') },
+    { icon: <BarChart2 size={20} color="#fff" />, label: 'Insights', grad: 'linear-gradient(135deg,#0891B2,#0E7490)', shadow: 'rgba(8,145,178,0.4)',   action: () => navigate('/insights') },
+    { icon: <CardIco size={20} color="#fff" />,   label: 'Card',     grad: 'linear-gradient(135deg,#CA8A04,#A16207)', shadow: 'rgba(202,138,4,0.4)',   action: () => navigate('/virtual-card') },
+    { icon: <Clock size={20} color="#fff" />,     label: 'History',  grad: 'linear-gradient(135deg,#7C3AED,#5B21B6)', shadow: 'rgba(124,58,237,0.4)',  action: () => navigate('/history') },
   ];
 
   const navTabs = [
@@ -182,10 +184,9 @@ export default function Dashboard() {
   const totalIn  = transactions.filter(t => t.direction === 'credit').reduce((s, t) => s + t.amount, 0);
   const totalOut = transactions.filter(t => t.direction === 'debit').reduce((s, t) => s + t.amount, 0);
 
-  // ── Tx type label ──
   const getTxLabel = (tx) => {
-    if (tx.type === 'deposit')    return 'Deposit';
-    if (tx.type === 'transfer')   return tx.direction === 'credit' ? 'Received' : 'Sent';
+    if (tx.type === 'deposit')     return 'Deposit';
+    if (tx.type === 'transfer')    return tx.direction === 'credit' ? 'Received' : 'Sent';
     if (tx.type === 'electricity') return 'Electricity';
     if (tx.type === 'gas')         return 'Gas Bill';
     if (tx.type === 'internet')    return 'Internet';
@@ -194,32 +195,21 @@ export default function Dashboard() {
   };
 
   const getTxIcon = (tx) => {
-    if (tx.type === 'deposit')    return { icon: <ArrowDownLeft size={16} color="#16A34A" />, bg: 'rgba(22,163,74,0.12)',  border: 'rgba(22,163,74,0.2)' };
-    if (tx.direction === 'credit')return { icon: <ArrowDownLeft size={16} color="#16A34A" />, bg: 'rgba(22,163,74,0.12)',  border: 'rgba(22,163,74,0.2)' };
-    if (tx.direction === 'debit') return { icon: <ArrowUpRight size={16} color="#1A73E8" />,  bg: 'rgba(26,115,232,0.12)', border: 'rgba(26,115,232,0.2)' };
-    return                               { icon: <Zap size={16} color="#EA580C" />,            bg: 'rgba(234,88,12,0.12)',  border: 'rgba(234,88,12,0.2)' };
+    if (tx.type === 'deposit')     return { icon: <ArrowDownLeft size={16} color="#16A34A" />, bg: 'rgba(22,163,74,0.12)',  border: 'rgba(22,163,74,0.2)' };
+    if (tx.direction === 'credit') return { icon: <ArrowDownLeft size={16} color="#16A34A" />, bg: 'rgba(22,163,74,0.12)',  border: 'rgba(22,163,74,0.2)' };
+    if (tx.direction === 'debit')  return { icon: <ArrowUpRight size={16} color="#1A73E8" />,  bg: 'rgba(26,115,232,0.12)', border: 'rgba(26,115,232,0.2)' };
+    return                                { icon: <Zap size={16} color="#EA580C" />,            bg: 'rgba(234,88,12,0.12)',  border: 'rgba(234,88,12,0.2)' };
   };
 
   return (
     <div style={{ minHeight: '100vh', background: isDark ? '#0A0F1E' : '#F0F4FF', maxWidth: '480px', margin: '0 auto', position: 'relative', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
 
-      {/* ── GLOBAL STYLE ── */}
       <style>{`
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        @keyframes pulse-ring {
-          0% { transform: scale(1); opacity: 0.8; }
-          100% { transform: scale(1.4); opacity: 0; }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-6px); }
-        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
       `}</style>
 
-      {/* Toast */}
+      {/* ── TOAST ── */}
       <AnimatePresence>
         {toast.msg && (
           <motion.div
@@ -236,55 +226,43 @@ export default function Dashboard() {
 
       {/* ── HEADER ── */}
       <motion.div
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 20px 16px', background: 'transparent' }}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 20px 16px' }}
         initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
       >
-        {/* Greeting */}
         <div>
-          <p style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#94A3B8', fontSize: '12px', margin: '0 0 3px 0', fontWeight: '500', letterSpacing: '0.3px' }}>
+          <p style={{ color: isDark ? 'rgba(255,255,255,0.4)' : '#94A3B8', fontSize: '12px', margin: '0 0 3px 0', fontWeight: '500', letterSpacing: '0.3px' }}>
             {greeting} 👋
           </p>
-          <p style={{ color: isDark ? '#F0F6FC' : '#0F172A', fontSize: '20px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>
+          <p style={{ color: isDark ? '#F0F6FC' : '#0F172A', fontSize: '22px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>
             {balance?.full_name?.split(' ')[0]}
           </p>
         </div>
 
-        {/* Right icons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* Theme toggle */}
           <motion.div
-            style={{ width: '38px', height: '38px', borderRadius: '12px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(10px)' }}
+            style={{ width: '38px', height: '38px', borderRadius: '12px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             whileTap={{ scale: 0.88 }} onClick={toggleTheme}
           >
             {isDark ? <Sun size={16} color="#FCD34D" /> : <Moon size={16} color="#6366F1" />}
           </motion.div>
 
-          {/* Notifications */}
           <motion.div
-            style={{ width: '38px', height: '38px', borderRadius: '12px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', backdropFilter: 'blur(10px)' }}
+            style={{ width: '38px', height: '38px', borderRadius: '12px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
             whileTap={{ scale: 0.88 }} onClick={() => navigate('/notifications')}
           >
-            <Bell size={16} color={isDark ? 'rgba(255,255,255,0.7)' : '#475569'} />
+            <Bell size={16} color={isDark ? 'rgba(255,255,255,0.65)' : '#475569'} />
             {unreadCount > 0 && (
-              <>
-                <motion.div style={{ position: 'absolute', top: '6px', right: '6px', width: '10px', height: '10px', borderRadius: '50%', background: '#EF4444' }}
-                  animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }}
-                />
-                <div style={{ position: 'absolute', top: '6px', right: '6px', width: '10px', height: '10px', borderRadius: '50%', background: '#EF4444', border: `2px solid ${isDark ? '#0A0F1E' : '#F0F4FF'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ color: '#fff', fontSize: '6px', fontWeight: 'bold' }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
-                </div>
-              </>
+              <div style={{ position: 'absolute', top: '7px', right: '7px', width: '10px', height: '10px', borderRadius: '50%', background: '#EF4444', border: `2px solid ${isDark ? '#0A0F1E' : '#F0F4FF'}` }} />
             )}
           </motion.div>
 
-          {/* Avatar */}
           <motion.div
-            style={{ width: '40px', height: '40px', borderRadius: '13px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 16px rgba(26,115,232,0.35)', overflow: 'hidden', position: 'relative' }}
+            style={{ width: '40px', height: '40px', borderRadius: '13px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 16px rgba(26,115,232,0.35)', overflow: 'hidden' }}
             whileTap={{ scale: 0.88 }} onClick={() => navigate('/profile')}
           >
             {avatarSrc
               ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <span style={{ color: '#fff', fontSize: '15px', fontWeight: 'bold' }}>{balance?.full_name?.charAt(0).toUpperCase()}</span>
+              : <span style={{ color: '#fff', fontSize: '15px', fontWeight: '800' }}>{balance?.full_name?.charAt(0).toUpperCase()}</span>
             }
           </motion.div>
         </div>
@@ -293,7 +271,7 @@ export default function Dashboard() {
       {/* ── BALANCE CARD ── */}
       <div style={{ padding: '0 16px 4px' }}>
         <motion.div
-          style={{ borderRadius: '24px', overflow: 'hidden', position: 'relative', background: 'linear-gradient(135deg, #1A1FEF 0%, #1A73E8 40%, #0EA5E9 100%)', boxShadow: '0 20px 60px rgba(26,115,232,0.45), 0 4px 16px rgba(0,0,0,0.2)' }}
+          style={{ borderRadius: '24px', overflow: 'hidden', position: 'relative', background: 'linear-gradient(135deg,#1A1FEF 0%,#1A73E8 45%,#0EA5E9 100%)', boxShadow: '0 20px 60px rgba(26,115,232,0.45), 0 4px 16px rgba(0,0,0,0.2)' }}
           initial={{ opacity: 0, y: 30, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.1, type: 'spring', stiffness: 200, damping: 20 }}
@@ -302,9 +280,7 @@ export default function Dashboard() {
           <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '160px', height: '160px', borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', bottom: '-50px', left: '-20px', width: '180px', height: '180px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', top: '30px', right: '60px', width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
-
-          {/* Shimmer line */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)' }} />
 
           <div style={{ padding: '24px 24px 20px', position: 'relative', zIndex: 1 }}>
 
@@ -323,17 +299,17 @@ export default function Dashboard() {
               </motion.div>
             </div>
 
-            {/* Balance amount */}
+            {/* Balance */}
             <motion.div style={{ marginBottom: '20px' }} animate={{ filter: hideBalance ? 'blur(10px)' : 'blur(0px)' }} transition={{ duration: 0.3 }}>
               <h1 style={{ color: '#fff', fontSize: '38px', fontWeight: '800', margin: '0 0 4px 0', letterSpacing: '-1.5px', lineHeight: 1 }}>
                 {hideBalance ? 'PKR ••••••' : <><span style={{ fontSize: '20px', fontWeight: '600', opacity: 0.75 }}>PKR </span><AnimatedNumber value={balance?.balance || 0} /></>}
               </h1>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', margin: 0, fontFamily: 'monospace', letterSpacing: '1px' }}>
+              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', margin: 0, fontFamily: 'monospace', letterSpacing: '1px' }}>
                 {balance?.wallet_number?.slice(0, 4)} •••• {balance?.wallet_number?.slice(-4)}
               </p>
             </motion.div>
 
-            {/* Stats row */}
+            {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
               <div style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', borderRadius: '14px', padding: '12px', border: '1px solid rgba(255,255,255,0.12)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
@@ -342,9 +318,7 @@ export default function Dashboard() {
                   </div>
                   <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Money In</span>
                 </div>
-                <p style={{ color: '#fff', fontSize: '14px', fontWeight: '700', margin: 0 }}>
-                  PKR {totalIn.toLocaleString()}
-                </p>
+                <p style={{ color: '#fff', fontSize: '14px', fontWeight: '700', margin: 0 }}>PKR {totalIn.toLocaleString()}</p>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', borderRadius: '14px', padding: '12px', border: '1px solid rgba(255,255,255,0.12)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
@@ -353,9 +327,7 @@ export default function Dashboard() {
                   </div>
                   <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Money Out</span>
                 </div>
-                <p style={{ color: '#fff', fontSize: '14px', fontWeight: '700', margin: 0 }}>
-                  PKR {totalOut.toLocaleString()}
-                </p>
+                <p style={{ color: '#fff', fontSize: '14px', fontWeight: '700', margin: 0 }}>PKR {totalOut.toLocaleString()}</p>
               </div>
             </div>
 
@@ -367,8 +339,7 @@ export default function Dashboard() {
                   {balance?.kyc_verified ? 'Identity Verified' : 'Verify Identity'}
                 </span>
               </div>
-              {/* Card chip decoration */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '-4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(252,196,4,0.7)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }} />
                 <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,50,50,0.7)', marginLeft: '-12px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }} />
               </div>
@@ -395,7 +366,7 @@ export default function Dashboard() {
               <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: item.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 6px 16px ${item.shadow}` }}>
                 {item.icon}
               </div>
-              <p style={{ color: isDark ? 'rgba(255,255,255,0.6)' : '#64748B', fontSize: '9.5px', margin: 0, fontWeight: '600', textAlign: 'center', letterSpacing: '0.2px' }}>
+              <p style={{ color: isDark ? 'rgba(255,255,255,0.55)' : '#64748B', fontSize: '9.5px', margin: 0, fontWeight: '600', textAlign: 'center', letterSpacing: '0.2px' }}>
                 {item.label}
               </p>
             </motion.div>
@@ -403,29 +374,31 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* ── PROMO BANNER ── */}
-      <motion.div
-        style={{ margin: '16px 16px 0', borderRadius: '18px', overflow: 'hidden', background: isDark ? 'linear-gradient(135deg,#1E1B4B,#312E81)' : 'linear-gradient(135deg,#EEF2FF,#E0E7FF)', border: `1px solid ${isDark ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.2)'}`, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
-        initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.35 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => navigate('/kyc')}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <motion.div
-            style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'linear-gradient(135deg,#6366F1,#4F46E5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.4)', flexShrink: 0 }}
-            animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 3, repeat: Infinity }}
-          >
-            <Sparkles size={18} color="#fff" />
-          </motion.div>
-          <div>
-            <p style={{ color: isDark ? '#C7D2FE' : '#4338CA', fontSize: '12px', fontWeight: '700', margin: '0 0 2px 0' }}>Complete KYC Verification</p>
-            <p style={{ color: isDark ? 'rgba(199,210,254,0.6)' : '#6366F1', fontSize: '10px', margin: 0 }}>Unlock all features and higher limits</p>
+      {/* ── KYC BANNER — only when not verified ── */}
+      {!balance?.kyc_verified && (
+        <motion.div
+          style={{ margin: '16px 16px 0', borderRadius: '18px', overflow: 'hidden', background: isDark ? 'linear-gradient(135deg,#1E1B4B,#312E81)' : 'linear-gradient(135deg,#EEF2FF,#E0E7FF)', border: `1px solid ${isDark ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.2)'}`, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+          initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.35 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => navigate('/kyc')}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <motion.div
+              style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'linear-gradient(135deg,#6366F1,#4F46E5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.4)', flexShrink: 0 }}
+              animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 3, repeat: Infinity }}
+            >
+              <Sparkles size={18} color="#fff" />
+            </motion.div>
+            <div>
+              <p style={{ color: isDark ? '#C7D2FE' : '#4338CA', fontSize: '12px', fontWeight: '700', margin: '0 0 2px 0' }}>Complete KYC Verification</p>
+              <p style={{ color: isDark ? 'rgba(199,210,254,0.6)' : '#6366F1', fontSize: '10px', margin: 0 }}>Unlock all features and higher limits</p>
+            </div>
           </div>
-        </div>
-        <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <ChevronRight size={14} color={isDark ? '#818CF8' : '#4F46E5'} />
-        </div>
-      </motion.div>
+          <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <ChevronRight size={14} color={isDark ? '#818CF8' : '#4F46E5'} />
+          </div>
+        </motion.div>
+      )}
 
       {/* ── RECENT TRANSACTIONS ── */}
       <motion.div
@@ -473,7 +446,7 @@ export default function Dashboard() {
               return (
                 <motion.div
                   key={i}
-                  style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 18px', borderTop: i === 0 ? `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` : `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`, cursor: 'pointer', transition: 'background 0.15s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 18px', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`, cursor: 'pointer' }}
                   whileHover={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}
                   whileTap={{ scale: 0.99 }}
                   initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
@@ -492,12 +465,9 @@ export default function Dashboard() {
                     setShowReceipt(true);
                   }}
                 >
-                  {/* Icon */}
                   <div style={{ width: '42px', height: '42px', borderRadius: '14px', background: bg, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {icon}
                   </div>
-
-                  {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ color: isDark ? '#F0F6FC' : '#0F172A', fontSize: '13px', fontWeight: '600', margin: '0 0 3px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {getTxLabel(tx)}
@@ -510,8 +480,6 @@ export default function Dashboard() {
                       </span>
                     </div>
                   </div>
-
-                  {/* Amount */}
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <p style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 3px 0', color: tx.direction === 'credit' ? '#16A34A' : isDark ? '#F0F6FC' : '#0F172A' }}>
                       {tx.direction === 'credit' ? '+' : '-'} PKR {tx.amount?.toLocaleString()}
@@ -529,11 +497,11 @@ export default function Dashboard() {
 
       {/* ── BOTTOM NAV ── */}
       <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '480px', zIndex: 100, padding: '0 16px 24px', boxSizing: 'border-box', pointerEvents: 'none' }}>
-        <div style={{ background: isDark ? 'rgba(15,20,40,0.85)' : 'rgba(255,255,255,0.9)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: '24px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`, boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.12)', display: 'flex', justifyContent: 'space-around', padding: '10px 8px', pointerEvents: 'all' }}>
+        <div style={{ background: isDark ? 'rgba(15,20,40,0.88)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: '24px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`, boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.12)', display: 'flex', justifyContent: 'space-around', padding: '10px 8px', pointerEvents: 'all' }}>
           {navTabs.map((tab) => {
-            const Icon = tab.icon;
+            const Icon    = tab.icon;
             const isActive = activeTab === tab.id;
-            const isScan = tab.id === 'scan';
+            const isScan   = tab.id === 'scan';
             return (
               <motion.div
                 key={tab.id}
@@ -548,15 +516,18 @@ export default function Dashboard() {
                 }}
               >
                 {isScan ? (
-                  <div style={{ width: '44px', height: '44px', borderRadius: '16px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(26,115,232,0.4)', marginTop: '-14px' }}>
-                    <QrCode size={20} color="#fff" />
-                  </div>
+                  <>
+                    <div style={{ width: '46px', height: '46px', borderRadius: '16px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(26,115,232,0.45)', marginTop: '-18px' }}>
+                      <QrCode size={20} color="#fff" />
+                    </div>
+                    <span style={{ fontSize: '9px', color: isDark ? 'rgba(255,255,255,0.4)' : '#94A3B8', fontWeight: '500', marginTop: '2px' }}>Scan</span>
+                  </>
                 ) : (
                   <>
                     <AnimatePresence>
                       {isActive && (
                         <motion.div
-                          style={{ position: 'absolute', top: '4px', width: '32px', height: '32px', borderRadius: '12px', background: 'rgba(26,115,232,0.12)', zIndex: 0 }}
+                          style={{ position: 'absolute', top: '4px', width: '34px', height: '34px', borderRadius: '12px', background: 'rgba(26,115,232,0.12)' }}
                           initial={{ opacity: 0, scale: 0.6 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.6 }}
@@ -564,14 +535,14 @@ export default function Dashboard() {
                         />
                       )}
                     </AnimatePresence>
-                    <div style={{ position: 'relative', zIndex: 1, width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Icon size={19} color={isActive ? '#1A73E8' : isDark ? 'rgba(255,255,255,0.4)' : '#94A3B8'} strokeWidth={isActive ? 2.5 : 1.8} />
+                    <div style={{ position: 'relative', zIndex: 1, width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon size={19} color={isActive ? '#1A73E8' : isDark ? 'rgba(255,255,255,0.38)' : '#94A3B8'} strokeWidth={isActive ? 2.5 : 1.8} />
                     </div>
+                    <span style={{ fontSize: '9px', color: isActive ? '#1A73E8' : isDark ? 'rgba(255,255,255,0.35)' : '#94A3B8', fontWeight: isActive ? '700' : '500', letterSpacing: '0.2px' }}>
+                      {tab.label}
+                    </span>
                   </>
                 )}
-                <span style={{ fontSize: '9px', color: isScan ? (isDark ? 'rgba(255,255,255,0.5)' : '#94A3B8') : isActive ? '#1A73E8' : isDark ? 'rgba(255,255,255,0.35)' : '#94A3B8', fontWeight: isActive ? '700' : '500', letterSpacing: '0.2px' }}>
-                  {tab.label}
-                </span>
               </motion.div>
             );
           })}
@@ -591,7 +562,6 @@ export default function Dashboard() {
               initial={{ y: 500 }} animate={{ y: 0 }} exit={{ y: 500 }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
             >
-              {/* Handle */}
               <div style={{ width: '40px', height: '4px', background: isDark ? 'rgba(255,255,255,0.12)' : '#E2E8F0', borderRadius: '2px', margin: '0 auto 24px' }} />
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '24px' }}>
@@ -604,10 +574,9 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Amount input */}
               <div style={{ marginBottom: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', border: `2px solid ${depositAmount ? '#1A73E8' : isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0'}`, borderRadius: '18px', padding: '0 20px', background: isDark ? 'rgba(255,255,255,0.04)' : '#F8FAFF', transition: 'all 0.2s', boxShadow: depositAmount ? '0 0 0 4px rgba(26,115,232,0.1)' : 'none' }}>
-                  <span style={{ color: isDark ? 'rgba(255,255,255,0.4)' : '#94A3B8', fontSize: '20px', fontWeight: '600', marginRight: '10px' }}>PKR</span>
+                  <span style={{ color: isDark ? 'rgba(255,255,255,0.35)' : '#94A3B8', fontSize: '20px', fontWeight: '600', marginRight: '10px' }}>PKR</span>
                   <input
                     style={{ flex: 1, padding: '18px 0', border: 'none', background: 'transparent', color: isDark ? '#F0F6FC' : '#0F172A', fontSize: '30px', fontWeight: '800', outline: 'none', letterSpacing: '-1px' }}
                     type="number" placeholder="0" value={depositAmount}
@@ -616,12 +585,11 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Quick amounts */}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
                 {[500, 1000, 5000, 10000].map(amt => (
                   <motion.button
                     key={amt}
-                    style={{ flex: 1, padding: '10px 4px', background: depositAmount == amt ? 'linear-gradient(135deg,#1A73E8,#0052CC)' : isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9', color: depositAmount == amt ? '#fff' : isDark ? 'rgba(255,255,255,0.6)' : '#64748B', border: `1px solid ${depositAmount == amt ? 'transparent' : isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0'}`, borderRadius: '12px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', boxShadow: depositAmount == amt ? '0 4px 12px rgba(26,115,232,0.35)' : 'none' }}
+                    style={{ flex: 1, padding: '10px 4px', background: depositAmount == amt ? 'linear-gradient(135deg,#1A73E8,#0052CC)' : isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9', color: depositAmount == amt ? '#fff' : isDark ? 'rgba(255,255,255,0.55)' : '#64748B', border: `1px solid ${depositAmount == amt ? 'transparent' : isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0'}`, borderRadius: '12px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', boxShadow: depositAmount == amt ? '0 4px 12px rgba(26,115,232,0.35)' : 'none' }}
                     whileTap={{ scale: 0.93 }} onClick={() => setDepositAmount(String(amt))}
                   >
                     {amt >= 1000 ? `${amt/1000}K` : amt}
@@ -630,7 +598,7 @@ export default function Dashboard() {
               </div>
 
               <motion.button
-                style={{ width: '100%', padding: '17px', background: depositAmount ? 'linear-gradient(135deg,#16A34A,#15803D)' : isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9', color: depositAmount ? '#fff' : isDark ? 'rgba(255,255,255,0.25)' : '#CBD5E1', border: 'none', borderRadius: '16px', fontSize: '15px', fontWeight: '800', cursor: depositAmount ? 'pointer' : 'not-allowed', marginBottom: '10px', boxShadow: depositAmount ? '0 8px 24px rgba(22,163,74,0.35)' : 'none', transition: 'all 0.25s', letterSpacing: '0.2px' }}
+                style={{ width: '100%', padding: '17px', background: depositAmount ? 'linear-gradient(135deg,#16A34A,#15803D)' : isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9', color: depositAmount ? '#fff' : isDark ? 'rgba(255,255,255,0.2)' : '#CBD5E1', border: 'none', borderRadius: '16px', fontSize: '15px', fontWeight: '800', cursor: depositAmount ? 'pointer' : 'not-allowed', marginBottom: '10px', boxShadow: depositAmount ? '0 8px 24px rgba(22,163,74,0.35)' : 'none', transition: 'all 0.25s', letterSpacing: '0.2px' }}
                 whileTap={depositAmount ? { scale: 0.97 } : {}} onClick={handleDeposit} disabled={actionLoading}
               >
                 {actionLoading
@@ -639,7 +607,7 @@ export default function Dashboard() {
                 }
               </motion.button>
               <motion.button
-                style={{ width: '100%', padding: '14px', background: 'transparent', color: isDark ? 'rgba(255,255,255,0.4)' : '#94A3B8', border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0'}`, borderRadius: '14px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}
+                style={{ width: '100%', padding: '14px', background: 'transparent', color: isDark ? 'rgba(255,255,255,0.35)' : '#94A3B8', border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0'}`, borderRadius: '14px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}
                 whileTap={{ scale: 0.97 }} onClick={() => setShowDeposit(false)}
               >Cancel</motion.button>
             </motion.div>
@@ -662,7 +630,6 @@ export default function Dashboard() {
               exit={{ scale: 0.8, opacity: 0, y: 40 }}
               transition={{ type: 'spring', stiffness: 350, damping: 28 }}
             >
-              {/* Close */}
               <motion.div
                 style={{ position: 'absolute', top: '16px', right: '16px', width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}
                 whileTap={{ scale: 0.9 }} onClick={() => setShowReceipt(false)}
@@ -670,10 +637,9 @@ export default function Dashboard() {
                 <X size={14} color="#fff" />
               </motion.div>
 
-              {/* Header */}
               <div style={{ background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', padding: '28px 24px', textAlign: 'center' }}>
                 <motion.div
-                  style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', border: '2px solid rgba(255,255,255,0.3)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}
+                  style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', border: '2px solid rgba(255,255,255,0.3)' }}
                   initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
                   transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
                 >
@@ -691,7 +657,6 @@ export default function Dashboard() {
                 </span>
               </div>
 
-              {/* Details */}
               <div style={{ padding: '16px 20px' }}>
                 {[
                   { label: 'Type',      value: receiptData.type },
@@ -713,10 +678,9 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {/* Actions */}
               <div style={{ display: 'flex', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9'}` }}>
                 <motion.button
-                  style={{ flex: 1, padding: '14px', background: 'transparent', color: isDark ? 'rgba(255,255,255,0.6)' : '#64748B', border: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9'}` }}
+                  style={{ flex: 1, padding: '14px', background: 'transparent', color: isDark ? 'rgba(255,255,255,0.55)' : '#64748B', border: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9'}` }}
                   whileTap={{ scale: 0.97 }} onClick={handlePrintReceipt}
                 >
                   <Printer size={14} /> Print
