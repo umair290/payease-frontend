@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { authService } from '../services/api';
+import { authService, logActivity } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import {
@@ -12,17 +12,17 @@ import {
 const API_URL = 'https://web-production-91d7.up.railway.app';
 
 const ForgotModal = ({ show, onClose }) => {
-  const [step, setStep] = useState(1);
-  const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [step,            setStep]            = useState(1);
+  const [email,           setEmail]           = useState('');
+  const [otp,             setOtp]             = useState('');
+  const [newPassword,     setNewPassword]     = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPw, setShowPw] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [countdown, setCountdown] = useState(0);
-  const [success, setSuccess] = useState(false);
+  const [showPw,          setShowPw]          = useState(false);
+  const [showConfirm,     setShowConfirm]     = useState(false);
+  const [loading,         setLoading]         = useState(false);
+  const [error,           setError]           = useState('');
+  const [countdown,       setCountdown]       = useState(0);
+  const [success,         setSuccess]         = useState(false);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -54,8 +54,8 @@ const ForgotModal = ({ show, onClose }) => {
   };
 
   const resetPassword = async () => {
-    if (otp.length !== 6) { setError('Enter the 6-digit OTP'); return; }
-    if (newPassword.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (otp.length !== 6)              { setError('Enter the 6-digit OTP'); return; }
+    if (newPassword.length < 6)        { setError('Password must be at least 6 characters'); return; }
     if (newPassword !== confirmPassword) { setError('Passwords do not match'); return; }
     setLoading(true); setError('');
     try {
@@ -83,7 +83,6 @@ const ForgotModal = ({ show, onClose }) => {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={handleClose}
           />
-
           <motion.div
             style={{ background: '#fff', borderRadius: '24px', width: '100%', maxWidth: '360px', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', position: 'relative', zIndex: 1 }}
             initial={{ scale: 0.85, opacity: 0, y: 40 }}
@@ -104,7 +103,6 @@ const ForgotModal = ({ show, onClose }) => {
                   <ArrowLeft size={16} color="#fff" />
                 </motion.div>
               )}
-
               <motion.div
                 style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}
                 initial={{ scale: 0, rotate: -180 }}
@@ -113,15 +111,13 @@ const ForgotModal = ({ show, onClose }) => {
               >
                 {success ? <CheckCircle size={24} color="#fff" /> : <Key size={24} color="#fff" />}
               </motion.div>
-
               <motion.h3
                 style={{ color: '#fff', fontSize: '17px', fontWeight: 'bold', margin: '0 0 3px 0' }}
                 key={`title-${step}-${success}`}
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
               >
-                {success ? '🎉 Password Reset!' : step === 1 ? 'Forgot Password?' : 'Reset Password'}
+                {success ? 'Password Reset!' : step === 1 ? 'Forgot Password?' : 'Reset Password'}
               </motion.h3>
-
               <motion.p
                 style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', margin: '0 0 12px 0' }}
                 key={`sub-${step}-${success}`}
@@ -131,7 +127,6 @@ const ForgotModal = ({ show, onClose }) => {
                   : step === 1 ? 'Enter your email to receive a reset code'
                   : `Code sent to ${email}`}
               </motion.p>
-
               {!success && (
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }}>
                   {[1, 2].map(s => (
@@ -172,11 +167,10 @@ const ForgotModal = ({ show, onClose }) => {
                   {step === 1 && (
                     <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
                       <p style={{ color: '#888', fontSize: '12px', textAlign: 'center', margin: '0 0 14px 0', lineHeight: '1.6' }}>
-                        Enter your registered email and we'll send a 6-digit verification code.
+                        Enter your registered email and we will send a 6-digit verification code.
                       </p>
-
                       <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${email ? '#1A73E8' : '#CBD5E0'}`, borderRadius: '12px', padding: '0 14px', background: '#F8FAFF', marginBottom: '12px', transition: 'all 0.2s', boxShadow: email ? '0 0 0 3px rgba(26,115,232,0.08)' : 'none' }}>
-                        <Mail size={15} color={email ? '#1A73E8' : '#94A3B8'} style={{ flexShrink: 0, marginRight: '10px', transition: 'color 0.2s' }} />
+                        <Mail size={15} color={email ? '#1A73E8' : '#94A3B8'} style={{ flexShrink: 0, marginRight: '10px' }} />
                         <input
                           style={{ flex: 1, padding: '12px 0', border: 'none', background: 'transparent', color: '#1A1A2E', fontSize: '14px', outline: 'none' }}
                           type="email" placeholder="your@email.com"
@@ -185,14 +179,12 @@ const ForgotModal = ({ show, onClose }) => {
                           autoFocus
                         />
                       </div>
-
                       {error && (
                         <motion.div style={{ background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '10px', padding: '8px 12px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
                           <AlertCircle size={13} color="#FF4444" />
                           <span style={{ color: '#FF4444', fontSize: '12px' }}>{error}</span>
                         </motion.div>
                       )}
-
                       <motion.button
                         style={{ width: '100%', padding: '13px', background: email ? 'linear-gradient(135deg, #1A73E8, #0052CC)' : '#E2E8F0', color: email ? '#fff' : '#94A3B8', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', cursor: email ? 'pointer' : 'not-allowed', boxShadow: email ? '0 4px 16px rgba(26,115,232,0.3)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', transition: 'all 0.25s' }}
                         whileTap={email ? { scale: 0.97 } : {}} onClick={sendOtp} disabled={loading}
@@ -202,45 +194,37 @@ const ForgotModal = ({ show, onClose }) => {
                           : <><Mail size={15} color={email ? '#fff' : '#94A3B8'} /> Send Verification Code</>
                         }
                       </motion.button>
-
                       <motion.button
                         style={{ width: '100%', padding: '11px', background: 'transparent', color: '#94A3B8', border: '1.5px solid #E2E8F0', borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }}
                         whileTap={{ scale: 0.97 }} onClick={handleClose}
-                      >
-                        Cancel
-                      </motion.button>
+                      >Cancel</motion.button>
                     </motion.div>
                   )}
 
                   {/* Step 2 */}
                   {step === 2 && (
                     <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-
-                      {/* Email sent confirmation */}
                       <div style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(22,163,74,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <CheckCircle size={16} color="#16A34A" />
                         </div>
                         <div>
                           <p style={{ color: '#16A34A', fontSize: '12px', fontWeight: '700', margin: 0 }}>Code sent!</p>
-                          <p style={{ color: '#888', fontSize: '11px', margin: 0 }}>Check inbox & spam at {email}</p>
+                          <p style={{ color: '#888', fontSize: '11px', margin: 0 }}>Check inbox and spam at {email}</p>
                         </div>
                       </div>
 
-                      {/* OTP Boxes */}
                       <p style={{ color: '#1A1A2E', fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0', textAlign: 'center' }}>Enter 6-Digit Verification Code</p>
                       <div style={{ position: 'relative', marginBottom: '6px' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', padding: '10px', border: `2px solid ${otp.length === 6 ? '#1A73E8' : '#CBD5E0'}`, borderRadius: '14px', background: '#EEF2FF', transition: 'all 0.2s', boxShadow: otp.length === 6 ? '0 0 0 3px rgba(26,115,232,0.08)' : 'none' }}>
                           {[0, 1, 2, 3, 4, 5].map(i => (
                             <motion.div
                               key={i}
-                              style={{ width: '30px', height: '36px', borderRadius: '10px', border: `2px solid ${i < otp.length ? '#1A73E8' : '#94A3B8'}`, background: i < otp.length ? 'rgba(26,115,232,0.12)' : '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', boxShadow: i < otp.length ? '0 2px 8px rgba(26,115,232,0.2)' : 'inset 0 1px 3px rgba(0,0,0,0.08)' }}
+                              style={{ width: '30px', height: '36px', borderRadius: '10px', border: `2px solid ${i < otp.length ? '#1A73E8' : '#94A3B8'}`, background: i < otp.length ? 'rgba(26,115,232,0.12)' : '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
                               animate={{ scale: i === otp.length - 1 ? [1, 1.12, 1] : 1 }}
                               transition={{ duration: 0.15 }}
                             >
-                              <span style={{ color: '#1A73E8', fontSize: '14px', fontWeight: 'bold' }}>
-                                {otp[i] ? '●' : ''}
-                              </span>
+                              <span style={{ color: '#1A73E8', fontSize: '14px', fontWeight: 'bold' }}>{otp[i] ? '●' : ''}</span>
                             </motion.div>
                           ))}
                         </div>
@@ -252,7 +236,6 @@ const ForgotModal = ({ show, onClose }) => {
                         />
                       </div>
 
-                      {/* Resend */}
                       <div style={{ textAlign: 'center', margin: '4px 0 12px' }}>
                         {countdown > 0
                           ? <span style={{ color: '#94A3B8', fontSize: '11px' }}>Resend in <strong style={{ color: '#1A1A2E' }}>{countdown}s</strong></span>
@@ -262,9 +245,8 @@ const ForgotModal = ({ show, onClose }) => {
                         }
                       </div>
 
-                      {/* New Password */}
-                      <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${newPassword ? '#1A73E8' : '#CBD5E0'}`, borderRadius: '11px', padding: '0 12px', background: '#F8FAFF', marginBottom: '8px', transition: 'all 0.2s', boxShadow: newPassword ? '0 0 0 3px rgba(26,115,232,0.08)' : 'none' }}>
-                        <Lock size={14} color={newPassword ? '#1A73E8' : '#94A3B8'} style={{ flexShrink: 0, marginRight: '8px', transition: 'color 0.2s' }} />
+                      <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${newPassword ? '#1A73E8' : '#CBD5E0'}`, borderRadius: '11px', padding: '0 12px', background: '#F8FAFF', marginBottom: '8px', transition: 'all 0.2s' }}>
+                        <Lock size={14} color={newPassword ? '#1A73E8' : '#94A3B8'} style={{ flexShrink: 0, marginRight: '8px' }} />
                         <input
                           style={{ flex: 1, padding: '11px 0', border: 'none', background: 'transparent', color: '#1A1A2E', fontSize: '13px', outline: 'none' }}
                           type={showPw ? 'text' : 'password'} placeholder="New password (min 6 chars)"
@@ -275,9 +257,8 @@ const ForgotModal = ({ show, onClose }) => {
                         </motion.div>
                       </div>
 
-                      {/* Confirm Password */}
                       <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${confirmPassword ? (confirmPassword === newPassword ? '#00C853' : '#FF4444') : '#CBD5E0'}`, borderRadius: '11px', padding: '0 12px', background: '#F8FAFF', marginBottom: '6px', transition: 'all 0.2s' }}>
-                        <Lock size={14} color={confirmPassword ? (confirmPassword === newPassword ? '#00C853' : '#FF4444') : '#94A3B8'} style={{ flexShrink: 0, marginRight: '8px', transition: 'color 0.2s' }} />
+                        <Lock size={14} color={confirmPassword ? (confirmPassword === newPassword ? '#00C853' : '#FF4444') : '#94A3B8'} style={{ flexShrink: 0, marginRight: '8px' }} />
                         <input
                           style={{ flex: 1, padding: '11px 0', border: 'none', background: 'transparent', color: '#1A1A2E', fontSize: '13px', outline: 'none' }}
                           type={showConfirm ? 'text' : 'password'} placeholder="Confirm new password"
@@ -288,7 +269,6 @@ const ForgotModal = ({ show, onClose }) => {
                         </motion.div>
                       </div>
 
-                      {/* Match indicator */}
                       {confirmPassword.length > 0 && (
                         <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                           {confirmPassword === newPassword
@@ -306,7 +286,7 @@ const ForgotModal = ({ show, onClose }) => {
                       )}
 
                       <motion.button
-                        style={{ width: '100%', padding: '13px', background: otp.length === 6 && newPassword && confirmPassword === newPassword ? 'linear-gradient(135deg, #1A73E8, #0052CC)' : '#E2E8F0', color: otp.length === 6 && newPassword && confirmPassword === newPassword ? '#fff' : '#94A3B8', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', boxShadow: otp.length === 6 ? '0 4px 16px rgba(26,115,232,0.3)' : 'none', transition: 'all 0.25s' }}
+                        style={{ width: '100%', padding: '13px', background: otp.length === 6 && newPassword && confirmPassword === newPassword ? 'linear-gradient(135deg, #1A73E8, #0052CC)' : '#E2E8F0', color: otp.length === 6 && newPassword && confirmPassword === newPassword ? '#fff' : '#94A3B8', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.25s' }}
                         whileTap={{ scale: 0.97 }} onClick={resetPassword} disabled={loading}
                       >
                         {loading
@@ -327,18 +307,20 @@ const ForgotModal = ({ show, onClose }) => {
 };
 
 export default function Login() {
-  const [showSplash, setShowSplash] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
-  const [showForgot, setShowForgot] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [showSplash,    setShowSplash]    = useState(true);
+  const [email,         setEmail]         = useState('');
+  const [password,      setPassword]      = useState('');
+  const [error,         setError]         = useState('');
+  const [loading,       setLoading]       = useState(false);
+  const [showPassword,  setShowPassword]  = useState(false);
+  const [focusedField,  setFocusedField]  = useState(null);
+  const [showForgot,    setShowForgot]    = useState(false);
+  const { login }   = useAuth();
+  const navigate    = useNavigate();
 
   useEffect(() => {
+    // Check onboarding per user — but we don't know email yet
+    // so only redirect to onboarding AFTER login succeeds (see handleLogin)
     const timer = setTimeout(() => setShowSplash(false), 2500);
     return () => clearTimeout(timer);
   }, []);
@@ -349,11 +331,40 @@ export default function Login() {
     setError('');
     try {
       const res = await authService.login({ email, password });
-      login(res.data.user, res.data.access_token);
-      if (res.data.user?.is_admin) navigate('/admin');
-      else navigate('/dashboard');
+      const userData = res.data.user;
+      const token    = res.data.access_token;
+
+      // Login to context
+      login(userData, token);
+
+      // ── Activity log (after token is set) ──
+      // Small delay so token is in localStorage before logActivity runs
+      setTimeout(() => {
+        logActivity(
+          'User Login',
+          `Logged in from web browser — ${new Date().toLocaleString('en-PK')}`
+        );
+      }, 600);
+
+      // ── Admin → go to admin dashboard ──
+      if (userData?.is_admin) {
+        navigate('/admin');
+        return;
+      }
+
+      // ── Per-user onboarding check ──
+      // Key is unique per email so each new account gets onboarding
+      const onboardingKey = `payease_onboarded_${email.toLowerCase().trim()}`;
+      if (!localStorage.getItem(onboardingKey)) {
+        // Save email temporarily so Onboarding.js knows which key to set
+        localStorage.setItem('payease_pending_onboard_email', email.toLowerCase().trim());
+        navigate('/onboarding');
+      } else {
+        navigate('/dashboard');
+      }
+
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed');
+      setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
     }
     setLoading(false);
   };
@@ -410,7 +421,7 @@ export default function Login() {
               </motion.div>
 
               <motion.h2 style={styles.welcomeTitle} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-                Welcome Back 👋
+                Welcome Back
               </motion.h2>
               <motion.p style={styles.welcomeSub} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
                 Sign in to your account
@@ -435,7 +446,7 @@ export default function Login() {
                 <div style={styles.fieldGroup}>
                   <label style={styles.label}>Email Address</label>
                   <div style={{ ...styles.inputBox, borderColor: focusedField === 'email' ? '#1A73E8' : '#E0E6F0', boxShadow: focusedField === 'email' ? '0 0 0 3px rgba(26,115,232,0.12)' : 'none' }}>
-                    <Mail size={16} color={focusedField === 'email' ? '#1A73E8' : '#888'} style={{ flexShrink: 0, marginRight: '10px', transition: 'color 0.2s' }} />
+                    <Mail size={16} color={focusedField === 'email' ? '#1A73E8' : '#888'} style={{ flexShrink: 0, marginRight: '10px' }} />
                     <input
                       style={styles.input}
                       type="email" placeholder="example@gmail.com"
@@ -454,14 +465,13 @@ export default function Login() {
                     <motion.span
                       style={styles.forgotText}
                       whileTap={{ scale: 0.92 }}
-                      whileHover={{ color: '#0052CC' }}
                       onClick={(e) => { e.preventDefault(); setShowForgot(true); }}
                     >
                       Forgot Password?
                     </motion.span>
                   </div>
                   <div style={{ ...styles.inputBox, borderColor: focusedField === 'password' ? '#1A73E8' : '#E0E6F0', boxShadow: focusedField === 'password' ? '0 0 0 3px rgba(26,115,232,0.12)' : 'none' }}>
-                    <Lock size={16} color={focusedField === 'password' ? '#1A73E8' : '#888'} style={{ flexShrink: 0, marginRight: '10px', transition: 'color 0.2s' }} />
+                    <Lock size={16} color={focusedField === 'password' ? '#1A73E8' : '#888'} style={{ flexShrink: 0, marginRight: '10px' }} />
                     <input
                       style={styles.input}
                       type={showPassword ? 'text' : 'password'}
@@ -515,39 +525,35 @@ export default function Login() {
 }
 
 const styles = {
-  container: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #0d1b35 0%, #1a2a4a 50%, #0d1b35 100%)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-  },
-  splash: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%' },
+  container:       { minHeight: '100vh', background: 'linear-gradient(135deg, #0d1b35 0%, #1a2a4a 50%, #0d1b35 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  splash:          { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%' },
   splashLogoWrapper: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  splashLogo: { width: '90px', height: '90px', borderRadius: '26px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' },
-  splashLogoP: { color: '#fff', fontSize: '44px', fontWeight: 'bold' },
-  splashTitle: { color: '#fff', fontSize: '34px', fontWeight: 'bold', margin: '0 0 8px 0' },
-  splashTagline: { color: 'rgba(255,255,255,0.5)', fontSize: '15px', margin: '0 0 48px 0' },
-  splashDots: { display: 'flex', gap: '8px' },
-  dot: { width: '8px', height: '8px', borderRadius: '50%', background: '#1A73E8' },
-  pageWrapper: { width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' },
-  card: { background: '#fff', borderRadius: '24px', padding: '40px 36px', width: '100%', maxWidth: '420px', boxSizing: 'border-box', boxShadow: '0 24px 80px rgba(0,0,0,0.35)' },
-  logoRow: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', justifyContent: 'center' },
-  logoIcon: { width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  logoP: { color: '#fff', fontSize: '20px', fontWeight: 'bold' },
-  logoText: { color: '#1A1A2E', fontSize: '22px', fontWeight: 'bold' },
-  welcomeTitle: { color: '#1A1A2E', fontSize: '22px', fontWeight: 'bold', margin: '0 0 6px 0', textAlign: 'center' },
-  welcomeSub: { color: '#888', fontSize: '14px', textAlign: 'center', margin: '0 0 24px 0' },
-  errorBox: { background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.3)', color: '#cc0000', padding: '10px 14px', borderRadius: '10px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' },
-  form: { width: '100%' },
-  fieldGroup: { marginBottom: '16px' },
-  label: { color: '#444', fontSize: '13px', fontWeight: '600', display: 'block', marginBottom: '6px' },
-  labelRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' },
-  forgotText: { color: '#1A73E8', fontSize: '12px', fontWeight: '600', cursor: 'pointer', userSelect: 'none' },
-  inputBox: { display: 'flex', alignItems: 'center', border: '1.5px solid #E0E6F0', borderRadius: '12px', padding: '0 14px', background: '#F8FAFF', transition: 'border-color 0.2s, box-shadow 0.2s' },
-  input: { flex: 1, padding: '13px 0', border: 'none', background: 'transparent', color: '#1A1A2E', fontSize: '14px', outline: 'none', minWidth: 0 },
-  eyeBtn: { cursor: 'pointer', opacity: 0.6, userSelect: 'none', flexShrink: 0, display: 'flex', alignItems: 'center' },
-  loginBtn: { width: '100%', padding: '14px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px', boxShadow: '0 6px 20px rgba(26,115,232,0.35)', boxSizing: 'border-box', transition: 'all 0.2s' },
-  divider: { display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0 12px' },
-  dividerLine: { flex: 1, height: '1px', background: '#E0E6F0' },
-  dividerText: { color: '#aaa', fontSize: '12px', whiteSpace: 'nowrap' },
-  registerBtn: { width: '100%', padding: '13px', background: '#F8FAFF', color: '#1A73E8', border: '1.5px solid #E0E6F0', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', boxSizing: 'border-box' },
+  splashLogo:      { width: '90px', height: '90px', borderRadius: '26px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' },
+  splashLogoP:     { color: '#fff', fontSize: '44px', fontWeight: 'bold' },
+  splashTitle:     { color: '#fff', fontSize: '34px', fontWeight: 'bold', margin: '0 0 8px 0' },
+  splashTagline:   { color: 'rgba(255,255,255,0.5)', fontSize: '15px', margin: '0 0 48px 0' },
+  splashDots:      { display: 'flex', gap: '8px' },
+  dot:             { width: '8px', height: '8px', borderRadius: '50%', background: '#1A73E8' },
+  pageWrapper:     { width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' },
+  card:            { background: '#fff', borderRadius: '24px', padding: '40px 36px', width: '100%', maxWidth: '420px', boxSizing: 'border-box', boxShadow: '0 24px 80px rgba(0,0,0,0.35)' },
+  logoRow:         { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', justifyContent: 'center' },
+  logoIcon:        { width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  logoP:           { color: '#fff', fontSize: '20px', fontWeight: 'bold' },
+  logoText:        { color: '#1A1A2E', fontSize: '22px', fontWeight: 'bold' },
+  welcomeTitle:    { color: '#1A1A2E', fontSize: '22px', fontWeight: 'bold', margin: '0 0 6px 0', textAlign: 'center' },
+  welcomeSub:      { color: '#888', fontSize: '14px', textAlign: 'center', margin: '0 0 24px 0' },
+  errorBox:        { background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.3)', color: '#cc0000', padding: '10px 14px', borderRadius: '10px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' },
+  form:            { width: '100%' },
+  fieldGroup:      { marginBottom: '16px' },
+  label:           { color: '#444', fontSize: '13px', fontWeight: '600', display: 'block', marginBottom: '6px' },
+  labelRow:        { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' },
+  forgotText:      { color: '#1A73E8', fontSize: '12px', fontWeight: '600', cursor: 'pointer', userSelect: 'none' },
+  inputBox:        { display: 'flex', alignItems: 'center', border: '1.5px solid #E0E6F0', borderRadius: '12px', padding: '0 14px', background: '#F8FAFF', transition: 'border-color 0.2s, box-shadow 0.2s' },
+  input:           { flex: 1, padding: '13px 0', border: 'none', background: 'transparent', color: '#1A1A2E', fontSize: '14px', outline: 'none', minWidth: 0 },
+  eyeBtn:          { cursor: 'pointer', opacity: 0.6, userSelect: 'none', flexShrink: 0, display: 'flex', alignItems: 'center' },
+  loginBtn:        { width: '100%', padding: '14px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px', boxShadow: '0 6px 20px rgba(26,115,232,0.35)', boxSizing: 'border-box', transition: 'all 0.2s' },
+  divider:         { display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0 12px' },
+  dividerLine:     { flex: 1, height: '1px', background: '#E0E6F0' },
+  dividerText:     { color: '#aaa', fontSize: '12px', whiteSpace: 'nowrap' },
+  registerBtn:     { width: '100%', padding: '13px', background: '#F8FAFF', color: '#1A73E8', border: '1.5px solid #E0E6F0', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', boxSizing: 'border-box' },
 };

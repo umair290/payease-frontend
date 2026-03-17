@@ -47,9 +47,9 @@ const SLIDES = [
 ];
 
 export default function Onboarding() {
-  const { colors }              = useTheme();
-  const navigate                = useNavigate();
-  const [current, setCurrent]   = useState(0);
+  const { colors }                = useTheme();
+  const navigate                  = useNavigate();
+  const [current,   setCurrent]   = useState(0);
   const [direction, setDirection] = useState(1);
 
   // Auto advance every 4 seconds
@@ -77,17 +77,30 @@ export default function Onboarding() {
     }
   };
 
+  // ── KEY FIX: per-user onboarding flag ──
   const finish = () => {
-    localStorage.setItem('payease_onboarded', 'true');
-    navigate('/login');
+    // Login.js saves the email here before redirecting to onboarding
+    const pendingEmail = localStorage.getItem('payease_pending_onboard_email');
+    if (pendingEmail) {
+      // Mark this specific email as onboarded
+      localStorage.setItem(`payease_onboarded_${pendingEmail}`, 'true');
+      // Clean up the temp key
+      localStorage.removeItem('payease_pending_onboard_email');
+      // Go to dashboard since user is already logged in
+      navigate('/dashboard');
+    } else {
+      // Fallback: came from direct URL or register flow
+      // Just go to login
+      navigate('/login');
+    }
   };
 
   const slide = SLIDES[current];
 
   const variants = {
-    enter:  (dir) => ({ x: dir > 0 ? 60  : -60,  opacity: 0 }),
-    center: ()    => ({ x: 0,               opacity: 1 }),
-    exit:   (dir) => ({ x: dir > 0 ? -60 : 60,   opacity: 0 }),
+    enter:  (dir) => ({ x: dir > 0 ? 60  : -60, opacity: 0 }),
+    center: ()    => ({ x: 0,                    opacity: 1 }),
+    exit:   (dir) => ({ x: dir > 0 ? -60 : 60,  opacity: 0 }),
   };
 
   return (
@@ -123,7 +136,6 @@ export default function Onboarding() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
-              {/* Outer ring */}
               <div style={{ position: 'absolute', inset: '-12px', borderRadius: '40px', border: `2px solid ${slide.accent}`, opacity: 0.15 }} />
               {slide.icon}
             </motion.div>
