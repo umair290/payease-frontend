@@ -17,6 +17,7 @@ import Insights from './pages/Insights';
 import VirtualCard from './pages/VirtualCard';
 import useSessionTimeout from './hooks/useSessionTimeout';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
+import ChangeRequest from './pages/ChangeRequest';
 
 const LoadingSpinner = () => (
   <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0F4FF' }}>
@@ -125,6 +126,7 @@ function AppRoutes() {
         <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
         <Route path="/insights" element={<PrivateRoute><Insights /></PrivateRoute>} />
         <Route path="/virtual-card" element={<PrivateRoute><VirtualCard /></PrivateRoute>} />
+        <Route path="/change-request" element={<PrivateRoute><ChangeRequest /></PrivateRoute>} />
       </Routes>
     </SessionManager>
   );

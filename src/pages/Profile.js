@@ -12,7 +12,7 @@ import {
   Lock, Mail, Eye, EyeOff, RefreshCw, AlertCircle,
   Phone, Calendar, CreditCard as IdCard,
   BarChart2, MapPin, Smartphone, AlertTriangle,
-  Edit2, Camera, X
+  Edit2, Camera, X, ClipboardList
 } from 'lucide-react';
 
 // ── Reusable Modal ──
@@ -129,24 +129,25 @@ const StepHeader = ({ icon, title, subtitle, steps, currentStep, grad = 'linear-
 export default function Profile() {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme, colors } = useTheme();
-  const navigate  = useNavigate();
-  const fileRef   = useRef(null);
+  const navigate = useNavigate();
+  const fileRef  = useRef(null);
 
   // ── Data ──
-  const [balance,  setBalance]  = useState(null);
-  const [kycInfo,  setKycInfo]  = useState(null);
-  const [avatar,   setAvatar]   = useState(null); // base64 profile pic
-  const [toast,    setToast]    = useState({ msg: '', type: 'success' });
+  const [balance, setBalance] = useState(null);
+  const [kycInfo, setKycInfo] = useState(null);
+  const [avatar,  setAvatar]  = useState(null);
+  const [toast,   setToast]   = useState({ msg: '', type: 'success' });
 
   // ── Modal visibility ──
-  const [showLogout,       setShowLogout]       = useState(false);
-  const [showPersonalInfo, setShowPersonalInfo] = useState(false);
-  const [showEditProfile,  setShowEditProfile]  = useState(false);
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [showChangePin,    setShowChangePin]    = useState(false);
+  const [showLogout,          setShowLogout]          = useState(false);
+  const [showPersonalInfo,    setShowPersonalInfo]    = useState(false);
+  const [showEditProfile,     setShowEditProfile]     = useState(false);
+  const [showChangePassword,  setShowChangePassword]  = useState(false);
+  const [showChangePin,       setShowChangePin]       = useState(false);
+  const [showChangeRequest,   setShowChangeRequest]   = useState(false);
 
   // ── Edit Profile state ──
-  const [editStep,      setEditStep]      = useState(1); // 1=form, 2=otp
+  const [editStep,      setEditStep]      = useState(1);
   const [editName,      setEditName]      = useState('');
   const [editPhone,     setEditPhone]     = useState('');
   const [editOtp,       setEditOtp]       = useState('');
@@ -156,16 +157,16 @@ export default function Profile() {
   const [editCountdown, setEditCountdown] = useState(0);
 
   // ── Change Password state ──
-  const [pwStep,           setPwStep]           = useState(1);
-  const [pwOtp,            setPwOtp]            = useState('');
-  const [newPassword,      setNewPassword]      = useState('');
-  const [confirmPassword,  setConfirmPassword]  = useState('');
-  const [showNewPw,        setShowNewPw]        = useState(false);
-  const [showConfirmPw,    setShowConfirmPw]    = useState(false);
-  const [pwLoading,        setPwLoading]        = useState(false);
-  const [pwError,          setPwError]          = useState('');
-  const [pwEmail,          setPwEmail]          = useState('');
-  const [pwCountdown,      setPwCountdown]      = useState(0);
+  const [pwStep,          setPwStep]          = useState(1);
+  const [pwOtp,           setPwOtp]           = useState('');
+  const [newPassword,     setNewPassword]     = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPw,       setShowNewPw]       = useState(false);
+  const [showConfirmPw,   setShowConfirmPw]   = useState(false);
+  const [pwLoading,       setPwLoading]       = useState(false);
+  const [pwError,         setPwError]         = useState('');
+  const [pwEmail,         setPwEmail]         = useState('');
+  const [pwCountdown,     setPwCountdown]     = useState(0);
 
   // ── Change PIN state ──
   const [pinStep,      setPinStep]      = useState(1);
@@ -176,6 +177,46 @@ export default function Profile() {
   const [pinError,     setPinError]     = useState('');
   const [pinEmail,     setPinEmail]     = useState('');
   const [pinCountdown, setPinCountdown] = useState(0);
+
+  // ── Change Request state ──
+  const [crStep,       setCrStep]       = useState(1);
+  const [crField,      setCrField]      = useState('');
+  const [crValue,      setCrValue]      = useState('');
+  const [crReason,     setCrReason]     = useState('');
+  const [crLoading,    setCrLoading]    = useState(false);
+  const [crError,      setCrError]      = useState('');
+  const [crSuccess,    setCrSuccess]    = useState(false);
+
+  const CR_FIELDS = [
+    { id: 'date_of_birth',    label: 'Date of Birth',  icon: <Calendar size={18} color="#FFB300" />,    bg: 'rgba(255,179,0,0.1)',    placeholder: 'e.g. 01-01-1995',           desc: 'Correct your registered date of birth' },
+    { id: 'cnic_number',      label: 'CNIC Number',    icon: <IdCard size={18} color="#1A73E8" />,      bg: 'rgba(26,115,232,0.1)',   placeholder: 'e.g. 12345-1234567-1',       desc: 'Correct your national identity number' },
+    { id: 'full_name_on_card',label: 'Name on CNIC',   icon: <User size={18} color="#7C3AED" />,        bg: 'rgba(124,58,237,0.1)',   placeholder: 'Name exactly as on your CNIC', desc: 'Correct the name as shown on your CNIC' },
+  ];
+
+  const selectedCrField = CR_FIELDS.find(f => f.id === crField);
+
+  const resetCr = () => {
+    setCrStep(1); setCrField(''); setCrValue('');
+    setCrReason(''); setCrError(''); setCrSuccess(false);
+  };
+
+  const submitChangeRequest = async () => {
+    if (!crValue.trim())  { setCrError('Please enter the new value'); return; }
+    if (!crReason.trim()) { setCrError('Please provide a reason'); return; }
+    if (crReason.trim().length < 10) { setCrError('Please provide more detail (at least 10 characters)'); return; }
+    setCrLoading(true); setCrError('');
+    try {
+      await api.post('/api/admin/change-requests/submit', {
+        field:  crField,
+        value:  crValue.trim(),
+        reason: crReason.trim(),
+      });
+      setCrSuccess(true);
+    } catch (err) {
+      setCrError(err.response?.data?.error || 'Failed to submit request');
+    }
+    setCrLoading(false);
+  };
 
   // ── Countdown timers ──
   useEffect(() => {
@@ -190,7 +231,6 @@ export default function Profile() {
 
   useEffect(() => {
     loadData();
-    // Load saved avatar from localStorage
     const saved = localStorage.getItem('payease_avatar');
     if (saved) setAvatar(saved);
   }, []);
@@ -292,8 +332,8 @@ export default function Profile() {
   };
 
   const submitChangePassword = async () => {
-    if (pwOtp.length !== 6)           { setPwError('Enter the 6-digit verification code'); return; }
-    if (newPassword.length < 6)       { setPwError('Password must be at least 6 characters'); return; }
+    if (pwOtp.length !== 6)              { setPwError('Enter the 6-digit verification code'); return; }
+    if (newPassword.length < 6)          { setPwError('Password must be at least 6 characters'); return; }
     if (newPassword !== confirmPassword) { setPwError('Passwords do not match'); return; }
     setPwLoading(true); setPwError('');
     try {
@@ -316,9 +356,9 @@ export default function Profile() {
   };
 
   const submitChangePin = async () => {
-    if (pinOtp.length !== 6)     { setPinError('Enter the 6-digit verification code'); return; }
-    if (newPin.length !== 4)     { setPinError('PIN must be 4 digits'); return; }
-    if (newPin !== confirmPin)   { setPinError('PINs do not match'); return; }
+    if (pinOtp.length !== 6)   { setPinError('Enter the 6-digit verification code'); return; }
+    if (newPin.length !== 4)   { setPinError('PIN must be 4 digits'); return; }
+    if (newPin !== confirmPin) { setPinError('PINs do not match'); return; }
     setPinLoading(true); setPinError('');
     try {
       await api.post('/api/otp/change-pin', { otp: pinOtp, new_pin: newPin });
@@ -329,7 +369,6 @@ export default function Profile() {
     setPinLoading(false);
   };
 
-  // ── Open edit profile ──
   const openEditProfile = () => {
     setEditName(balance?.full_name || '');
     setEditPhone(balance?.phone || '');
@@ -341,21 +380,36 @@ export default function Profile() {
     {
       title: 'Account',
       items: [
-        { icon: <User size={18} color="#1A73E8" />,    label: 'Personal Information', sub: 'View and edit your profile',     bg: 'rgba(26,115,232,0.1)',  action: () => setShowPersonalInfo(true) },
-        { icon: <CreditCard size={18} color="#7C3AED" />, label: 'Virtual Card',      sub: 'Your PayEase demo card',         bg: 'rgba(124,58,237,0.1)', action: () => navigate('/virtual-card') },
-        { icon: <BarChart2 size={18} color="#0891B2" />,  label: 'Spending Insights', sub: 'Track your spending habits',     bg: 'rgba(8,145,178,0.1)',  action: () => navigate('/insights') },
-        { icon: <FileText size={18} color="#FF6B35" />,   label: 'KYC Verification',  sub: kycInfo?.status === 'approved' ? 'Verified' : 'Verify your identity', bg: 'rgba(255,107,53,0.1)', action: () => navigate('/kyc') },
-        { icon: <Copy size={18} color="#9C27B0" />,       label: 'Wallet Address',    sub: balance?.wallet_number || 'Tap to copy', bg: 'rgba(156,39,176,0.1)', action: copyWallet, rightIcon: <Copy size={14} color="#9C27B0" /> },
+        { icon: <User size={18} color="#1A73E8" />,         label: 'Personal Information', sub: 'View and edit your profile',                           bg: 'rgba(26,115,232,0.1)',  action: () => setShowPersonalInfo(true) },
+        { icon: <CreditCard size={18} color="#7C3AED" />,   label: 'Virtual Card',         sub: 'Your PayEase demo card',                              bg: 'rgba(124,58,237,0.1)', action: () => navigate('/virtual-card') },
+        { icon: <BarChart2 size={18} color="#0891B2" />,    label: 'Spending Insights',    sub: 'Track your spending habits',                          bg: 'rgba(8,145,178,0.1)',  action: () => navigate('/insights') },
+        { icon: <FileText size={18} color="#FF6B35" />,     label: 'KYC Verification',     sub: kycInfo?.status === 'approved' ? 'Verified' : 'Verify your identity', bg: 'rgba(255,107,53,0.1)', action: () => navigate('/kyc') },
+        { icon: <Copy size={18} color="#9C27B0" />,         label: 'Wallet Address',       sub: balance?.wallet_number || 'Tap to copy',              bg: 'rgba(156,39,176,0.1)', action: copyWallet, rightIcon: <Copy size={14} color="#9C27B0" /> },
+        {
+          icon: <ClipboardList size={18} color="#CA8A04" />,
+          label: 'Change Request',
+          sub: 'Request changes to restricted fields',
+          bg: 'rgba(202,138,4,0.1)',
+          action: () => { resetCr(); setShowChangeRequest(true); },
+          rightIcon: (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ background: 'rgba(202,138,4,0.15)', borderRadius: '20px', padding: '2px 8px' }}>
+                <span style={{ color: '#CA8A04', fontSize: '10px', fontWeight: '700' }}>Admin Only</span>
+              </div>
+              <ChevronRight size={15} color="#CA8A04" />
+            </div>
+          )
+        },
       ]
     },
     {
       title: 'Security',
       items: [
-        { icon: <Key size={18} color="#00C853" />,         label: 'Change Password',   sub: 'Update your account password',        bg: 'rgba(0,200,83,0.1)',   action: () => { setPwStep(1); setPwError(''); setShowChangePassword(true); } },
-        { icon: <Shield size={18} color="#1A73E8" />,      label: 'Change PIN',        sub: 'Update your 4-digit transaction PIN', bg: 'rgba(26,115,232,0.1)', action: () => { setPinStep(1); setPinError(''); setShowChangePin(true); } },
-        { icon: <Smartphone size={18} color="#DC2626" />,  label: 'Active Sessions',   sub: 'Manage logged-in devices',            bg: 'rgba(220,38,38,0.1)',  action: () => showToast('Feature coming soon', 'error') },
-        { icon: <AlertTriangle size={18} color="#CA8A04" />, label: 'Fraud Alerts',    sub: 'Security notifications',              bg: 'rgba(202,138,4,0.1)', action: () => navigate('/notifications') },
-        { icon: <MapPin size={18} color="#7C3AED" />,      label: 'Login Locations',   sub: 'View recent login activity',          bg: 'rgba(124,58,237,0.1)', action: () => showToast('Feature coming soon', 'error') },
+        { icon: <Key size={18} color="#00C853" />,           label: 'Change Password',  sub: 'Update your account password',        bg: 'rgba(0,200,83,0.1)',   action: () => { setPwStep(1); setPwError(''); setShowChangePassword(true); } },
+        { icon: <Shield size={18} color="#1A73E8" />,        label: 'Change PIN',       sub: 'Update your 4-digit transaction PIN', bg: 'rgba(26,115,232,0.1)', action: () => { setPinStep(1); setPinError(''); setShowChangePin(true); } },
+        { icon: <Smartphone size={18} color="#DC2626" />,    label: 'Active Sessions',  sub: 'Manage logged-in devices',            bg: 'rgba(220,38,38,0.1)',  action: () => showToast('Feature coming soon', 'error') },
+        { icon: <AlertTriangle size={18} color="#CA8A04" />, label: 'Fraud Alerts',     sub: 'Security notifications',              bg: 'rgba(202,138,4,0.1)', action: () => navigate('/notifications') },
+        { icon: <MapPin size={18} color="#7C3AED" />,        label: 'Login Locations',  sub: 'View recent login activity',          bg: 'rgba(124,58,237,0.1)', action: () => showToast('Feature coming soon', 'error') },
       ]
     },
     {
@@ -368,7 +422,7 @@ export default function Profile() {
     {
       title: 'Support',
       items: [
-        { icon: <HelpCircle size={18} color="#888" />, label: 'Help & Support', sub: 'FAQs and contact us', bg: 'rgba(136,136,136,0.1)', action: () => navigate('/notifications') },
+        { icon: <HelpCircle size={18} color="#888" />, label: 'Help and Support', sub: 'FAQs and contact us', bg: 'rgba(136,136,136,0.1)', action: () => navigate('/notifications') },
       ]
     }
   ];
@@ -376,7 +430,7 @@ export default function Profile() {
   return (
     <div style={{ minHeight: '100vh', maxWidth: '480px', margin: '0 auto', background: colors.bg }}>
 
-      {/* Hidden file input for avatar */}
+      {/* Hidden file input */}
       <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
 
       {/* Toast */}
@@ -409,7 +463,6 @@ export default function Profile() {
         style={{ background: 'linear-gradient(135deg, #1A73E8, #0052CC)', margin: '16px', borderRadius: '20px', padding: '24px 20px', textAlign: 'center', boxShadow: '0 12px 40px rgba(26,115,232,0.35)' }}
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       >
-        {/* Avatar */}
         <div style={{ position: 'relative', width: '80px', margin: '0 auto 10px' }}>
           <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '3px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
             {avatar
@@ -417,7 +470,6 @@ export default function Profile() {
               : <span style={{ color: '#fff', fontSize: '30px', fontWeight: 'bold' }}>{balance?.full_name?.charAt(0).toUpperCase()}</span>
             }
           </div>
-          {/* Camera button */}
           <motion.div
             style={{ position: 'absolute', bottom: 0, right: 0, width: '26px', height: '26px', borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
             whileTap={{ scale: 0.9 }} onClick={() => fileRef.current?.click()}
@@ -434,7 +486,6 @@ export default function Profile() {
             <Shield size={11} color="#00FF6B" />
             <span style={{ color: '#00FF6B', fontSize: '11px', fontWeight: '600' }}>{kycInfo?.status === 'approved' ? 'KYC Verified' : 'KYC Pending'}</span>
           </div>
-          {/* Edit button */}
           <motion.div
             style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '20px', padding: '4px 12px', cursor: 'pointer' }}
             whileTap={{ scale: 0.95 }} onClick={openEditProfile}
@@ -444,7 +495,6 @@ export default function Profile() {
           </motion.div>
         </div>
 
-        {/* Remove avatar if set */}
         {avatar && (
           <motion.p
             style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', marginTop: '8px', cursor: 'pointer', textDecoration: 'underline' }}
@@ -456,7 +506,7 @@ export default function Profile() {
       </motion.div>
 
       {/* Stats */}
-      <motion.div style={{ margin: '0 16px 16px', borderRadius: '16px', padding: '14px', display: 'flex', background: colors.card, border: `1px solid ${colors.border}`, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      <motion.div style={{ margin: '0 16px 16px', borderRadius: '16px', padding: '14px', display: 'flex', background: colors.card, border: `1px solid ${colors.border}` }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <div style={{ flex: 1, textAlign: 'center' }}>
           <p style={{ fontSize: '15px', fontWeight: 'bold', margin: '0 0 3px 0', color: colors.text }}>PKR {balance?.balance?.toLocaleString() || '0'}</p>
           <p style={{ fontSize: '11px', margin: 0, color: colors.textSecondary }}>Current Balance</p>
@@ -475,7 +525,7 @@ export default function Profile() {
       {menuSections.map((section, si) => (
         <motion.div key={si} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + si * 0.05 }} style={{ margin: '0 16px 10px' }}>
           <p style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 6px 4px', color: colors.textSecondary }}>{section.title}</p>
-          <div style={{ borderRadius: '14px', overflow: 'hidden', background: colors.card, border: `1px solid ${colors.border}`, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+          <div style={{ borderRadius: '14px', overflow: 'hidden', background: colors.card, border: `1px solid ${colors.border}` }}>
             {section.items.map((item, ii) => (
               <motion.div key={ii} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 14px', cursor: 'pointer', borderBottom: ii < section.items.length - 1 ? `1px solid ${colors.border}` : 'none' }} whileTap={{ scale: 0.98 }} onClick={item.action}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: item.bg }}>{item.icon}</div>
@@ -499,14 +549,10 @@ export default function Profile() {
       </motion.div>
 
 
-      {/* ─────────────────────────────────────── */}
-      {/* PERSONAL INFO MODAL                    */}
-      {/* ─────────────────────────────────────── */}
+      {/* ── PERSONAL INFO MODAL ── */}
       <Modal show={showPersonalInfo} onClose={() => setShowPersonalInfo(false)} colors={colors}>
         <StepHeader icon={<User size={24} color="#fff" />} title="Personal Information" subtitle="Your registered account details" steps={0} currentStep={0} />
         <div style={{ padding: '16px' }}>
-
-          {/* Avatar + Name row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '12px', background: colors.actionBg, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
             <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
               {avatar
@@ -527,14 +573,13 @@ export default function Profile() {
             </motion.div>
           </div>
 
-          {/* Info rows */}
           {[
-            { icon: <User size={15} color="#1A73E8" />,     label: 'Full Name',        value: balance?.full_name || 'N/A',             bg: 'rgba(26,115,232,0.1)' },
-            { icon: <Mail size={15} color="#9C27B0" />,     label: 'Email Address',    value: user?.email || 'N/A',                    bg: 'rgba(156,39,176,0.1)' },
-            { icon: <Phone size={15} color="#00C853" />,    label: 'Phone Number',     value: balance?.phone || 'N/A',                 bg: 'rgba(0,200,83,0.1)' },
-            { icon: <IdCard size={15} color="#FF6B35" />,   label: 'CNIC Number',      value: kycInfo?.cnic_number || 'Not submitted', bg: 'rgba(255,107,53,0.1)' },
-            { icon: <Calendar size={15} color="#FFB300" />, label: 'Date of Birth',    value: kycInfo?.date_of_birth || 'Not submitted', bg: 'rgba(255,179,0,0.1)' },
-            { icon: <CreditCard size={15} color="#9C27B0" />, label: 'Wallet ID',      value: balance?.wallet_number || 'N/A',         bg: 'rgba(156,39,176,0.1)', copyable: true },
+            { icon: <User size={15} color="#1A73E8" />,     label: 'Full Name',     value: balance?.full_name || 'N/A',               bg: 'rgba(26,115,232,0.1)' },
+            { icon: <Mail size={15} color="#9C27B0" />,     label: 'Email',         value: user?.email || 'N/A',                      bg: 'rgba(156,39,176,0.1)' },
+            { icon: <Phone size={15} color="#00C853" />,    label: 'Phone',         value: balance?.phone || 'N/A',                   bg: 'rgba(0,200,83,0.1)' },
+            { icon: <IdCard size={15} color="#FF6B35" />,   label: 'CNIC Number',   value: kycInfo?.cnic_number || 'Not submitted',    bg: 'rgba(255,107,53,0.1)' },
+            { icon: <Calendar size={15} color="#FFB300" />, label: 'Date of Birth', value: kycInfo?.date_of_birth || 'Not submitted',  bg: 'rgba(255,179,0,0.1)' },
+            { icon: <CreditCard size={15} color="#9C27B0" />, label: 'Wallet ID',   value: balance?.wallet_number || 'N/A',           bg: 'rgba(156,39,176,0.1)', copyable: true },
           ].map((row, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', borderBottom: i < 5 ? `1px solid ${colors.border}` : 'none' }}>
               <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{row.icon}</div>
@@ -555,13 +600,27 @@ export default function Profile() {
             <Shield size={16} color={kycInfo?.status === 'approved' ? '#00C853' : '#FFB300'} />
             <div>
               <p style={{ color: kycInfo?.status === 'approved' ? '#00C853' : '#FFB300', fontSize: '12px', fontWeight: '700', margin: 0 }}>
-                KYC Status: {kycInfo?.status === 'approved' ? 'Verified' : kycInfo?.status === 'pending' ? 'Under Review' : 'Not Submitted'}
+                KYC: {kycInfo?.status === 'approved' ? 'Verified' : kycInfo?.status === 'pending' ? 'Under Review' : 'Not Submitted'}
               </p>
               <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>
                 {kycInfo?.status === 'approved' ? 'Your identity has been verified' : 'Complete KYC to unlock all features'}
               </p>
             </div>
           </div>
+
+          {/* Change request shortcut */}
+          <motion.div
+            style={{ marginTop: '12px', padding: '12px', background: 'rgba(202,138,4,0.06)', border: '1px solid rgba(202,138,4,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => { setShowPersonalInfo(false); resetCr(); setShowChangeRequest(true); }}
+          >
+            <ClipboardList size={16} color="#CA8A04" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#CA8A04', fontSize: '12px', fontWeight: '700', margin: 0 }}>Need to change CNIC or Date of Birth?</p>
+              <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>Submit a change request for admin review</p>
+            </div>
+            <ChevronRight size={14} color="#CA8A04" />
+          </motion.div>
 
           <motion.button
             style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', marginTop: '14px', boxShadow: '0 4px 16px rgba(26,115,232,0.3)' }}
@@ -571,26 +630,20 @@ export default function Profile() {
       </Modal>
 
 
-      {/* ─────────────────────────────────────── */}
-      {/* EDIT PROFILE MODAL                     */}
-      {/* ─────────────────────────────────────── */}
+      {/* ── EDIT PROFILE MODAL ── */}
       <Modal show={showEditProfile} onClose={() => { setShowEditProfile(false); resetEditProfile(); }} colors={colors}>
         <StepHeader
           icon={<Edit2 size={22} color="#fff" />}
           title="Edit Profile"
           subtitle={editStep === 1 ? 'Step 1 of 2 — Update your information' : 'Step 2 of 2 — Verify your identity'}
-          steps={2}
-          currentStep={editStep}
+          steps={2} currentStep={editStep}
           grad="linear-gradient(135deg, #7C3AED, #5B21B6)"
         />
         <div style={{ padding: '16px' }}>
           <AnimatePresence mode="wait">
-
-            {/* Step 1 — Form */}
             {editStep === 1 && (
               <motion.div key="edit-s1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
-
-                {/* Profile Picture */}
+                {/* Profile Picture row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px', background: colors.actionBg, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
                   <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {avatar
@@ -605,65 +658,42 @@ export default function Profile() {
                   <motion.button
                     style={{ padding: '7px 12px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: '8px', color: '#7C3AED', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
                     whileTap={{ scale: 0.95 }} onClick={() => fileRef.current?.click()}
-                  >
-                    Change
-                  </motion.button>
+                  >Change</motion.button>
                 </div>
 
-                {/* Full Name */}
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>Full Name</p>
                 <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${editName ? '#7C3AED' : colors.border}`, borderRadius: '12px', padding: '0 14px', background: colors.inputBg, marginBottom: '4px', transition: 'all 0.2s' }}>
                   <User size={15} color={editName ? '#7C3AED' : colors.textSecondary} style={{ flexShrink: 0, marginRight: '10px' }} />
-                  <input
-                    style={{ flex: 1, padding: '12px 0', border: 'none', background: 'transparent', color: colors.text, fontSize: '14px', outline: 'none' }}
-                    type="text" placeholder="Enter your full name"
-                    value={editName} onChange={(e) => { setEditName(e.target.value); setEditError(''); }}
-                    autoFocus
-                  />
+                  <input style={{ flex: 1, padding: '12px 0', border: 'none', background: 'transparent', color: colors.text, fontSize: '14px', outline: 'none' }} type="text" placeholder="Enter your full name" value={editName} onChange={(e) => { setEditName(e.target.value); setEditError(''); }} autoFocus />
                 </div>
                 <p style={{ color: colors.textSecondary, fontSize: '10px', margin: '0 0 12px 2px' }}>Letters and spaces only</p>
 
-                {/* Phone */}
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>Phone Number</p>
                 <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${editPhone ? '#7C3AED' : colors.border}`, borderRadius: '12px', padding: '0 14px', background: colors.inputBg, marginBottom: '4px', transition: 'all 0.2s' }}>
                   <Phone size={15} color={editPhone ? '#7C3AED' : colors.textSecondary} style={{ flexShrink: 0, marginRight: '10px' }} />
-                  <input
-                    style={{ flex: 1, padding: '12px 0', border: 'none', background: 'transparent', color: colors.text, fontSize: '14px', outline: 'none' }}
-                    type="tel" placeholder="e.g. 03001234567"
-                    value={editPhone} onChange={(e) => { setEditPhone(e.target.value); setEditError(''); }}
-                  />
+                  <input style={{ flex: 1, padding: '12px 0', border: 'none', background: 'transparent', color: colors.text, fontSize: '14px', outline: 'none' }} type="tel" placeholder="e.g. 03001234567" value={editPhone} onChange={(e) => { setEditPhone(e.target.value); setEditError(''); }} />
                 </div>
                 <p style={{ color: colors.textSecondary, fontSize: '10px', margin: '0 0 12px 2px' }}>10-13 digits, no spaces</p>
 
-                {/* Email locked */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: colors.actionBg, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '14px' }}>
                   <Lock size={14} color={colors.textSecondary} style={{ flexShrink: 0 }} />
-                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>
-                    Email address cannot be changed. Contact support if needed.
-                  </p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>Email address cannot be changed. Contact support if needed.</p>
                 </div>
 
                 <ErrorBox msg={editError} />
 
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <motion.button
-                    style={{ flex: 1, padding: '13px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
-                    whileTap={{ scale: 0.97 }} onClick={() => { setShowEditProfile(false); resetEditProfile(); }}
-                  >Cancel</motion.button>
+                  <motion.button style={{ flex: 1, padding: '13px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }} whileTap={{ scale: 0.97 }} onClick={() => { setShowEditProfile(false); resetEditProfile(); }}>Cancel</motion.button>
                   <motion.button
                     style={{ flex: 2, padding: '13px', background: editName && editPhone ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : colors.actionBg, color: editName && editPhone ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', boxShadow: editName && editPhone ? '0 4px 14px rgba(124,58,237,0.3)' : 'none', transition: 'all 0.2s' }}
                     whileTap={{ scale: 0.97 }} onClick={sendEditOtp} disabled={editLoading}
-                  >
-                    {editLoading ? 'Sending code...' : 'Continue'}
-                  </motion.button>
+                  >{editLoading ? 'Sending code...' : 'Continue'}</motion.button>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 2 — OTP */}
             {editStep === 2 && (
               <motion.div key="edit-s2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
-
                 <div style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <CheckCircle size={16} color="#16A34A" style={{ flexShrink: 0 }} />
                   <div>
@@ -672,7 +702,6 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {/* Summary of changes */}
                 <div style={{ background: colors.actionBg, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px', marginBottom: '16px' }}>
                   <p style={{ color: colors.textSecondary, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 8px 0' }}>Changes to be saved</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -687,29 +716,21 @@ export default function Profile() {
 
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 8px 0', textAlign: 'center' }}>Enter 6-Digit Verification Code</p>
                 <OtpInput value={editOtp} onChange={setEditOtp} colors={colors} />
-
                 <div style={{ textAlign: 'center', margin: '6px 0 14px' }}>
                   {editCountdown > 0
                     ? <span style={{ color: colors.textSecondary, fontSize: '11px' }}>Resend in <strong style={{ color: colors.text }}>{editCountdown}s</strong></span>
-                    : <motion.span style={{ color: '#7C3AED', fontSize: '11px', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }} whileTap={{ scale: 0.95 }} onClick={sendEditOtp}>
-                        <RefreshCw size={11} /> Resend Code
-                      </motion.span>
+                    : <motion.span style={{ color: '#7C3AED', fontSize: '11px', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }} whileTap={{ scale: 0.95 }} onClick={sendEditOtp}><RefreshCw size={11} /> Resend Code</motion.span>
                   }
                 </div>
 
                 <ErrorBox msg={editError} />
 
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <motion.button
-                    style={{ flex: 1, padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }}
-                    whileTap={{ scale: 0.97 }} onClick={() => { setEditStep(1); setEditOtp(''); setEditError(''); }}
-                  >Back</motion.button>
+                  <motion.button style={{ flex: 1, padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => { setEditStep(1); setEditOtp(''); setEditError(''); }}>Back</motion.button>
                   <motion.button
                     style={{ flex: 2, padding: '12px', background: editOtp.length === 6 ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : colors.actionBg, color: editOtp.length === 6 ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: editOtp.length === 6 ? '0 4px 14px rgba(124,58,237,0.3)' : 'none' }}
                     whileTap={{ scale: 0.97 }} onClick={submitEditProfile} disabled={editLoading}
-                  >
-                    {editLoading ? 'Saving...' : 'Save Changes'}
-                  </motion.button>
+                  >{editLoading ? 'Saving...' : 'Save Changes'}</motion.button>
                 </div>
               </motion.div>
             )}
@@ -718,17 +739,9 @@ export default function Profile() {
       </Modal>
 
 
-      {/* ─────────────────────────────────────── */}
-      {/* CHANGE PASSWORD MODAL                  */}
-      {/* ─────────────────────────────────────── */}
+      {/* ── CHANGE PASSWORD MODAL ── */}
       <Modal show={showChangePassword} onClose={() => { setShowChangePassword(false); setPwStep(1); setPwOtp(''); setNewPassword(''); setConfirmPassword(''); setPwError(''); }} colors={colors}>
-        <StepHeader
-          icon={<Key size={24} color="#fff" />}
-          title="Change Password"
-          subtitle={pwStep === 1 ? 'Step 1 of 2 — Verify identity' : 'Step 2 of 2 — Set new password'}
-          steps={2}
-          currentStep={pwStep}
-        />
+        <StepHeader icon={<Key size={24} color="#fff" />} title="Change Password" subtitle={pwStep === 1 ? 'Step 1 of 2 — Verify identity' : 'Step 2 of 2 — Set new password'} steps={2} currentStep={pwStep} />
         <div style={{ padding: '16px' }}>
           <AnimatePresence mode="wait">
             {pwStep === 1 && (
@@ -752,10 +765,7 @@ export default function Profile() {
                 >
                   {pwLoading ? <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1, repeat: Infinity }}>Sending...</motion.span> : <><Mail size={15} color="#fff" /> Send Verification Code</>}
                 </motion.button>
-                <motion.button
-                  style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }}
-                  whileTap={{ scale: 0.97 }} onClick={() => { setShowChangePassword(false); setPwStep(1); setPwOtp(''); setNewPassword(''); setConfirmPassword(''); setPwError(''); }}
-                >Cancel</motion.button>
+                <motion.button style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => { setShowChangePassword(false); setPwStep(1); setPwOtp(''); setNewPassword(''); setConfirmPassword(''); setPwError(''); }}>Cancel</motion.button>
               </motion.div>
             )}
             {pwStep === 2 && (
@@ -805,9 +815,7 @@ export default function Profile() {
                   <motion.button
                     style={{ flex: 2, padding: '12px', background: pwOtp.length === 6 && newPassword && confirmPassword ? 'linear-gradient(135deg, #1A73E8, #0052CC)' : colors.actionBg, color: pwOtp.length === 6 && newPassword && confirmPassword ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
                     whileTap={{ scale: 0.97 }} onClick={submitChangePassword} disabled={pwLoading}
-                  >
-                    {pwLoading ? 'Changing...' : 'Change Password'}
-                  </motion.button>
+                  >{pwLoading ? 'Changing...' : 'Change Password'}</motion.button>
                 </div>
               </motion.div>
             )}
@@ -816,17 +824,9 @@ export default function Profile() {
       </Modal>
 
 
-      {/* ─────────────────────────────────────── */}
-      {/* CHANGE PIN MODAL                       */}
-      {/* ─────────────────────────────────────── */}
+      {/* ── CHANGE PIN MODAL ── */}
       <Modal show={showChangePin} onClose={() => { setShowChangePin(false); setPinStep(1); setPinOtp(''); setNewPin(''); setConfirmPin(''); setPinError(''); }} colors={colors}>
-        <StepHeader
-          icon={<Shield size={24} color="#fff" />}
-          title="Change PIN"
-          subtitle={pinStep === 1 ? 'Step 1 of 2 — Verify identity' : 'Step 2 of 2 — Set new PIN'}
-          steps={2}
-          currentStep={pinStep}
-        />
+        <StepHeader icon={<Shield size={24} color="#fff" />} title="Change PIN" subtitle={pinStep === 1 ? 'Step 1 of 2 — Verify identity' : 'Step 2 of 2 — Set new PIN'} steps={2} currentStep={pinStep} />
         <div style={{ padding: '16px' }}>
           <AnimatePresence mode="wait">
             {pinStep === 1 && (
@@ -850,10 +850,7 @@ export default function Profile() {
                 >
                   {pinLoading ? <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1, repeat: Infinity }}>Sending...</motion.span> : <><Mail size={15} color="#fff" /> Send Verification Code</>}
                 </motion.button>
-                <motion.button
-                  style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }}
-                  whileTap={{ scale: 0.97 }} onClick={() => { setShowChangePin(false); setPinStep(1); setPinOtp(''); setNewPin(''); setConfirmPin(''); setPinError(''); }}
-                >Cancel</motion.button>
+                <motion.button style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => { setShowChangePin(false); setPinStep(1); setPinOtp(''); setNewPin(''); setConfirmPin(''); setPinError(''); }}>Cancel</motion.button>
               </motion.div>
             )}
             {pinStep === 2 && (
@@ -885,9 +882,7 @@ export default function Profile() {
                   <motion.button
                     style={{ flex: 2, padding: '12px', background: pinOtp.length === 6 && newPin.length === 4 && confirmPin.length === 4 ? 'linear-gradient(135deg, #1A73E8, #0052CC)' : colors.actionBg, color: pinOtp.length === 6 && newPin.length === 4 && confirmPin.length === 4 ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
                     whileTap={{ scale: 0.97 }} onClick={submitChangePin} disabled={pinLoading}
-                  >
-                    {pinLoading ? 'Changing...' : 'Change PIN'}
-                  </motion.button>
+                  >{pinLoading ? 'Changing...' : 'Change PIN'}</motion.button>
                 </div>
               </motion.div>
             )}
@@ -896,23 +891,178 @@ export default function Profile() {
       </Modal>
 
 
-      {/* ─────────────────────────────────────── */}
-      {/* LOGOUT MODAL                           */}
-      {/* ─────────────────────────────────────── */}
+      {/* ── CHANGE REQUEST MODAL ── */}
+      <Modal show={showChangeRequest} onClose={() => { setShowChangeRequest(false); resetCr(); }} colors={colors}>
+        <StepHeader
+          icon={<ClipboardList size={22} color="#fff" />}
+          title="Change Request"
+          subtitle={crSuccess ? 'Request submitted' : crStep === 1 ? 'Select what to change' : 'Provide details'}
+          steps={crSuccess ? 0 : 2} currentStep={crStep}
+          grad="linear-gradient(135deg, #CA8A04, #92400E)"
+        />
+        <div style={{ padding: '16px' }}>
+          <AnimatePresence mode="wait">
+
+            {/* Success */}
+            {crSuccess && (
+              <motion.div key="cr-success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+                <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
+                  <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(22,163,74,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                    <CheckCircle size={32} color="#16A34A" />
+                  </div>
+                  <h3 style={{ color: colors.text, fontSize: '17px', fontWeight: 'bold', margin: '0 0 6px 0' }}>Request Submitted</h3>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '0 0 20px 0', lineHeight: '1.6' }}>
+                    Your request has been sent to the admin team. You will receive a notification and email once it is reviewed.
+                  </p>
+                </div>
+
+                {/* Summary */}
+                <div style={{ background: colors.actionBg, borderRadius: '12px', padding: '12px 14px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+                  <p style={{ color: colors.textSecondary, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>Request Summary</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
+                    <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Field</span>
+                    <span style={{ color: colors.text, fontSize: '12px', fontWeight: '600' }}>{selectedCrField?.label}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
+                    <span style={{ color: colors.textSecondary, fontSize: '12px' }}>New Value</span>
+                    <span style={{ color: colors.text, fontSize: '12px', fontWeight: '600' }}>{crValue}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                    <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Status</span>
+                    <span style={{ background: 'rgba(202,138,4,0.1)', color: '#CA8A04', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '20px' }}>Pending Review</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <motion.button
+                    style={{ flex: 1, padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => { resetCr(); }}
+                  >New Request</motion.button>
+                  <motion.button
+                    style={{ flex: 2, padding: '12px', background: 'linear-gradient(135deg, #CA8A04, #92400E)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 14px rgba(202,138,4,0.3)' }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => { setShowChangeRequest(false); resetCr(); }}
+                  >Done</motion.button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 1 — Select Field */}
+            {!crSuccess && crStep === 1 && (
+              <motion.div key="cr-s1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
+
+                {/* Info banner */}
+                <div style={{ background: 'rgba(202,138,4,0.08)', border: '1px solid rgba(202,138,4,0.2)', borderRadius: '12px', padding: '12px 14px', marginBottom: '16px', display: 'flex', gap: '10px' }}>
+                  <ClipboardList size={16} color="#CA8A04" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, lineHeight: '1.6' }}>
+                    Some fields like CNIC and Date of Birth can only be changed by an administrator. Submit a request and the admin team will review it within 24-48 hours.
+                  </p>
+                </div>
+
+                <p style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>Select field to change</p>
+
+                {CR_FIELDS.map((f, i) => (
+                  <motion.div
+                    key={f.id}
+                    style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: colors.actionBg, borderRadius: '14px', marginBottom: '8px', cursor: 'pointer', border: `1.5px solid ${crField === f.id ? '#CA8A04' : colors.border}`, transition: 'all 0.2s' }}
+                    whileTap={{ scale: 0.98 }}
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                    onClick={() => { setCrField(f.id); setStep2: setCrStep(2); setCrError(''); }}
+                  >
+                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{f.icon}</div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ color: colors.text, fontSize: '13px', fontWeight: '600', margin: '0 0 2px 0' }}>{f.label}</p>
+                      <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>{f.desc}</p>
+                    </div>
+                    <ChevronRight size={16} color={colors.textSecondary} />
+                  </motion.div>
+                ))}
+
+                <motion.button
+                  style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer', marginTop: '4px' }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { setShowChangeRequest(false); resetCr(); }}
+                >Cancel</motion.button>
+              </motion.div>
+            )}
+
+            {/* Step 2 — Fill Details */}
+            {!crSuccess && crStep === 2 && selectedCrField && (
+              <motion.div key="cr-s2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
+
+                {/* Selected field badge */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', background: colors.actionBg, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: selectedCrField.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {selectedCrField.icon}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ color: colors.text, fontSize: '13px', fontWeight: '600', margin: 0 }}>{selectedCrField.label}</p>
+                    <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>{selectedCrField.desc}</p>
+                  </div>
+                </div>
+
+                {/* New value input */}
+                <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>New {selectedCrField.label}</p>
+                <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${crValue ? '#CA8A04' : colors.border}`, borderRadius: '12px', padding: '0 14px', background: colors.inputBg, marginBottom: '14px', transition: 'all 0.2s', boxShadow: crValue ? '0 0 0 3px rgba(202,138,4,0.08)' : 'none' }}>
+                  <div style={{ marginRight: '10px', flexShrink: 0 }}>{selectedCrField.icon}</div>
+                  <input
+                    style={{ flex: 1, padding: '12px 0', border: 'none', background: 'transparent', color: colors.text, fontSize: '14px', outline: 'none' }}
+                    placeholder={selectedCrField.placeholder}
+                    value={crValue} onChange={(e) => { setCrValue(e.target.value); setCrError(''); }}
+                    autoFocus
+                  />
+                </div>
+
+                {/* Reason */}
+                <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>Reason for Change</p>
+                <textarea
+                  style={{ width: '100%', padding: '12px 14px', border: `1.5px solid ${crReason ? '#CA8A04' : colors.border}`, borderRadius: '12px', background: colors.inputBg, color: colors.text, fontSize: '13px', outline: 'none', minHeight: '90px', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.5', boxSizing: 'border-box', transition: 'all 0.2s', boxShadow: crReason ? '0 0 0 3px rgba(202,138,4,0.08)' : 'none', marginBottom: '4px' }}
+                  placeholder="Explain why this information needs to be corrected..."
+                  value={crReason} onChange={(e) => { setCrReason(e.target.value); setCrError(''); }}
+                />
+                <p style={{ color: colors.textSecondary, fontSize: '10px', margin: '0 0 12px 2px' }}>Minimum 10 characters required</p>
+
+                {/* Warning */}
+                <div style={{ background: 'rgba(202,138,4,0.06)', border: '1px solid rgba(202,138,4,0.2)', borderRadius: '10px', padding: '10px 14px', marginBottom: '12px', display: 'flex', gap: '8px' }}>
+                  <AlertCircle size={14} color="#CA8A04" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0, lineHeight: '1.5' }}>
+                    This does not immediately update your information. Admin will review and approve or reject your request.
+                  </p>
+                </div>
+
+                <ErrorBox msg={crError} />
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <motion.button
+                    style={{ flex: 1, padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
+                    whileTap={{ scale: 0.97 }} onClick={() => { setCrStep(1); setCrValue(''); setCrReason(''); setCrError(''); }}
+                  >Back</motion.button>
+                  <motion.button
+                    style={{ flex: 2, padding: '12px', background: crValue && crReason ? 'linear-gradient(135deg, #CA8A04, #92400E)' : colors.actionBg, color: crValue && crReason ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold', cursor: crValue && crReason ? 'pointer' : 'not-allowed', boxShadow: crValue && crReason ? '0 4px 14px rgba(202,138,4,0.3)' : 'none', transition: 'all 0.2s' }}
+                    whileTap={crValue && crReason ? { scale: 0.97 } : {}} onClick={submitChangeRequest} disabled={crLoading}
+                  >{crLoading ? 'Submitting...' : 'Submit Request'}</motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </Modal>
+
+
+      {/* ── LOGOUT MODAL ── */}
       <Modal show={showLogout} onClose={() => setShowLogout(false)} colors={colors}>
         <StepHeader icon={<LogOut size={24} color="#fff" />} title="Logout?" subtitle="You will need to sign in again" steps={0} currentStep={0} grad="linear-gradient(135deg, #DC2626, #B91C1C)" />
         <div style={{ padding: '16px' }}>
           <p style={{ color: colors.textSecondary, fontSize: '13px', textAlign: 'center', margin: '0 0 16px 0', lineHeight: '1.6' }}>
             Are you sure you want to logout? Your data will remain safe and secure.
           </p>
-          <motion.button
-            style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, #DC2626, #B91C1C)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '8px', boxShadow: '0 4px 14px rgba(220,38,38,0.3)' }}
-            whileTap={{ scale: 0.97 }} onClick={logout}
-          >Yes, Logout</motion.button>
-          <motion.button
-            style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }}
-            whileTap={{ scale: 0.97 }} onClick={() => setShowLogout(false)}
-          >Cancel</motion.button>
+          <motion.button style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, #DC2626, #B91C1C)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '8px', boxShadow: '0 4px 14px rgba(220,38,38,0.3)' }} whileTap={{ scale: 0.97 }} onClick={logout}>
+            Yes, Logout
+          </motion.button>
+          <motion.button style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => setShowLogout(false)}>
+            Cancel
+          </motion.button>
         </div>
       </Modal>
 
