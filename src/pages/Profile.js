@@ -12,7 +12,7 @@ import {
   Lock, Mail, Eye, EyeOff, RefreshCw, AlertCircle,
   Phone, Calendar, CreditCard as IdCard,
   BarChart2, MapPin, Smartphone, AlertTriangle,
-  Edit2, Camera, X, ClipboardList
+  Camera, ClipboardList
 } from 'lucide-react';
 
 // ── Reusable Modal ──
@@ -139,22 +139,11 @@ export default function Profile() {
   const [toast,   setToast]   = useState({ msg: '', type: 'success' });
 
   // ── Modal visibility ──
-  const [showLogout,          setShowLogout]          = useState(false);
-  const [showPersonalInfo,    setShowPersonalInfo]    = useState(false);
-  const [showEditProfile,     setShowEditProfile]     = useState(false);
-  const [showChangePassword,  setShowChangePassword]  = useState(false);
-  const [showChangePin,       setShowChangePin]       = useState(false);
-  const [showChangeRequest,   setShowChangeRequest]   = useState(false);
-
-  // ── Edit Profile state ──
-  const [editStep,      setEditStep]      = useState(1);
-  const [editName,      setEditName]      = useState('');
-  const [editPhone,     setEditPhone]     = useState('');
-  const [editOtp,       setEditOtp]       = useState('');
-  const [editLoading,   setEditLoading]   = useState(false);
-  const [editError,     setEditError]     = useState('');
-  const [editEmail,     setEditEmail]     = useState('');
-  const [editCountdown, setEditCountdown] = useState(0);
+  const [showLogout,         setShowLogout]         = useState(false);
+  const [showPersonalInfo,   setShowPersonalInfo]   = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showChangePin,      setShowChangePin]      = useState(false);
+  const [showChangeRequest,  setShowChangeRequest]  = useState(false);
 
   // ── Change Password state ──
   const [pwStep,          setPwStep]          = useState(1);
@@ -179,18 +168,56 @@ export default function Profile() {
   const [pinCountdown, setPinCountdown] = useState(0);
 
   // ── Change Request state ──
-  const [crStep,       setCrStep]       = useState(1);
-  const [crField,      setCrField]      = useState('');
-  const [crValue,      setCrValue]      = useState('');
-  const [crReason,     setCrReason]     = useState('');
-  const [crLoading,    setCrLoading]    = useState(false);
-  const [crError,      setCrError]      = useState('');
-  const [crSuccess,    setCrSuccess]    = useState(false);
+  const [crStep,    setCrStep]    = useState(1);
+  const [crField,   setCrField]   = useState('');
+  const [crValue,   setCrValue]   = useState('');
+  const [crReason,  setCrReason]  = useState('');
+  const [crLoading, setCrLoading] = useState(false);
+  const [crError,   setCrError]   = useState('');
+  const [crSuccess, setCrSuccess] = useState(false);
 
+  // ── All requestable fields including name and phone ──
   const CR_FIELDS = [
-    { id: 'date_of_birth',    label: 'Date of Birth',  icon: <Calendar size={18} color="#FFB300" />,    bg: 'rgba(255,179,0,0.1)',    placeholder: 'e.g. 01-01-1995',           desc: 'Correct your registered date of birth' },
-    { id: 'cnic_number',      label: 'CNIC Number',    icon: <IdCard size={18} color="#1A73E8" />,      bg: 'rgba(26,115,232,0.1)',   placeholder: 'e.g. 12345-1234567-1',       desc: 'Correct your national identity number' },
-    { id: 'full_name_on_card',label: 'Name on CNIC',   icon: <User size={18} color="#7C3AED" />,        bg: 'rgba(124,58,237,0.1)',   placeholder: 'Name exactly as on your CNIC', desc: 'Correct the name as shown on your CNIC' },
+    {
+      id:          'full_name',
+      label:       'Full Name',
+      icon:        <User size={18} color="#1A73E8" />,
+      bg:          'rgba(26,115,232,0.1)',
+      placeholder: 'Enter correct full name',
+      desc:        'Correct a typo or spelling mistake in your name',
+    },
+    {
+      id:          'phone',
+      label:       'Phone Number',
+      icon:        <Phone size={18} color="#16A34A" />,
+      bg:          'rgba(22,163,74,0.1)',
+      placeholder: 'e.g. 03001234567',
+      desc:        'Update your registered contact number',
+    },
+    {
+      id:          'date_of_birth',
+      label:       'Date of Birth',
+      icon:        <Calendar size={18} color="#FFB300" />,
+      bg:          'rgba(255,179,0,0.1)',
+      placeholder: 'e.g. 01-01-1995',
+      desc:        'Correct your registered date of birth',
+    },
+    {
+      id:          'cnic_number',
+      label:       'CNIC Number',
+      icon:        <IdCard size={18} color="#EA580C" />,
+      bg:          'rgba(234,88,12,0.1)',
+      placeholder: 'e.g. 12345-1234567-1',
+      desc:        'Correct your national identity number',
+    },
+    {
+      id:          'full_name_on_card',
+      label:       'Name on CNIC',
+      icon:        <IdCard size={18} color="#7C3AED" />,
+      bg:          'rgba(124,58,237,0.1)',
+      placeholder: 'Name exactly as on your CNIC',
+      desc:        'Correct the name as shown on your CNIC',
+    },
   ];
 
   const selectedCrField = CR_FIELDS.find(f => f.id === crField);
@@ -220,14 +247,11 @@ export default function Profile() {
 
   // ── Countdown timers ──
   useEffect(() => {
-    if (pwCountdown > 0)   { const t = setTimeout(() => setPwCountdown(c => c - 1),   1000); return () => clearTimeout(t); }
+    if (pwCountdown > 0)  { const t = setTimeout(() => setPwCountdown(c => c - 1),  1000); return () => clearTimeout(t); }
   }, [pwCountdown]);
   useEffect(() => {
-    if (pinCountdown > 0)  { const t = setTimeout(() => setPinCountdown(c => c - 1),  1000); return () => clearTimeout(t); }
+    if (pinCountdown > 0) { const t = setTimeout(() => setPinCountdown(c => c - 1), 1000); return () => clearTimeout(t); }
   }, [pinCountdown]);
-  useEffect(() => {
-    if (editCountdown > 0) { const t = setTimeout(() => setEditCountdown(c => c - 1), 1000); return () => clearTimeout(t); }
-  }, [editCountdown]);
 
   useEffect(() => {
     loadData();
@@ -256,7 +280,7 @@ export default function Profile() {
     showToast('Wallet address copied');
   };
 
-  // ── Profile Picture ──
+  // ── Profile Picture only ──
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -275,50 +299,6 @@ export default function Profile() {
     setAvatar(null);
     localStorage.removeItem('payease_avatar');
     showToast('Profile picture removed');
-  };
-
-  // ── Edit Profile ──
-  const validateEditForm = () => {
-    if (!editName.trim()) { setEditError('Full name is required'); return false; }
-    if (!/^[a-zA-Z\s]+$/.test(editName.trim())) { setEditError('Name must contain only letters and spaces'); return false; }
-    if (!editPhone.trim()) { setEditError('Phone number is required'); return false; }
-    const cleanPhone = editPhone.replace(/[\s\-]/g, '');
-    if (!/^\d{10,13}$/.test(cleanPhone)) { setEditError('Enter a valid phone number (10-13 digits)'); return false; }
-    return true;
-  };
-
-  const sendEditOtp = async () => {
-    if (!validateEditForm()) return;
-    setEditLoading(true); setEditError('');
-    try {
-      const res = await api.post('/api/otp/send', { purpose: 'update_profile' });
-      setEditEmail(res.data.email);
-      setEditStep(2);
-      setEditCountdown(60);
-    } catch (err) { setEditError(err.response?.data?.error || 'Failed to send verification code'); }
-    setEditLoading(false);
-  };
-
-  const submitEditProfile = async () => {
-    if (editOtp.length !== 6) { setEditError('Enter the 6-digit verification code'); return; }
-    setEditLoading(true); setEditError('');
-    try {
-      await api.post('/api/otp/update-profile', {
-        otp:       editOtp,
-        full_name: editName.trim(),
-        phone:     editPhone.replace(/[\s\-]/g, ''),
-      });
-      showToast('Profile updated successfully');
-      setShowEditProfile(false);
-      resetEditProfile();
-      await loadData();
-    } catch (err) { setEditError(err.response?.data?.error || 'Failed to update profile'); }
-    setEditLoading(false);
-  };
-
-  const resetEditProfile = () => {
-    setEditStep(1); setEditName(''); setEditPhone('');
-    setEditOtp(''); setEditError(''); setEditEmail(''); setEditCountdown(0);
   };
 
   // ── Change Password ──
@@ -369,32 +349,56 @@ export default function Profile() {
     setPinLoading(false);
   };
 
-  const openEditProfile = () => {
-    setEditName(balance?.full_name || '');
-    setEditPhone(balance?.phone || '');
-    resetEditProfile();
-    setShowEditProfile(true);
-  };
-
   const menuSections = [
     {
       title: 'Account',
       items: [
-        { icon: <User size={18} color="#1A73E8" />,         label: 'Personal Information', sub: 'View and edit your profile',                           bg: 'rgba(26,115,232,0.1)',  action: () => setShowPersonalInfo(true) },
-        { icon: <CreditCard size={18} color="#7C3AED" />,   label: 'Virtual Card',         sub: 'Your PayEase demo card',                              bg: 'rgba(124,58,237,0.1)', action: () => navigate('/virtual-card') },
-        { icon: <BarChart2 size={18} color="#0891B2" />,    label: 'Spending Insights',    sub: 'Track your spending habits',                          bg: 'rgba(8,145,178,0.1)',  action: () => navigate('/insights') },
-        { icon: <FileText size={18} color="#FF6B35" />,     label: 'KYC Verification',     sub: kycInfo?.status === 'approved' ? 'Verified' : 'Verify your identity', bg: 'rgba(255,107,53,0.1)', action: () => navigate('/kyc') },
-        { icon: <Copy size={18} color="#9C27B0" />,         label: 'Wallet Address',       sub: balance?.wallet_number || 'Tap to copy',              bg: 'rgba(156,39,176,0.1)', action: copyWallet, rightIcon: <Copy size={14} color="#9C27B0" /> },
         {
-          icon: <ClipboardList size={18} color="#CA8A04" />,
+          icon:   <User size={18} color="#1A73E8" />,
+          label:  'Personal Information',
+          sub:    'View your profile details',
+          bg:     'rgba(26,115,232,0.1)',
+          action: () => setShowPersonalInfo(true)
+        },
+        {
+          icon:   <CreditCard size={18} color="#7C3AED" />,
+          label:  'Virtual Card',
+          sub:    'Your PayEase demo card',
+          bg:     'rgba(124,58,237,0.1)',
+          action: () => navigate('/virtual-card')
+        },
+        {
+          icon:   <BarChart2 size={18} color="#0891B2" />,
+          label:  'Spending Insights',
+          sub:    'Track your spending habits',
+          bg:     'rgba(8,145,178,0.1)',
+          action: () => navigate('/insights')
+        },
+        {
+          icon:   <FileText size={18} color="#FF6B35" />,
+          label:  'KYC Verification',
+          sub:    kycInfo?.status === 'approved' ? 'Identity verified' : 'Verify your identity',
+          bg:     'rgba(255,107,53,0.1)',
+          action: () => navigate('/kyc')
+        },
+        {
+          icon:   <Copy size={18} color="#9C27B0" />,
+          label:  'Wallet Address',
+          sub:    balance?.wallet_number || 'Tap to copy',
+          bg:     'rgba(156,39,176,0.1)',
+          action: copyWallet,
+          rightIcon: <Copy size={14} color="#9C27B0" />
+        },
+        {
+          icon:  <ClipboardList size={18} color="#CA8A04" />,
           label: 'Change Request',
-          sub: 'Request changes to restricted fields',
-          bg: 'rgba(202,138,4,0.1)',
+          sub:   'Request changes to your account info',
+          bg:    'rgba(202,138,4,0.1)',
           action: () => { resetCr(); setShowChangeRequest(true); },
           rightIcon: (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ background: 'rgba(202,138,4,0.15)', borderRadius: '20px', padding: '2px 8px' }}>
-                <span style={{ color: '#CA8A04', fontSize: '10px', fontWeight: '700' }}>Admin Only</span>
+                <span style={{ color: '#CA8A04', fontSize: '10px', fontWeight: '700' }}>Admin Review</span>
               </div>
               <ChevronRight size={15} color="#CA8A04" />
             </div>
@@ -408,7 +412,7 @@ export default function Profile() {
         { icon: <Key size={18} color="#00C853" />,           label: 'Change Password',  sub: 'Update your account password',        bg: 'rgba(0,200,83,0.1)',   action: () => { setPwStep(1); setPwError(''); setShowChangePassword(true); } },
         { icon: <Shield size={18} color="#1A73E8" />,        label: 'Change PIN',       sub: 'Update your 4-digit transaction PIN', bg: 'rgba(26,115,232,0.1)', action: () => { setPinStep(1); setPinError(''); setShowChangePin(true); } },
         { icon: <Smartphone size={18} color="#DC2626" />,    label: 'Active Sessions',  sub: 'Manage logged-in devices',            bg: 'rgba(220,38,38,0.1)',  action: () => showToast('Feature coming soon', 'error') },
-        { icon: <AlertTriangle size={18} color="#CA8A04" />, label: 'Fraud Alerts',     sub: 'Security notifications',              bg: 'rgba(202,138,4,0.1)', action: () => navigate('/notifications') },
+        { icon: <AlertTriangle size={18} color="#CA8A04" />, label: 'Fraud Alerts',     sub: 'Security notifications',              bg: 'rgba(202,138,4,0.1)',  action: () => navigate('/notifications') },
         { icon: <MapPin size={18} color="#7C3AED" />,        label: 'Login Locations',  sub: 'View recent login activity',          bg: 'rgba(124,58,237,0.1)', action: () => showToast('Feature coming soon', 'error') },
       ]
     },
@@ -458,11 +462,12 @@ export default function Profile() {
         <div style={{ width: 36 }} />
       </div>
 
-      {/* Profile Card */}
+      {/* Profile Card — only camera button, no edit button */}
       <motion.div
         style={{ background: 'linear-gradient(135deg, #1A73E8, #0052CC)', margin: '16px', borderRadius: '20px', padding: '24px 20px', textAlign: 'center', boxShadow: '0 12px 40px rgba(26,115,232,0.35)' }}
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       >
+        {/* Avatar with camera button only */}
         <div style={{ position: 'relative', width: '80px', margin: '0 auto 10px' }}>
           <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '3px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
             {avatar
@@ -481,23 +486,22 @@ export default function Profile() {
         <h2 style={{ color: '#fff', fontSize: '19px', fontWeight: 'bold', margin: '0 0 3px 0' }}>{balance?.full_name}</h2>
         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: '0 0 10px 0' }}>{user?.email}</p>
 
+        {/* KYC badge only — no edit button */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(0,200,83,0.2)', border: '1px solid rgba(0,200,83,0.4)', borderRadius: '20px', padding: '4px 12px' }}>
             <Shield size={11} color="#00FF6B" />
             <span style={{ color: '#00FF6B', fontSize: '11px', fontWeight: '600' }}>{kycInfo?.status === 'approved' ? 'KYC Verified' : 'KYC Pending'}</span>
           </div>
-          <motion.div
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '20px', padding: '4px 12px', cursor: 'pointer' }}
-            whileTap={{ scale: 0.95 }} onClick={openEditProfile}
-          >
-            <Edit2 size={11} color="#fff" />
-            <span style={{ color: '#fff', fontSize: '11px', fontWeight: '600' }}>Edit</span>
-          </motion.div>
         </div>
+
+        {/* Tap to change photo hint */}
+        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', margin: '8px 0 0 0' }}>
+          Tap the camera icon to update photo
+        </p>
 
         {avatar && (
           <motion.p
-            style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', marginTop: '8px', cursor: 'pointer', textDecoration: 'underline' }}
+            style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', marginTop: '4px', cursor: 'pointer', textDecoration: 'underline' }}
             whileTap={{ scale: 0.95 }} onClick={removeAvatar}
           >
             Remove photo
@@ -553,6 +557,8 @@ export default function Profile() {
       <Modal show={showPersonalInfo} onClose={() => setShowPersonalInfo(false)} colors={colors}>
         <StepHeader icon={<User size={24} color="#fff" />} title="Personal Information" subtitle="Your registered account details" steps={0} currentStep={0} />
         <div style={{ padding: '16px' }}>
+
+          {/* Avatar row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '12px', background: colors.actionBg, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
             <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
               {avatar
@@ -564,22 +570,16 @@ export default function Profile() {
               <p style={{ color: colors.text, fontSize: '15px', fontWeight: 'bold', margin: '0 0 2px 0' }}>{balance?.full_name}</p>
               <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>{user?.email}</p>
             </div>
-            <motion.div
-              style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(26,115,232,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => { setShowPersonalInfo(false); openEditProfile(); }}
-            >
-              <Edit2 size={15} color="#1A73E8" />
-            </motion.div>
           </div>
 
+          {/* Info rows */}
           {[
-            { icon: <User size={15} color="#1A73E8" />,     label: 'Full Name',     value: balance?.full_name || 'N/A',               bg: 'rgba(26,115,232,0.1)' },
-            { icon: <Mail size={15} color="#9C27B0" />,     label: 'Email',         value: user?.email || 'N/A',                      bg: 'rgba(156,39,176,0.1)' },
-            { icon: <Phone size={15} color="#00C853" />,    label: 'Phone',         value: balance?.phone || 'N/A',                   bg: 'rgba(0,200,83,0.1)' },
-            { icon: <IdCard size={15} color="#FF6B35" />,   label: 'CNIC Number',   value: kycInfo?.cnic_number || 'Not submitted',    bg: 'rgba(255,107,53,0.1)' },
-            { icon: <Calendar size={15} color="#FFB300" />, label: 'Date of Birth', value: kycInfo?.date_of_birth || 'Not submitted',  bg: 'rgba(255,179,0,0.1)' },
-            { icon: <CreditCard size={15} color="#9C27B0" />, label: 'Wallet ID',   value: balance?.wallet_number || 'N/A',           bg: 'rgba(156,39,176,0.1)', copyable: true },
+            { icon: <User size={15} color="#1A73E8" />,     label: 'Full Name',     value: balance?.full_name || 'N/A',              bg: 'rgba(26,115,232,0.1)' },
+            { icon: <Mail size={15} color="#9C27B0" />,     label: 'Email',         value: user?.email || 'N/A',                     bg: 'rgba(156,39,176,0.1)' },
+            { icon: <Phone size={15} color="#00C853" />,    label: 'Phone',         value: balance?.phone || 'N/A',                  bg: 'rgba(0,200,83,0.1)' },
+            { icon: <IdCard size={15} color="#FF6B35" />,   label: 'CNIC Number',   value: kycInfo?.cnic_number || 'Not submitted',   bg: 'rgba(255,107,53,0.1)' },
+            { icon: <Calendar size={15} color="#FFB300" />, label: 'Date of Birth', value: kycInfo?.date_of_birth || 'Not submitted', bg: 'rgba(255,179,0,0.1)' },
+            { icon: <CreditCard size={15} color="#9C27B0" />, label: 'Wallet ID',   value: balance?.wallet_number || 'N/A',          bg: 'rgba(156,39,176,0.1)', copyable: true },
           ].map((row, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', borderBottom: i < 5 ? `1px solid ${colors.border}` : 'none' }}>
               <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{row.icon}</div>
@@ -616,7 +616,7 @@ export default function Profile() {
           >
             <ClipboardList size={16} color="#CA8A04" style={{ flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <p style={{ color: '#CA8A04', fontSize: '12px', fontWeight: '700', margin: 0 }}>Need to change CNIC or Date of Birth?</p>
+              <p style={{ color: '#CA8A04', fontSize: '12px', fontWeight: '700', margin: 0 }}>Need to update your info?</p>
               <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>Submit a change request for admin review</p>
             </div>
             <ChevronRight size={14} color="#CA8A04" />
@@ -626,115 +626,6 @@ export default function Profile() {
             style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', marginTop: '14px', boxShadow: '0 4px 16px rgba(26,115,232,0.3)' }}
             whileTap={{ scale: 0.97 }} onClick={() => setShowPersonalInfo(false)}
           >Close</motion.button>
-        </div>
-      </Modal>
-
-
-      {/* ── EDIT PROFILE MODAL ── */}
-      <Modal show={showEditProfile} onClose={() => { setShowEditProfile(false); resetEditProfile(); }} colors={colors}>
-        <StepHeader
-          icon={<Edit2 size={22} color="#fff" />}
-          title="Edit Profile"
-          subtitle={editStep === 1 ? 'Step 1 of 2 — Update your information' : 'Step 2 of 2 — Verify your identity'}
-          steps={2} currentStep={editStep}
-          grad="linear-gradient(135deg, #7C3AED, #5B21B6)"
-        />
-        <div style={{ padding: '16px' }}>
-          <AnimatePresence mode="wait">
-            {editStep === 1 && (
-              <motion.div key="edit-s1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
-                {/* Profile Picture row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px', background: colors.actionBg, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
-                  <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {avatar
-                      ? <img src={avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <span style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>{balance?.full_name?.charAt(0).toUpperCase()}</span>
-                    }
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ color: colors.text, fontSize: '13px', fontWeight: '600', margin: '0 0 4px 0' }}>Profile Picture</p>
-                    <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>JPG or PNG, max 2MB</p>
-                  </div>
-                  <motion.button
-                    style={{ padding: '7px 12px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: '8px', color: '#7C3AED', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                    whileTap={{ scale: 0.95 }} onClick={() => fileRef.current?.click()}
-                  >Change</motion.button>
-                </div>
-
-                <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>Full Name</p>
-                <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${editName ? '#7C3AED' : colors.border}`, borderRadius: '12px', padding: '0 14px', background: colors.inputBg, marginBottom: '4px', transition: 'all 0.2s' }}>
-                  <User size={15} color={editName ? '#7C3AED' : colors.textSecondary} style={{ flexShrink: 0, marginRight: '10px' }} />
-                  <input style={{ flex: 1, padding: '12px 0', border: 'none', background: 'transparent', color: colors.text, fontSize: '14px', outline: 'none' }} type="text" placeholder="Enter your full name" value={editName} onChange={(e) => { setEditName(e.target.value); setEditError(''); }} autoFocus />
-                </div>
-                <p style={{ color: colors.textSecondary, fontSize: '10px', margin: '0 0 12px 2px' }}>Letters and spaces only</p>
-
-                <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>Phone Number</p>
-                <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${editPhone ? '#7C3AED' : colors.border}`, borderRadius: '12px', padding: '0 14px', background: colors.inputBg, marginBottom: '4px', transition: 'all 0.2s' }}>
-                  <Phone size={15} color={editPhone ? '#7C3AED' : colors.textSecondary} style={{ flexShrink: 0, marginRight: '10px' }} />
-                  <input style={{ flex: 1, padding: '12px 0', border: 'none', background: 'transparent', color: colors.text, fontSize: '14px', outline: 'none' }} type="tel" placeholder="e.g. 03001234567" value={editPhone} onChange={(e) => { setEditPhone(e.target.value); setEditError(''); }} />
-                </div>
-                <p style={{ color: colors.textSecondary, fontSize: '10px', margin: '0 0 12px 2px' }}>10-13 digits, no spaces</p>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: colors.actionBg, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '14px' }}>
-                  <Lock size={14} color={colors.textSecondary} style={{ flexShrink: 0 }} />
-                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>Email address cannot be changed. Contact support if needed.</p>
-                </div>
-
-                <ErrorBox msg={editError} />
-
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <motion.button style={{ flex: 1, padding: '13px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }} whileTap={{ scale: 0.97 }} onClick={() => { setShowEditProfile(false); resetEditProfile(); }}>Cancel</motion.button>
-                  <motion.button
-                    style={{ flex: 2, padding: '13px', background: editName && editPhone ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : colors.actionBg, color: editName && editPhone ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', boxShadow: editName && editPhone ? '0 4px 14px rgba(124,58,237,0.3)' : 'none', transition: 'all 0.2s' }}
-                    whileTap={{ scale: 0.97 }} onClick={sendEditOtp} disabled={editLoading}
-                  >{editLoading ? 'Sending code...' : 'Continue'}</motion.button>
-                </div>
-              </motion.div>
-            )}
-
-            {editStep === 2 && (
-              <motion.div key="edit-s2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
-                <div style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <CheckCircle size={16} color="#16A34A" style={{ flexShrink: 0 }} />
-                  <div>
-                    <p style={{ color: '#16A34A', fontSize: '12px', fontWeight: '700', margin: 0 }}>Verification code sent</p>
-                    <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>Check your inbox at {editEmail}</p>
-                  </div>
-                </div>
-
-                <div style={{ background: colors.actionBg, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px', marginBottom: '16px' }}>
-                  <p style={{ color: colors.textSecondary, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 8px 0' }}>Changes to be saved</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Name</span>
-                    <span style={{ color: colors.text, fontSize: '12px', fontWeight: '600' }}>{editName}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Phone</span>
-                    <span style={{ color: colors.text, fontSize: '12px', fontWeight: '600' }}>{editPhone}</span>
-                  </div>
-                </div>
-
-                <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 8px 0', textAlign: 'center' }}>Enter 6-Digit Verification Code</p>
-                <OtpInput value={editOtp} onChange={setEditOtp} colors={colors} />
-                <div style={{ textAlign: 'center', margin: '6px 0 14px' }}>
-                  {editCountdown > 0
-                    ? <span style={{ color: colors.textSecondary, fontSize: '11px' }}>Resend in <strong style={{ color: colors.text }}>{editCountdown}s</strong></span>
-                    : <motion.span style={{ color: '#7C3AED', fontSize: '11px', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }} whileTap={{ scale: 0.95 }} onClick={sendEditOtp}><RefreshCw size={11} /> Resend Code</motion.span>
-                  }
-                </div>
-
-                <ErrorBox msg={editError} />
-
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <motion.button style={{ flex: 1, padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }} whileTap={{ scale: 0.97 }} onClick={() => { setEditStep(1); setEditOtp(''); setEditError(''); }}>Back</motion.button>
-                  <motion.button
-                    style={{ flex: 2, padding: '12px', background: editOtp.length === 6 ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : colors.actionBg, color: editOtp.length === 6 ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: editOtp.length === 6 ? '0 4px 14px rgba(124,58,237,0.3)' : 'none' }}
-                    whileTap={{ scale: 0.97 }} onClick={submitEditProfile} disabled={editLoading}
-                  >{editLoading ? 'Saving...' : 'Save Changes'}</motion.button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </Modal>
 
@@ -896,14 +787,14 @@ export default function Profile() {
         <StepHeader
           icon={<ClipboardList size={22} color="#fff" />}
           title="Change Request"
-          subtitle={crSuccess ? 'Request submitted' : crStep === 1 ? 'Select what to change' : 'Provide details'}
+          subtitle={crSuccess ? 'Request submitted successfully' : crStep === 1 ? 'Select what to change' : 'Provide details'}
           steps={crSuccess ? 0 : 2} currentStep={crStep}
           grad="linear-gradient(135deg, #CA8A04, #92400E)"
         />
         <div style={{ padding: '16px' }}>
           <AnimatePresence mode="wait">
 
-            {/* Success */}
+            {/* ── Success screen ── */}
             {crSuccess && (
               <motion.div key="cr-success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
                 <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
@@ -912,11 +803,10 @@ export default function Profile() {
                   </div>
                   <h3 style={{ color: colors.text, fontSize: '17px', fontWeight: 'bold', margin: '0 0 6px 0' }}>Request Submitted</h3>
                   <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '0 0 20px 0', lineHeight: '1.6' }}>
-                    Your request has been sent to the admin team. You will receive a notification and email once it is reviewed.
+                    Your request has been sent to the admin team. You will receive a notification and email once it is reviewed within 24-48 hours.
                   </p>
                 </div>
 
-                {/* Summary */}
                 <div style={{ background: colors.actionBg, borderRadius: '12px', padding: '12px 14px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
                   <p style={{ color: colors.textSecondary, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>Request Summary</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${colors.border}` }}>
@@ -936,19 +826,17 @@ export default function Profile() {
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <motion.button
                     style={{ flex: 1, padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => { resetCr(); }}
+                    whileTap={{ scale: 0.97 }} onClick={() => resetCr()}
                   >New Request</motion.button>
                   <motion.button
                     style={{ flex: 2, padding: '12px', background: 'linear-gradient(135deg, #CA8A04, #92400E)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 14px rgba(202,138,4,0.3)' }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => { setShowChangeRequest(false); resetCr(); }}
+                    whileTap={{ scale: 0.97 }} onClick={() => { setShowChangeRequest(false); resetCr(); }}
                   >Done</motion.button>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 1 — Select Field */}
+            {/* ── Step 1: Select field ── */}
             {!crSuccess && crStep === 1 && (
               <motion.div key="cr-s1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
 
@@ -956,19 +844,19 @@ export default function Profile() {
                 <div style={{ background: 'rgba(202,138,4,0.08)', border: '1px solid rgba(202,138,4,0.2)', borderRadius: '12px', padding: '12px 14px', marginBottom: '16px', display: 'flex', gap: '10px' }}>
                   <ClipboardList size={16} color="#CA8A04" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, lineHeight: '1.6' }}>
-                    Some fields like CNIC and Date of Birth can only be changed by an administrator. Submit a request and the admin team will review it within 24-48 hours.
+                    Account information can only be changed by an administrator. Select what you need to update and submit a request. The admin team will review it within 24-48 hours.
                   </p>
                 </div>
 
-                <p style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>Select field to change</p>
+                <p style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>What would you like to change?</p>
 
                 {CR_FIELDS.map((f, i) => (
                   <motion.div
                     key={f.id}
                     style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: colors.actionBg, borderRadius: '14px', marginBottom: '8px', cursor: 'pointer', border: `1.5px solid ${crField === f.id ? '#CA8A04' : colors.border}`, transition: 'all 0.2s' }}
                     whileTap={{ scale: 0.98 }}
-                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                    onClick={() => { setCrField(f.id); setStep2: setCrStep(2); setCrError(''); }}
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                    onClick={() => { setCrField(f.id); setCrStep(2); setCrError(''); }}
                   >
                     <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{f.icon}</div>
                     <div style={{ flex: 1 }}>
@@ -981,13 +869,12 @@ export default function Profile() {
 
                 <motion.button
                   style={{ width: '100%', padding: '12px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer', marginTop: '4px' }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => { setShowChangeRequest(false); resetCr(); }}
+                  whileTap={{ scale: 0.97 }} onClick={() => { setShowChangeRequest(false); resetCr(); }}
                 >Cancel</motion.button>
               </motion.div>
             )}
 
-            {/* Step 2 — Fill Details */}
+            {/* ── Step 2: Fill details ── */}
             {!crSuccess && crStep === 2 && selectedCrField && (
               <motion.div key="cr-s2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
 
@@ -997,12 +884,12 @@ export default function Profile() {
                     {selectedCrField.icon}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ color: colors.text, fontSize: '13px', fontWeight: '600', margin: 0 }}>{selectedCrField.label}</p>
+                    <p style={{ color: colors.text, fontSize: '13px', fontWeight: '600', margin: 0 }}>Changing: {selectedCrField.label}</p>
                     <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>{selectedCrField.desc}</p>
                   </div>
                 </div>
 
-                {/* New value input */}
+                {/* New value */}
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>New {selectedCrField.label}</p>
                 <div style={{ display: 'flex', alignItems: 'center', border: `1.5px solid ${crValue ? '#CA8A04' : colors.border}`, borderRadius: '12px', padding: '0 14px', background: colors.inputBg, marginBottom: '14px', transition: 'all 0.2s', boxShadow: crValue ? '0 0 0 3px rgba(202,138,4,0.08)' : 'none' }}>
                   <div style={{ marginRight: '10px', flexShrink: 0 }}>{selectedCrField.icon}</div>
@@ -1018,16 +905,16 @@ export default function Profile() {
                 <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0' }}>Reason for Change</p>
                 <textarea
                   style={{ width: '100%', padding: '12px 14px', border: `1.5px solid ${crReason ? '#CA8A04' : colors.border}`, borderRadius: '12px', background: colors.inputBg, color: colors.text, fontSize: '13px', outline: 'none', minHeight: '90px', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.5', boxSizing: 'border-box', transition: 'all 0.2s', boxShadow: crReason ? '0 0 0 3px rgba(202,138,4,0.08)' : 'none', marginBottom: '4px' }}
-                  placeholder="Explain why this information needs to be corrected..."
+                  placeholder="Explain why this needs to be updated (e.g. typing mistake, number changed)..."
                   value={crReason} onChange={(e) => { setCrReason(e.target.value); setCrError(''); }}
                 />
                 <p style={{ color: colors.textSecondary, fontSize: '10px', margin: '0 0 12px 2px' }}>Minimum 10 characters required</p>
 
-                {/* Warning */}
+                {/* Warning notice */}
                 <div style={{ background: 'rgba(202,138,4,0.06)', border: '1px solid rgba(202,138,4,0.2)', borderRadius: '10px', padding: '10px 14px', marginBottom: '12px', display: 'flex', gap: '8px' }}>
                   <AlertCircle size={14} color="#CA8A04" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0, lineHeight: '1.5' }}>
-                    This does not immediately update your information. Admin will review and approve or reject your request.
+                    This request will not update your information immediately. The admin team will review and approve or reject it.
                   </p>
                 </div>
 
