@@ -9,7 +9,7 @@ import {
   ArrowUpRight, ArrowDownLeft, ChevronRight,
   Sun, Moon, Bell, FileText, CheckCircle,
   Download, Share2, Printer, X, Wallet,
-  TrendingUp, Plus, BarChart2, CreditCard as CardIco
+  Plus, BarChart2, CreditCard as CardIco
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -132,24 +132,25 @@ export default function Dashboard() {
     </div>
   );
 
+  // ── 6 Quick Actions (no QR — it's in bottom nav) ──
   const quickActions = [
     { icon: <Send size={20} color="#1A73E8" />, label: 'Send', bg: 'rgba(26,115,232,0.1)', action: () => navigate('/send') },
     { icon: <Plus size={20} color="#16A34A" />, label: 'Deposit', bg: 'rgba(22,163,74,0.1)', action: () => setShowDeposit(true) },
     { icon: <FileText size={20} color="#EA580C" />, label: 'Bills', bg: 'rgba(234,88,12,0.1)', action: () => navigate('/bills') },
-    { icon: <QrCode size={20} color="#7C3AED" />, label: 'QR', bg: 'rgba(124,58,237,0.1)', action: () => navigate('/qr') },
     { icon: <BarChart2 size={20} color="#0891B2" />, label: 'Insights', bg: 'rgba(8,145,178,0.1)', action: () => navigate('/insights') },
     { icon: <CardIco size={20} color="#CA8A04" />, label: 'Card', bg: 'rgba(202,138,4,0.1)', action: () => navigate('/virtual-card') },
+    { icon: <Clock size={20} color="#7C3AED" />, label: 'History', bg: 'rgba(124,58,237,0.1)', action: () => navigate('/history') },
   ];
 
   const navTabs = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'send', icon: Send, label: 'Send' },
-    { id: 'scan', icon: QrCode, label: 'Scan' },
-    { id: 'history', icon: Clock, label: 'History' },
-    { id: 'profile', icon: User, label: 'Profile' },
+    { id: 'home',    icon: Home,   label: 'Home' },
+    { id: 'send',    icon: Send,   label: 'Send' },
+    { id: 'scan',    icon: QrCode, label: 'Scan' },
+    { id: 'history', icon: Clock,  label: 'History' },
+    { id: 'profile', icon: User,   label: 'Profile' },
   ];
 
-  const totalIn = transactions.filter(t => t.direction === 'credit').reduce((s, t) => s + t.amount, 0);
+  const totalIn  = transactions.filter(t => t.direction === 'credit').reduce((s, t) => s + t.amount, 0);
   const totalOut = transactions.filter(t => t.direction === 'debit').reduce((s, t) => s + t.amount, 0);
 
   return (
@@ -165,8 +166,7 @@ export default function Dashboard() {
             exit={{ opacity: 0, y: -40, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           >
-            <CheckCircle size={15} color="#fff" />
-            {toast.msg}
+            <CheckCircle size={15} color="#fff" /> {toast.msg}
           </motion.div>
         )}
       </AnimatePresence>
@@ -186,7 +186,6 @@ export default function Dashboard() {
           >
             {isDark ? <Sun size={17} color="#CA8A04" /> : <Moon size={17} color="#1A73E8" />}
           </motion.div>
-
           <motion.div
             style={{ width: '36px', height: '36px', borderRadius: '10px', background: colors.actionBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
             whileTap={{ scale: 0.9 }} onClick={() => navigate('/notifications')}
@@ -201,7 +200,6 @@ export default function Dashboard() {
               </motion.div>
             )}
           </motion.div>
-
           <motion.div
             style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(26,115,232,0.3)' }}
             whileTap={{ scale: 0.9 }} onClick={() => navigate('/profile')}
@@ -264,7 +262,7 @@ export default function Dashboard() {
                 {balance?.wallet_number?.slice(0, 6)}••••••
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ display: 'flex' }}>
               <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#FF5F00', opacity: 0.9 }} />
               <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#FFB300', opacity: 0.9, marginLeft: '-10px' }} />
             </div>
@@ -274,21 +272,23 @@ export default function Dashboard() {
 
       {/* ── QUICK ACTIONS ── */}
       <motion.div
-        style={{ margin: '14px 16px', background: colors.card, borderRadius: '16px', padding: '16px 8px', border: `1px solid ${colors.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+        style={{ margin: '14px 16px', background: colors.card, borderRadius: '16px', padding: '16px 12px', border: `1px solid ${colors.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
         initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
           {quickActions.map((item, i) => (
             <motion.div
               key={i}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '72px' }}
-              whileTap={{ scale: 0.88 }} onClick={item.action}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 2px' }}
+              whileTap={{ scale: 0.85 }} onClick={item.action}
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.04 }}
             >
-              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '13px', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {item.icon}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0, fontWeight: '600', textAlign: 'center' }}>{item.label}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '10px', margin: 0, fontWeight: '600', textAlign: 'center', lineHeight: 1.2 }}>
+                {item.label}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -432,7 +432,6 @@ export default function Dashboard() {
                   <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>Deposit funds to your wallet</p>
                 </div>
               </div>
-
               <div style={{ marginBottom: '16px' }}>
                 <p style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: '600', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Amount (PKR)</p>
                 <div style={{ display: 'flex', alignItems: 'center', border: `2px solid ${depositAmount ? '#1A73E8' : colors.border}`, borderRadius: '14px', padding: '0 16px', background: colors.inputBg, transition: 'all 0.2s', boxShadow: depositAmount ? '0 0 0 3px rgba(26,115,232,0.08)' : 'none' }}>
@@ -440,38 +439,31 @@ export default function Dashboard() {
                   <input
                     style={{ flex: 1, padding: '16px 0', border: 'none', background: 'transparent', color: colors.text, fontSize: '26px', fontWeight: 'bold', outline: 'none' }}
                     type="number" placeholder="0" value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    autoFocus
+                    onChange={(e) => setDepositAmount(e.target.value)} autoFocus
                   />
                 </div>
               </div>
-
               <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                 {[500, 1000, 5000, 10000].map(amt => (
                   <motion.button
                     key={amt}
                     style={{ flex: 1, padding: '8px 4px', background: depositAmount == amt ? '#1A73E8' : colors.actionBg, color: depositAmount == amt ? '#fff' : colors.textSecondary, border: `1px solid ${depositAmount == amt ? '#1A73E8' : colors.border}`, borderRadius: '10px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setDepositAmount(String(amt))}
+                    whileTap={{ scale: 0.95 }} onClick={() => setDepositAmount(String(amt))}
                   >
                     {amt >= 1000 ? `${amt/1000}K` : amt}
                   </motion.button>
                 ))}
               </div>
-
               <motion.button
                 style={{ width: '100%', padding: '15px', background: depositAmount ? 'linear-gradient(135deg, #1A73E8, #0052CC)' : '#E5E7EB', color: depositAmount ? '#fff' : '#9CA3AF', border: 'none', borderRadius: '14px', fontSize: '15px', fontWeight: 'bold', cursor: depositAmount ? 'pointer' : 'not-allowed', marginBottom: '10px', boxShadow: depositAmount ? '0 6px 20px rgba(26,115,232,0.3)' : 'none', transition: 'all 0.2s' }}
-                whileTap={depositAmount ? { scale: 0.97 } : {}}
-                onClick={handleDeposit} disabled={actionLoading}
+                whileTap={depositAmount ? { scale: 0.97 } : {}} onClick={handleDeposit} disabled={actionLoading}
               >
                 {actionLoading ? 'Processing...' : `Deposit PKR ${depositAmount ? parseFloat(depositAmount).toLocaleString() : '0'}`}
               </motion.button>
               <motion.button
                 style={{ width: '100%', padding: '13px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '14px', cursor: 'pointer' }}
                 whileTap={{ scale: 0.97 }} onClick={() => setShowDeposit(false)}
-              >
-                Cancel
-              </motion.button>
+              >Cancel</motion.button>
             </motion.div>
           </motion.div>
         )}
@@ -498,7 +490,6 @@ export default function Dashboard() {
               >
                 <X size={14} color="#fff" />
               </motion.div>
-
               <div style={{ background: 'linear-gradient(135deg, #1A73E8, #0052CC)', padding: '24px', textAlign: 'center' }}>
                 <motion.div
                   style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', border: '2px solid rgba(255,255,255,0.3)' }}
@@ -517,7 +508,6 @@ export default function Dashboard() {
                   ✓ {receiptData.status}
                 </span>
               </div>
-
               <div style={{ padding: '16px 20px' }}>
                 {[
                   { label: 'Type', value: receiptData.type },
@@ -538,7 +528,6 @@ export default function Dashboard() {
                   </motion.div>
                 ))}
               </div>
-
               <div style={{ display: 'flex', gap: '1px', borderTop: `1px solid ${colors.border}` }}>
                 <motion.button
                   style={{ flex: 1, padding: '13px', background: colors.actionBg, color: colors.text, border: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', borderRight: `1px solid ${colors.border}` }}

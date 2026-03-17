@@ -6,54 +6,81 @@ import { accountService } from '../services/api';
 import {
   ArrowLeft, TrendingUp, TrendingDown, Zap,
   Wifi, Wind, Phone, ArrowUpRight, ArrowDownLeft,
-  Wallet, Calendar, BarChart2, PieChart, Target
+  Wallet, Calendar, BarChart2, Target, Sparkles
 } from 'lucide-react';
 import {
   PieChart as RePie, Pie, Cell, Tooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  LineChart, Line, Area, AreaChart
 } from 'recharts';
 
 const CATEGORY_CONFIG = {
-  electricity: { label: 'Electricity', color: '#FFB300', icon: <Zap size={14} color="#FFB300" />, bg: 'rgba(255,179,0,0.1)' },
-  gas:         { label: 'Gas',         color: '#FF6B35', icon: <Wind size={14} color="#FF6B35" />, bg: 'rgba(255,107,53,0.1)' },
-  internet:    { label: 'Internet',    color: '#1A73E8', icon: <Wifi size={14} color="#1A73E8" />, bg: 'rgba(26,115,232,0.1)' },
-  topup:       { label: 'Mobile',      color: '#00C853', icon: <Phone size={14} color="#00C853" />, bg: 'rgba(0,200,83,0.1)' },
-  transfer:    { label: 'Transfers',   color: '#7C3AED', icon: <ArrowUpRight size={14} color="#7C3AED" />, bg: 'rgba(124,58,237,0.1)' },
-  deposit:     { label: 'Deposits',    color: '#16A34A', icon: <ArrowDownLeft size={14} color="#16A34A" />, bg: 'rgba(22,163,74,0.1)' },
-  other:       { label: 'Other',       color: '#6B7280', icon: <Wallet size={14} color="#6B7280" />, bg: 'rgba(107,114,128,0.1)' },
+  electricity: { label: 'Electricity', color: '#FFB300', icon: '⚡', bg: 'rgba(255,179,0,0.12)' },
+  gas:         { label: 'Gas',         color: '#FF6B35', icon: '🔥', bg: 'rgba(255,107,53,0.12)' },
+  internet:    { label: 'Internet',    color: '#1A73E8', icon: '📶', bg: 'rgba(26,115,232,0.12)' },
+  topup:       { label: 'Mobile',      color: '#00C853', icon: '📱', bg: 'rgba(0,200,83,0.12)' },
+  transfer:    { label: 'Transfers',   color: '#7C3AED', icon: '💸', bg: 'rgba(124,58,237,0.12)' },
+  deposit:     { label: 'Deposits',    color: '#16A34A', icon: '💰', bg: 'rgba(22,163,74,0.12)' },
+  bill:        { label: 'Bills',       color: '#EA580C', icon: '🧾', bg: 'rgba(234,88,12,0.12)' },
+  other:       { label: 'Other',       color: '#6B7280', icon: '💳', bg: 'rgba(107,114,128,0.12)' },
 };
 
 function categorize(tx) {
-  if (tx.type === 'deposit') return 'deposit';
-  if (tx.type === 'electricity') return 'electricity';
-  if (tx.type === 'gas') return 'gas';
-  if (tx.type === 'internet') return 'internet';
-  if (tx.type === 'topup') return 'topup';
-  if (tx.type === 'transfer') return 'transfer';
+  const t = tx.type?.toLowerCase() || '';
+  if (t === 'deposit') return 'deposit';
+  if (t === 'electricity') return 'electricity';
+  if (t === 'gas') return 'gas';
+  if (t === 'internet') return 'internet';
+  if (t === 'topup') return 'topup';
+  if (t === 'transfer') return 'transfer';
+  if (['electricity','gas','internet','topup'].some(b => tx.description?.toLowerCase().includes(b))) return 'bill';
   return 'other';
 }
 
 const CustomTooltip = ({ active, payload, label, colors }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '10px', padding: '10px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
-      <p style={{ color: colors.textSecondary, fontSize: '11px', margin: '0 0 4px 0', fontWeight: '600' }}>{label}</p>
+    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '10px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
+      <p style={{ color: colors.textSecondary, fontSize: '11px', margin: '0 0 6px 0', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color, fontSize: '13px', fontWeight: '700', margin: '2px 0' }}>
-          PKR {Number(p.value).toLocaleString()}
+        <p key={i} style={{ color: p.color, fontSize: '13px', fontWeight: '700', margin: '2px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: p.color, display: 'inline-block' }} />
+          {p.name}: PKR {Number(p.value).toLocaleString()}
         </p>
       ))}
     </div>
   );
 };
 
+const AnimatedCounter = ({ value, prefix = '', suffix = '', color, fontSize = '22px' }) => {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let start = 0;
+    const end = value;
+    if (end === 0) return;
+    const duration = 1000;
+    const increment = end / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) { setCount(end); clearInterval(timer); }
+      else setCount(Math.floor(start));
+    }, 16);
+    return () => clearInterval(timer);
+  }, [value]);
+  return (
+    <span style={{ color, fontSize, fontWeight: 'bold' }}>
+      {prefix}{count.toLocaleString()}{suffix}
+    </span>
+  );
+};
+
 export default function Insights() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
   const [period, setPeriod] = useState('month');
+  const [activeChart, setActiveChart] = useState('bar');
 
   useEffect(() => { loadData(); }, []);
 
@@ -70,7 +97,6 @@ export default function Insights() {
     try { return new Date(d.replace(' ', 'T')); } catch { return null; }
   };
 
-  // Filter by period
   const now = new Date();
   const filtered = transactions.filter(tx => {
     const d = parseDate(tx.date || tx.created_at);
@@ -83,24 +109,23 @@ export default function Insights() {
 
   const debits = filtered.filter(t => t.direction === 'debit');
   const credits = filtered.filter(t => t.direction === 'credit');
-
   const totalSpent = debits.reduce((s, t) => s + t.amount, 0);
   const totalReceived = credits.reduce((s, t) => s + t.amount, 0);
-  const totalTx = filtered.length;
+  const netFlow = totalReceived - totalSpent;
+  const savings = totalReceived > 0 ? Math.round((netFlow / totalReceived) * 100) : 0;
 
-  // Category breakdown (spending only)
+  // Category breakdown
   const categoryMap = {};
   debits.forEach(tx => {
     const cat = categorize(tx);
     if (!categoryMap[cat]) categoryMap[cat] = 0;
     categoryMap[cat] += tx.amount;
   });
-
   const pieData = Object.entries(categoryMap)
     .map(([key, val]) => ({ name: CATEGORY_CONFIG[key]?.label || key, value: val, color: CATEGORY_CONFIG[key]?.color || '#888', key }))
     .sort((a, b) => b.value - a.value);
 
-  // Monthly trend (last 6 months)
+  // Monthly trend (6 months)
   const monthlyData = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -110,29 +135,28 @@ export default function Insights() {
     });
     const spent = monthTxs.filter(t => t.direction === 'debit').reduce((s, t) => s + t.amount, 0);
     const received = monthTxs.filter(t => t.direction === 'credit').reduce((s, t) => s + t.amount, 0);
-    monthlyData.push({
-      month: d.toLocaleDateString('en-PK', { month: 'short' }),
-      spent, received
-    });
+    monthlyData.push({ month: d.toLocaleDateString('en-PK', { month: 'short' }), spent, received });
   }
 
-  // Daily breakdown for current period
-  const dailyMap = {};
-  filtered.forEach(tx => {
-    const d = parseDate(tx.date || tx.created_at);
-    if (!d) return;
-    const key = d.toLocaleDateString('en-PK', { day: 'numeric', month: 'short' });
-    if (!dailyMap[key]) dailyMap[key] = { day: key, spent: 0, received: 0 };
-    if (tx.direction === 'debit') dailyMap[key].spent += tx.amount;
-    else dailyMap[key].received += tx.amount;
-  });
-  const dailyData = Object.values(dailyMap).slice(-7);
+  // Weekly data
+  const weeklyData = [];
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    const dayTxs = transactions.filter(tx => {
+      const td = parseDate(tx.date || tx.created_at);
+      return td && td.toDateString() === d.toDateString();
+    });
+    const spent = dayTxs.filter(t => t.direction === 'debit').reduce((s, t) => s + t.amount, 0);
+    const received = dayTxs.filter(t => t.direction === 'credit').reduce((s, t) => s + t.amount, 0);
+    weeklyData.push({ day: days[d.getDay()], spent, received });
+  }
 
-  // Top spending categories
-  const topCategories = pieData.slice(0, 4);
-
-  // Recent big transactions
-  const bigTx = [...debits].sort((a, b) => b.amount - a.amount).slice(0, 3);
+  const chartData = period === 'week' ? weeklyData : monthlyData;
+  const chartKey = period === 'week' ? 'day' : 'month';
+  const topCategories = pieData.slice(0, 5);
+  const bigTx = [...debits].sort((a, b) => b.amount - a.amount).slice(0, 4);
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: colors.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -145,253 +169,367 @@ export default function Insights() {
     <div style={{ minHeight: '100vh', background: colors.bg, maxWidth: '480px', margin: '0 auto' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: colors.card, borderBottom: `1px solid ${colors.border}`, position: 'sticky', top: 0, zIndex: 10 }}>
-        <motion.div
-          style={{ width: '36px', height: '36px', borderRadius: '10px', background: colors.actionBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/dashboard')}
-        >
-          <ArrowLeft size={20} color={colors.text} />
-        </motion.div>
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ color: colors.text, fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Spending Insights</h2>
-          <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>Track your money flow</p>
+      <div style={{ background: colors.card, borderBottom: `1px solid ${colors.border}`, position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px' }}>
+          <motion.div
+            style={{ width: '36px', height: '36px', borderRadius: '10px', background: colors.actionBg, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            whileTap={{ scale: 0.9 }} onClick={() => navigate('/dashboard')}
+          >
+            <ArrowLeft size={20} color={colors.text} />
+          </motion.div>
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{ color: colors.text, fontSize: '18px', fontWeight: 'bold', margin: 0 }}>Spending Insights</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>
+              {filtered.length} transactions · {period === 'week' ? 'This Week' : period === 'month' ? 'This Month' : 'This Year'}
+            </p>
+          </div>
+          <div style={{ width: 36 }} />
         </div>
-        <div style={{ width: 36 }} />
-      </div>
 
-      {/* Period Selector */}
-      <div style={{ padding: '12px 16px', background: colors.card, borderBottom: `1px solid ${colors.border}` }}>
-        <div style={{ display: 'flex', background: colors.actionBg, borderRadius: '12px', padding: '4px', border: `1px solid ${colors.border}` }}>
-          {[{ id: 'week', label: 'This Week' }, { id: 'month', label: 'This Month' }, { id: 'year', label: 'This Year' }].map(p => (
-            <motion.button
-              key={p.id}
-              style={{ flex: 1, padding: '9px', border: 'none', borderRadius: '10px', cursor: 'pointer', background: period === p.id ? '#1A73E8' : 'transparent', color: period === p.id ? '#fff' : colors.textSecondary, fontSize: '12px', fontWeight: '600', transition: 'all 0.2s' }}
-              whileTap={{ scale: 0.97 }} onClick={() => setPeriod(p.id)}
-            >
-              {p.label}
-            </motion.button>
-          ))}
+        {/* Period Tabs */}
+        <div style={{ padding: '0 16px 12px' }}>
+          <div style={{ display: 'flex', background: colors.actionBg, borderRadius: '12px', padding: '3px', border: `1px solid ${colors.border}` }}>
+            {[
+              { id: 'week', label: 'Week' },
+              { id: 'month', label: 'Month' },
+              { id: 'year', label: 'Year' },
+            ].map(p => (
+              <motion.button
+                key={p.id}
+                style={{ flex: 1, padding: '9px', border: 'none', borderRadius: '10px', cursor: 'pointer', background: period === p.id ? '#1A73E8' : 'transparent', color: period === p.id ? '#fff' : colors.textSecondary, fontSize: '13px', fontWeight: '600', transition: 'all 0.2s', position: 'relative' }}
+                whileTap={{ scale: 0.97 }} onClick={() => setPeriod(p.id)}
+              >
+                {period === p.id && (
+                  <motion.div
+                    layoutId="period-indicator"
+                    style={{ position: 'absolute', inset: 0, borderRadius: '10px', background: '#1A73E8', zIndex: -1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                )}
+                {p.label}
+              </motion.button>
+            ))}
+          </div>
         </div>
       </div>
 
       <div style={{ padding: '16px' }}>
 
-        {/* Summary Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
-          <motion.div
-            style={{ background: 'linear-gradient(135deg, #DC2626, #B91C1C)', borderRadius: '16px', padding: '16px', position: 'relative', overflow: 'hidden' }}
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          >
-            <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-            <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
-              <TrendingDown size={16} color="#fff" />
-            </div>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: '600', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Spent</p>
-            <p style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>PKR {totalSpent.toLocaleString()}</p>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px', margin: '4px 0 0 0' }}>{debits.length} transactions</p>
-          </motion.div>
-
-          <motion.div
-            style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)', borderRadius: '16px', padding: '16px', position: 'relative', overflow: 'hidden' }}
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-          >
-            <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-            <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
-              <TrendingUp size={16} color="#fff" />
-            </div>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: '600', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Received</p>
-            <p style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>PKR {totalReceived.toLocaleString()}</p>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px', margin: '4px 0 0 0' }}>{credits.length} transactions</p>
-          </motion.div>
-        </div>
-
-        {/* Net Flow Card */}
+        {/* Hero Summary Cards */}
         <motion.div
-          style={{ background: colors.card, borderRadius: '16px', padding: '16px', marginBottom: '16px', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: '14px' }}
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          style={{ background: 'linear-gradient(135deg, #1A73E8, #0052CC)', borderRadius: '20px', padding: '20px', marginBottom: '14px', position: 'relative', overflow: 'hidden' }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         >
-          <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: totalReceived - totalSpent >= 0 ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            {totalReceived - totalSpent >= 0
-              ? <TrendingUp size={22} color="#16A34A" />
-              : <TrendingDown size={22} color="#DC2626" />
-            }
+          <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+          <div style={{ position: 'absolute', bottom: '-30px', left: '20px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+            <div>
+              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px 0' }}>Net Cash Flow</p>
+              <div style={{ color: '#fff', fontSize: '28px', fontWeight: 'bold' }}>
+                {netFlow >= 0 ? '+' : '-'} PKR {Math.abs(netFlow).toLocaleString()}
+              </div>
+            </div>
+            <div style={{ background: netFlow >= 0 ? 'rgba(22,163,74,0.25)' : 'rgba(220,38,38,0.25)', borderRadius: '12px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              {netFlow >= 0 ? <TrendingUp size={16} color="#4ADE80" /> : <TrendingDown size={16} color="#F87171" />}
+              <span style={{ color: netFlow >= 0 ? '#4ADE80' : '#F87171', fontSize: '13px', fontWeight: '700' }}>
+                {savings >= 0 ? `${savings}%` : `${Math.abs(savings)}%`}
+              </span>
+            </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 3px 0' }}>Net Cash Flow</p>
-            <p style={{ color: totalReceived - totalSpent >= 0 ? '#16A34A' : '#DC2626', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>
-              {totalReceived - totalSpent >= 0 ? '+' : '-'} PKR {Math.abs(totalReceived - totalSpent).toLocaleString()}
-            </p>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ color: colors.textSecondary, fontSize: '11px', margin: '0 0 3px 0' }}>Transactions</p>
-            <p style={{ color: colors.text, fontSize: '18px', fontWeight: 'bold', margin: 0 }}>{totalTx}</p>
+
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ flex: 1, background: 'rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+                <ArrowDownLeft size={12} color="rgba(255,255,255,0.7)" />
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Received</span>
+              </div>
+              <p style={{ color: '#4ADE80', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>PKR {totalReceived.toLocaleString()}</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', margin: '2px 0 0 0' }}>{credits.length} txns</p>
+            </div>
+            <div style={{ flex: 1, background: 'rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+                <ArrowUpRight size={12} color="rgba(255,255,255,0.7)" />
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Spent</span>
+              </div>
+              <p style={{ color: '#F87171', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>PKR {totalSpent.toLocaleString()}</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', margin: '2px 0 0 0' }}>{debits.length} txns</p>
+            </div>
+            <div style={{ flex: 1, background: 'rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+                <Target size={12} color="rgba(255,255,255,0.7)" />
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Total</span>
+              </div>
+              <p style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{filtered.length}</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', margin: '2px 0 0 0' }}>transactions</p>
+            </div>
           </div>
         </motion.div>
 
-        {/* Monthly Trend Chart */}
+        {/* Chart Toggle + Chart */}
         <motion.div
-          style={{ background: colors.card, borderRadius: '16px', padding: '16px', marginBottom: '16px', border: `1px solid ${colors.border}` }}
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+          style={{ background: colors.card, borderRadius: '20px', padding: '16px', marginBottom: '14px', border: `1px solid ${colors.border}` }}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <div>
-              <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '700', margin: '0 0 2px 0' }}>6-Month Trend</h3>
-              <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>Spending vs Income</p>
+              <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '700', margin: '0 0 2px 0' }}>
+                {period === 'week' ? 'Daily Activity' : '6-Month Trend'}
+              </h3>
+              <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>Income vs Spending</p>
             </div>
-            <BarChart2 size={18} color={colors.textSecondary} />
+            {/* Chart Type Toggle */}
+            <div style={{ display: 'flex', background: colors.actionBg, borderRadius: '10px', padding: '3px', gap: '2px', border: `1px solid ${colors.border}` }}>
+              {[
+                { id: 'bar', label: '▐▌' },
+                { id: 'area', label: '∿' },
+              ].map(c => (
+                <motion.button
+                  key={c.id}
+                  style={{ padding: '5px 10px', border: 'none', borderRadius: '8px', cursor: 'pointer', background: activeChart === c.id ? '#1A73E8' : 'transparent', color: activeChart === c.id ? '#fff' : colors.textSecondary, fontSize: '13px', fontWeight: '700', transition: 'all 0.2s' }}
+                  whileTap={{ scale: 0.9 }} onClick={() => setActiveChart(c.id)}
+                >
+                  {c.label}
+                </motion.button>
+              ))}
+            </div>
           </div>
-          {monthlyData.every(d => d.spent === 0 && d.received === 0) ? (
-            <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>No data available yet</p>
+
+          {chartData.every(d => d.spent === 0 && d.received === 0) ? (
+            <div style={{ textAlign: 'center', padding: '32px 0' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>No transaction data for this period</p>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={monthlyData} barSize={14}>
-                <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
-                <XAxis dataKey="month" tick={{ fontSize: 10, fill: colors.textSecondary }} />
-                <YAxis tick={{ fontSize: 9, fill: colors.textSecondary }} />
-                <Tooltip content={<CustomTooltip colors={colors} />} />
-                <Bar dataKey="spent" name="Spent" fill="#DC2626" radius={[4, 4, 0, 0]} opacity={0.85} />
-                <Bar dataKey="received" name="Received" fill="#16A34A" radius={[4, 4, 0, 0]} opacity={0.85} />
-              </BarChart>
-            </ResponsiveContainer>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeChart + period}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ResponsiveContainer width="100%" height={180}>
+                  {activeChart === 'bar' ? (
+                    <BarChart data={chartData} barSize={10} barGap={2}>
+                      <defs>
+                        <linearGradient id="spentGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#DC2626" stopOpacity={1} />
+                          <stop offset="100%" stopColor="#DC2626" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="receivedGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#16A34A" stopOpacity={1} />
+                          <stop offset="100%" stopColor="#16A34A" stopOpacity={0.7} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={colors.border} vertical={false} />
+                      <XAxis dataKey={chartKey} tick={{ fontSize: 10, fill: colors.textSecondary }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 9, fill: colors.textSecondary }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTooltip colors={colors} />} cursor={{ fill: colors.actionBg, radius: 4 }} />
+                      <Bar dataKey="spent" name="Spent" fill="url(#spentGrad)" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="received" name="Received" fill="url(#receivedGrad)" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  ) : (
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="areaSpent" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#DC2626" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#DC2626" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="areaReceived" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#16A34A" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#16A34A" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={colors.border} vertical={false} />
+                      <XAxis dataKey={chartKey} tick={{ fontSize: 10, fill: colors.textSecondary }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 9, fill: colors.textSecondary }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTooltip colors={colors} />} />
+                      <Area type="monotone" dataKey="spent" stroke="#DC2626" fill="url(#areaSpent)" strokeWidth={2.5} dot={{ r: 3, fill: '#DC2626' }} name="Spent" />
+                      <Area type="monotone" dataKey="received" stroke="#16A34A" fill="url(#areaReceived)" strokeWidth={2.5} dot={{ r: 3, fill: '#16A34A' }} name="Received" />
+                    </AreaChart>
+                  )}
+                </ResponsiveContainer>
+              </motion.div>
+            </AnimatePresence>
           )}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '8px' }}>
+
+          {/* Legend */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '10px' }}>
             {[{ color: '#DC2626', label: 'Spent' }, { color: '#16A34A', label: 'Received' }].map((l, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: l.color }} />
-                <span style={{ color: colors.textSecondary, fontSize: '11px' }}>{l.label}</span>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: l.color }} />
+                <span style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: '500' }}>{l.label}</span>
               </div>
             ))}
           </div>
         </motion.div>
 
-        {/* Spending by Category Pie */}
+        {/* Spending Breakdown Pie */}
         {pieData.length > 0 && (
           <motion.div
-            style={{ background: colors.card, borderRadius: '16px', padding: '16px', marginBottom: '16px', border: `1px solid ${colors.border}` }}
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            style={{ background: colors.card, borderRadius: '20px', padding: '16px', marginBottom: '14px', border: `1px solid ${colors.border}` }}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div>
-                <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '700', margin: '0 0 2px 0' }}>Spending Breakdown</h3>
-                <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>By category</p>
-              </div>
-              <PieChart size={18} color={colors.textSecondary} />
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <ResponsiveContainer width={130} height={130}>
-                <RePie>
-                  <Pie data={pieData} cx={60} cy={60} innerRadius={35} outerRadius={60} dataKey="value" strokeWidth={0}>
-                    {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(v) => `PKR ${Number(v).toLocaleString()}`} />
-                </RePie>
-              </ResponsiveContainer>
-
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {pieData.slice(0, 5).map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
-                    <span style={{ color: colors.textSecondary, fontSize: '11px', flex: 1 }}>{item.name}</span>
-                    <span style={{ color: colors.text, fontSize: '11px', fontWeight: '700' }}>
-                      {totalSpent > 0 ? Math.round((item.value / totalSpent) * 100) : 0}%
-                    </span>
-                  </div>
-                ))}
+                <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '700', margin: '0 0 2px 0' }}>Where Did It Go?</h3>
+                <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>Spending by category</p>
               </div>
             </div>
-          </motion.div>
-        )}
 
-        {/* Category Cards */}
-        {topCategories.length > 0 && (
-          <motion.div
-            style={{ background: colors.card, borderRadius: '16px', padding: '16px', marginBottom: '16px', border: `1px solid ${colors.border}` }}
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-          >
-            <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '700', margin: '0 0 14px 0' }}>Top Categories</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {topCategories.map((cat, i) => {
-                const pct = totalSpent > 0 ? (cat.value / totalSpent) * 100 : 0;
-                const cfg = CATEGORY_CONFIG[cat.key] || CATEGORY_CONFIG.other;
-                return (
-                  <div key={i}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {cfg.icon}
-                        </div>
-                        <span style={{ color: colors.text, fontSize: '13px', fontWeight: '600' }}>{cat.name}</span>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ color: colors.text, fontSize: '13px', fontWeight: '700' }}>PKR {cat.value.toLocaleString()}</span>
-                        <span style={{ color: colors.textSecondary, fontSize: '11px', marginLeft: '6px' }}>{Math.round(pct)}%</span>
-                      </div>
-                    </div>
-                    <div style={{ height: '6px', background: colors.actionBg, borderRadius: '3px', overflow: 'hidden' }}>
-                      <motion.div
-                        style={{ height: '100%', borderRadius: '3px', background: cat.color }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ duration: 0.8, delay: i * 0.1, ease: 'easeOut' }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Daily Activity Line Chart */}
-        {dailyData.length > 1 && (
-          <motion.div
-            style={{ background: colors.card, borderRadius: '16px', padding: '16px', marginBottom: '16px', border: `1px solid ${colors.border}` }}
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          >
-            <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '700', margin: '0 0 4px 0' }}>Daily Activity</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '11px', margin: '0 0 14px 0' }}>Last 7 days</p>
-            <ResponsiveContainer width="100%" height={140}>
-              <LineChart data={dailyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
-                <XAxis dataKey="day" tick={{ fontSize: 9, fill: colors.textSecondary }} />
-                <YAxis tick={{ fontSize: 9, fill: colors.textSecondary }} />
-                <Tooltip content={<CustomTooltip colors={colors} />} />
-                <Line type="monotone" dataKey="spent" stroke="#DC2626" strokeWidth={2} dot={{ r: 3, fill: '#DC2626' }} name="Spent" />
-                <Line type="monotone" dataKey="received" stroke="#16A34A" strokeWidth={2} dot={{ r: 3, fill: '#16A34A' }} name="Received" />
-              </LineChart>
-            </ResponsiveContainer>
-          </motion.div>
-        )}
-
-        {/* Biggest Transactions */}
-        {bigTx.length > 0 && (
-          <motion.div
-            style={{ background: colors.card, borderRadius: '16px', padding: '16px', marginBottom: '80px', border: `1px solid ${colors.border}` }}
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-          >
-            <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '700', margin: '0 0 14px 0' }}>Biggest Expenses</h3>
-            {bigTx.map((tx, i) => {
-              const cfg = CATEGORY_CONFIG[categorize(tx)] || CATEGORY_CONFIG.other;
-              return (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: i < bigTx.length - 1 ? `1px solid ${colors.border}` : 'none' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    {cfg.icon}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ color: colors.text, fontSize: '13px', fontWeight: '600', margin: '0 0 2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {tx.description || cfg.label}
-                    </p>
-                    <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>
-                      {parseDate(tx.date)?.toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}
-                    </p>
-                  </div>
-                  <p style={{ color: '#DC2626', fontSize: '14px', fontWeight: '700', margin: 0, flexShrink: 0 }}>
-                    - PKR {tx.amount.toLocaleString()}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ position: 'relative', width: '140px', height: '140px', flexShrink: 0 }}>
+                <ResponsiveContainer width={140} height={140}>
+                  <RePie>
+                    <Pie data={pieData} cx={65} cy={65} innerRadius={38} outerRadius={65} dataKey="value" strokeWidth={2} stroke={colors.card}
+                      animationBegin={0} animationDuration={800}>
+                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip formatter={(v) => `PKR ${Number(v).toLocaleString()}`} contentStyle={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '8px' }} />
+                  </RePie>
+                </ResponsiveContainer>
+                {/* Center label */}
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                  <p style={{ color: colors.textSecondary, fontSize: '9px', margin: '0 0 2px 0', fontWeight: '600', textTransform: 'uppercase' }}>Total</p>
+                  <p style={{ color: colors.text, fontSize: '12px', fontWeight: 'bold', margin: 0 }}>
+                    PKR {(totalSpent / 1000).toFixed(1)}K
                   </p>
                 </div>
+              </div>
+
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {pieData.slice(0, 5).map((item, i) => {
+                  const pct = totalSpent > 0 ? Math.round((item.value / totalSpent) * 100) : 0;
+                  const cfg = CATEGORY_CONFIG[item.key] || CATEGORY_CONFIG.other;
+                  return (
+                    <motion.div
+                      key={i}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 + i * 0.05 }}
+                    >
+                      <span style={{ fontSize: '14px' }}>{cfg.icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                          <span style={{ color: colors.text, fontSize: '11px', fontWeight: '600' }}>{item.name}</span>
+                          <span style={{ color: colors.textSecondary, fontSize: '10px' }}>{pct}%</span>
+                        </div>
+                        <div style={{ height: '4px', background: colors.actionBg, borderRadius: '2px', overflow: 'hidden' }}>
+                          <motion.div
+                            style={{ height: '100%', borderRadius: '2px', background: item.color }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ duration: 0.8, delay: 0.3 + i * 0.08, ease: 'easeOut' }}
+                          />
+                        </div>
+                      </div>
+                      <span style={{ color: item.color, fontSize: '10px', fontWeight: '700', flexShrink: 0 }}>
+                        {(item.value / 1000).toFixed(1)}K
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Stats Grid */}
+        <motion.div
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+        >
+          {[
+            {
+              label: 'Avg. per Transaction',
+              value: debits.length > 0 ? Math.round(totalSpent / debits.length) : 0,
+              icon: '📊', color: '#1A73E8', bg: 'rgba(26,115,232,0.06)',
+              border: 'rgba(26,115,232,0.15)', prefix: 'PKR '
+            },
+            {
+              label: 'Biggest Expense',
+              value: bigTx[0]?.amount || 0,
+              icon: '🔝', color: '#DC2626', bg: 'rgba(220,38,38,0.06)',
+              border: 'rgba(220,38,38,0.15)', prefix: 'PKR '
+            },
+            {
+              label: 'Categories Used',
+              value: pieData.length,
+              icon: '🏷️', color: '#7C3AED', bg: 'rgba(124,58,237,0.06)',
+              border: 'rgba(124,58,237,0.15)', suffix: ' types'
+            },
+            {
+              label: savings >= 0 ? 'Saving Rate' : 'Over-spending',
+              value: Math.abs(savings),
+              icon: savings >= 0 ? '💎' : '⚠️',
+              color: savings >= 0 ? '#16A34A' : '#DC2626',
+              bg: savings >= 0 ? 'rgba(22,163,74,0.06)' : 'rgba(220,38,38,0.06)',
+              border: savings >= 0 ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.15)',
+              suffix: '%'
+            },
+          ].map((stat, i) => (
+            <motion.div
+              key={i}
+              style={{ background: stat.bg, borderRadius: '16px', padding: '14px', border: `1px solid ${stat.border}` }}
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 + i * 0.05 }}
+            >
+              <div style={{ fontSize: '20px', marginBottom: '8px' }}>{stat.icon}</div>
+              <p style={{ color: stat.color, fontSize: '16px', fontWeight: 'bold', margin: '0 0 3px 0' }}>
+                {stat.prefix || ''}{stat.value.toLocaleString()}{stat.suffix || ''}
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.3px', margin: 0 }}>
+                {stat.label}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Biggest Expenses */}
+        {bigTx.length > 0 && (
+          <motion.div
+            style={{ background: colors.card, borderRadius: '20px', overflow: 'hidden', border: `1px solid ${colors.border}`, marginBottom: '80px' }}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+          >
+            <div style={{ padding: '16px 16px 12px', borderBottom: `1px solid ${colors.border}` }}>
+              <h3 style={{ color: colors.text, fontSize: '14px', fontWeight: '700', margin: '0 0 2px 0' }}>Top Expenses</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>Largest transactions this period</p>
+            </div>
+            {bigTx.map((tx, i) => {
+              const cfg = CATEGORY_CONFIG[categorize(tx)] || CATEGORY_CONFIG.other;
+              const pct = totalSpent > 0 ? (tx.amount / totalSpent) * 100 : 0;
+              return (
+                <motion.div
+                  key={i}
+                  style={{ padding: '12px 16px', borderBottom: i < bigTx.length - 1 ? `1px solid ${colors.border}` : 'none' }}
+                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.06 }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
+                      {cfg.icon}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ color: colors.text, fontSize: '13px', fontWeight: '600', margin: '0 0 2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {tx.description || cfg.label}
+                      </p>
+                      <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>
+                        {parseDate(tx.date)?.toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}
+                        <span style={{ marginLeft: '6px', color: cfg.color, fontWeight: '600' }}>{Math.round(pct)}% of spending</span>
+                      </p>
+                    </div>
+                    <p style={{ color: '#DC2626', fontSize: '14px', fontWeight: '700', margin: 0, flexShrink: 0 }}>
+                      PKR {tx.amount.toLocaleString()}
+                    </p>
+                  </div>
+                  <div style={{ height: '3px', background: colors.actionBg, borderRadius: '2px', overflow: 'hidden' }}>
+                    <motion.div
+                      style={{ height: '100%', borderRadius: '2px', background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}88)` }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ duration: 0.7, delay: 0.5 + i * 0.08, ease: 'easeOut' }}
+                    />
+                  </div>
+                </motion.div>
               );
             })}
           </motion.div>
@@ -403,11 +541,9 @@ export default function Insights() {
             style={{ textAlign: 'center', padding: '60px 20px', background: colors.card, borderRadius: '20px', border: `1px solid ${colors.border}` }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           >
-            <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: colors.actionBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <BarChart2 size={28} color={colors.textSecondary} />
-            </div>
-            <p style={{ color: colors.text, fontSize: '16px', fontWeight: '600', margin: '0 0 6px 0' }}>No data yet</p>
-            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>Make transactions to see insights</p>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>📊</div>
+            <p style={{ color: colors.text, fontSize: '16px', fontWeight: '600', margin: '0 0 6px 0' }}>No data for this period</p>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>Make some transactions to see insights</p>
           </motion.div>
         )}
       </div>
