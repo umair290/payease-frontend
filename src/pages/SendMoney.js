@@ -8,12 +8,13 @@ import {
   ArrowRight, Send, Lock, Phone,
   CreditCard, FileText, Printer, Share2,
   X, ArrowUpRight, User, Wallet,
-  AlertCircle, ChevronRight
+  AlertCircle, ChevronRight, Star, Trash2,
+  Users, BookUser
 } from 'lucide-react';
 
 export default function SendMoney() {
   const { colors } = useTheme();
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [step,         setStep]         = useState(1);
@@ -30,10 +31,22 @@ export default function SendMoney() {
   const [success,      setSuccess]      = useState(false);
   const [senderInfo,   setSenderInfo]   = useState(null);
 
+  // ── Beneficiary state ──
+  const [beneficiaries,     setBeneficiaries]     = useState([]);
+  const [savePrompt,        setSavePrompt]        = useState(false);
+  const [showAllBenef,      setShowAllBenef]      = useState(false);
+  const [toastMsg,          setToastMsg]          = useState('');
+
   const [txRef] = useState('TXN' + Date.now().toString().slice(-8));
   const [txDate] = useState(new Date().toLocaleString('en-PK', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
   }));
+
+  // ── Load beneficiaries on mount ──
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('payease_beneficiaries') || '[]');
+    setBeneficiaries(saved);
+  }, []);
 
   useEffect(() => {
     const walletFromQR = searchParams.get('wallet');
@@ -43,6 +56,42 @@ export default function SendMoney() {
       lookupWalletByNumber(walletFromQR);
     }
   }, []);
+
+  // ── Toast helper ──
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 3000);
+  };
+
+  // ── Save beneficiary ──
+  const saveBeneficiary = () => {
+    const existing   = JSON.parse(localStorage.getItem('payease_beneficiaries') || '[]');
+    const alreadySaved = existing.find(b => b.wallet_number === recipient.wallet_number);
+    if (alreadySaved) { setSavePrompt(false); showToast('Already in your contacts'); return; }
+
+    const newBen = {
+      id:            Date.now(),
+      full_name:     recipient.full_name,
+      phone:         recipient.phone,
+      wallet_number: recipient.wallet_number,
+      kyc_verified:  recipient.kyc_verified,
+      saved_at:      new Date().toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }),
+    };
+    const updated = [newBen, ...existing].slice(0, 10); // max 10
+    localStorage.setItem('payease_beneficiaries', JSON.stringify(updated));
+    setBeneficiaries(updated);
+    setSavePrompt(false);
+    showToast('Saved to your contacts!');
+  };
+
+  // ── Delete beneficiary ──
+  const deleteBeneficiary = (id, e) => {
+    e.stopPropagation();
+    const updated = beneficiaries.filter(b => b.id !== id);
+    localStorage.setItem('payease_beneficiaries', JSON.stringify(updated));
+    setBeneficiaries(updated);
+    showToast('Contact removed');
+  };
 
   const lookupWalletByNumber = async (wNumber) => {
     setLoading(true); setError('');
@@ -78,7 +127,7 @@ export default function SendMoney() {
 
   const handleConfirm = () => {
     if (!amount || parseFloat(amount) <= 0) { setError('Please enter a valid amount'); return; }
-    if (parseFloat(amount) > 50000) { setError('Maximum transfer limit is PKR 50,000'); return; }
+    if (parseFloat(amount) > 50000)         { setError('Maximum transfer limit is PKR 50,000'); return; }
     setError(''); setStep(3);
   };
 
@@ -95,13 +144,21 @@ export default function SendMoney() {
       logActivity('Money Sent', `Sent PKR ${parseFloat(amount).toLocaleString()} to ${recipient.full_name} (${walletNumber})`);
       setShowPinModal(false);
       setSuccess(true);
+
+      // Prompt to save if not already saved
+      const existing = JSON.parse(localStorage.getItem('payease_beneficiaries') || '[]');
+      const alreadySaved = existing.find(b => b.wallet_number === walletNumber);
+      if (!alreadySaved) {
+        setTimeout(() => setSavePrompt(true), 600);
+      }
     } catch (err) { setError(err.response?.data?.error || 'Transfer failed'); }
     setLoading(false);
   };
 
   const resetAll = () => {
     setSuccess(false); setStep(1); setWalletNumber(''); setPhoneNumber('');
-    setAmount(''); setDescription(''); setPin(''); setRecipient(null); setError('');
+    setAmount(''); setDescription(''); setPin(''); setRecipient(null);
+    setError(''); setSavePrompt(false);
   };
 
   const handlePrint = () => {
@@ -122,9 +179,25 @@ export default function SendMoney() {
     else navigator.clipboard.writeText(text);
   };
 
+  // ── Displayed beneficiaries ──
+  const displayedBenef = showAllBenef ? beneficiaries : beneficiaries.slice(0, 3);
+
   // ── SUCCESS SCREEN ──
   if (success) return (
     <div style={{ minHeight: '100vh', background: colors.bg, maxWidth: '480px', margin: '0 auto' }}>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toastMsg && (
+          <motion.div
+            style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: '#16A34A', color: '#fff', padding: '12px 20px', borderRadius: '12px', zIndex: 9999, fontSize: '13px', fontWeight: '600', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+            initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }}
+          >
+            <CheckCircle size={14} color="#fff" /> {toastMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div style={{ background: 'linear-gradient(135deg, #1A73E8, #0052CC)', padding: '40px 24px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
         <div style={{ position: 'absolute', bottom: '-30px', left: '-30px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
@@ -135,22 +208,13 @@ export default function SendMoney() {
         >
           <CheckCircle size={40} color="#fff" />
         </motion.div>
-        <motion.h2
-          style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold', margin: '0 0 6px 0' }}
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-        >
+        <motion.h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold', margin: '0 0 6px 0' }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           Transfer Successful
         </motion.h2>
-        <motion.p
-          style={{ color: 'rgba(255,255,255,0.75)', fontSize: '13px', margin: '0 0 16px 0' }}
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-        >
+        <motion.p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '13px', margin: '0 0 16px 0' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
           Your payment has been processed
         </motion.p>
-        <motion.div
-          style={{ display: 'inline-block', background: 'rgba(255,255,255,0.15)', borderRadius: '14px', padding: '8px 24px' }}
-          initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5, type: 'spring' }}
-        >
+        <motion.div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.15)', borderRadius: '14px', padding: '8px 24px' }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5, type: 'spring' }}>
           <span style={{ color: '#fff', fontSize: '30px', fontWeight: 'bold' }}>PKR {parseFloat(amount).toLocaleString()}</span>
         </motion.div>
       </div>
@@ -176,11 +240,11 @@ export default function SendMoney() {
 
           <div style={{ padding: '4px 20px' }}>
             {[
-              { label: 'Wallet ID',    value: walletNumber },
-              { label: 'Amount',       value: `PKR ${parseFloat(amount).toLocaleString()}`, color: '#1A73E8', bold: true },
+              { label: 'Wallet ID', value: walletNumber },
+              { label: 'Amount',    value: `PKR ${parseFloat(amount).toLocaleString()}`, color: '#1A73E8', bold: true },
               description && { label: 'Note', value: description },
-              { label: 'Reference',    value: txRef },
-              { label: 'Date',         value: txDate },
+              { label: 'Reference', value: txRef },
+              { label: 'Date',      value: txDate },
             ].filter(Boolean).map((row, i, arr) => (
               <motion.div
                 key={i}
@@ -218,11 +282,82 @@ export default function SendMoney() {
           <Send size={15} color={colors.textSecondary} /> Send Another Payment
         </motion.button>
       </div>
+
+      {/* ── Save Beneficiary Prompt ── */}
+      <AnimatePresence>
+        {savePrompt && (
+          <motion.div
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          >
+            <motion.div
+              style={{ background: colors.card, borderRadius: '24px 24px 0 0', padding: '24px 24px 44px', width: '100%', maxWidth: '480px', boxSizing: 'border-box' }}
+              initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            >
+              <div style={{ width: '40px', height: '4px', background: colors.border, borderRadius: '2px', margin: '0 auto 20px' }} />
+
+              {/* Icon + Title */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+                <div style={{ width: '52px', height: '52px', borderRadius: '16px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '22px', fontWeight: 'bold', flexShrink: 0 }}>
+                  {recipient?.full_name?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p style={{ color: colors.text, fontSize: '16px', fontWeight: 'bold', margin: '0 0 3px 0' }}>Save as Contact?</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0 }}>
+                    Quickly send to <strong style={{ color: colors.text }}>{recipient?.full_name}</strong> next time
+                  </p>
+                </div>
+              </div>
+
+              {/* Contact preview */}
+              <div style={{ background: colors.actionBg, borderRadius: '14px', padding: '14px 16px', marginBottom: '16px', border: `1px solid ${colors.border}` }}>
+                {[
+                  { label: 'Name',   value: recipient?.full_name },
+                  { label: 'Phone',  value: recipient?.phone },
+                  { label: 'Wallet', value: recipient?.wallet_number },
+                ].map((row, i, arr) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < arr.length - 1 ? `1px solid ${colors.border}` : 'none' }}>
+                    <span style={{ color: colors.textSecondary, fontSize: '12px' }}>{row.label}</span>
+                    <span style={{ color: colors.text, fontSize: '12px', fontWeight: '600', fontFamily: row.label === 'Wallet' ? 'monospace' : 'inherit' }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <motion.button
+                  style={{ flex: 1, padding: '13px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
+                  whileTap={{ scale: 0.97 }} onClick={() => setSavePrompt(false)}
+                >Not Now</motion.button>
+                <motion.button
+                  style={{ flex: 2, padding: '13px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 14px rgba(26,115,232,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  whileTap={{ scale: 0.97 }} onClick={saveBeneficiary}
+                >
+                  <Star size={15} color="#fff" /> Save Contact
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 
+  // ── MAIN FLOW ──
   return (
     <div style={{ minHeight: '100vh', background: colors.bg, maxWidth: '480px', margin: '0 auto' }}>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toastMsg && (
+          <motion.div
+            style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: '#16A34A', color: '#fff', padding: '12px 20px', borderRadius: '12px', zIndex: 9999, fontSize: '13px', fontWeight: '600', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+            initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }}
+          >
+            <CheckCircle size={14} color="#fff" /> {toastMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: colors.card, borderBottom: `1px solid ${colors.border}`, position: 'sticky', top: 0, zIndex: 10 }}>
@@ -264,17 +399,106 @@ export default function SendMoney() {
           {/* ── STEP 1: Find Recipient ── */}
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+
+              {/* ── SAVED BENEFICIARIES ── */}
+              {beneficiaries.length > 0 && (
+                <motion.div
+                  style={{ background: colors.card, borderRadius: '16px', padding: '16px', marginBottom: '14px', border: `1px solid ${colors.border}` }}
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                >
+                  {/* Section header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(26,115,232,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Users size={14} color="#1A73E8" />
+                      </div>
+                      <p style={{ color: colors.text, fontSize: '13px', fontWeight: '700', margin: 0 }}>Saved Contacts</p>
+                      <span style={{ background: 'rgba(26,115,232,0.1)', color: '#1A73E8', fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '20px' }}>
+                        {beneficiaries.length}
+                      </span>
+                    </div>
+                    {beneficiaries.length > 3 && (
+                      <motion.span
+                        style={{ color: '#1A73E8', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setShowAllBenef(!showAllBenef)}
+                      >
+                        {showAllBenef ? 'Show less' : `+${beneficiaries.length - 3} more`}
+                      </motion.span>
+                    )}
+                  </div>
+
+                  {/* Contact list */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {displayedBenef.map((ben, i) => (
+                      <motion.div
+                        key={ben.id}
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 12px', background: colors.actionBg, borderRadius: '12px', border: `1px solid ${colors.border}`, cursor: 'pointer' }}
+                        whileTap={{ scale: 0.98 }}
+                        initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                        onClick={() => {
+                          setWalletNumber(ben.wallet_number);
+                          lookupWalletByNumber(ben.wallet_number);
+                        }}
+                      >
+                        {/* Avatar */}
+                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '17px', fontWeight: 'bold', flexShrink: 0 }}>
+                          {ben.full_name?.charAt(0).toUpperCase()}
+                        </div>
+
+                        {/* Info */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ color: colors.text, fontSize: '13px', fontWeight: '600', margin: '0 0 2px 0' }}>{ben.full_name}</p>
+                          <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>
+                            {ben.phone} · <span style={{ fontFamily: 'monospace' }}>{ben.wallet_number?.slice(0, 8)}...</span>
+                          </p>
+                        </div>
+
+                        {/* Verified badge */}
+                        {ben.kyc_verified && (
+                          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(22,163,74,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <CheckCircle size={13} color="#16A34A" />
+                          </div>
+                        )}
+
+                        {/* Delete button */}
+                        <motion.div
+                          style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(220,38,38,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => deleteBeneficiary(ben.id, e)}
+                        >
+                          <Trash2 size={14} color="#DC2626" />
+                        </motion.div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── SEARCH CARD ── */}
               <div style={{ background: colors.card, borderRadius: '20px', padding: '24px', border: `1px solid ${colors.border}` }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(26,115,232,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                  <Search size={28} color="#1A73E8" />
-                </div>
-                <h3 style={{ color: colors.text, fontSize: '20px', fontWeight: 'bold', margin: '0 0 6px 0', textAlign: 'center' }}>Find Recipient</h3>
-                <p style={{ color: colors.textSecondary, fontSize: '13px', textAlign: 'center', margin: '0 0 22px 0', lineHeight: '1.6' }}>
-                  Search by wallet number or phone number
-                </p>
+                {beneficiaries.length === 0 && (
+                  <>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(26,115,232,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                      <Search size={28} color="#1A73E8" />
+                    </div>
+                    <h3 style={{ color: colors.text, fontSize: '20px', fontWeight: 'bold', margin: '0 0 6px 0', textAlign: 'center' }}>Find Recipient</h3>
+                    <p style={{ color: colors.textSecondary, fontSize: '13px', textAlign: 'center', margin: '0 0 22px 0', lineHeight: '1.6' }}>
+                      Search by wallet number or phone number
+                    </p>
+                  </>
+                )}
+
+                {beneficiaries.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                    <div style={{ flex: 1, height: '1px', background: colors.border }} />
+                    <span style={{ color: colors.textSecondary, fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Or search new</span>
+                    <div style={{ flex: 1, height: '1px', background: colors.border }} />
+                  </div>
+                )}
 
                 {/* Tab Toggle */}
-                <div style={{ display: 'flex', background: colors.actionBg, borderRadius: '12px', padding: '4px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+                <div style={{ display: 'flex', background: colors.actionBg, borderRadius: '12px', padding: '4px', marginBottom: '16px', border: `1px solid ${colors.border}` }}>
                   {[{ id: 'wallet', label: 'Wallet ID', icon: <CreditCard size={14} /> }, { id: 'phone', label: 'Phone Number', icon: <Phone size={14} /> }].map((tab) => (
                     <motion.button
                       key={tab.id}
@@ -338,8 +562,6 @@ export default function SendMoney() {
           {/* ── STEP 2: Amount ── */}
           {step === 2 && recipient && (
             <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-
-              {/* Recipient Card */}
               <div style={{ background: colors.card, borderRadius: '16px', padding: '16px', marginBottom: '14px', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{ width: '52px', height: '52px', borderRadius: '16px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '22px', fontWeight: 'bold', flexShrink: 0 }}>
                   {recipient.full_name?.charAt(0).toUpperCase()}
@@ -357,10 +579,8 @@ export default function SendMoney() {
                 </div>
               </div>
 
-              {/* Amount Form */}
               <div style={{ background: colors.card, borderRadius: '20px', padding: '24px', border: `1px solid ${colors.border}` }}>
                 <h3 style={{ color: colors.text, fontSize: '18px', fontWeight: 'bold', margin: '0 0 20px 0' }}>Enter Amount</h3>
-
                 <div style={{ marginBottom: '16px' }}>
                   <p style={{ color: colors.textSecondary, fontSize: '12px', fontWeight: '600', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Amount (PKR)</p>
                   <div style={{ display: 'flex', alignItems: 'center', border: `2px solid ${amount ? '#1A73E8' : colors.border}`, borderRadius: '12px', padding: '0 16px', background: colors.inputBg, transition: 'all 0.2s', boxShadow: amount ? '0 0 0 3px rgba(26,115,232,0.08)' : 'none' }}>
@@ -416,28 +636,21 @@ export default function SendMoney() {
             </motion.div>
           )}
 
-          {/* ── STEP 3: Confirm (redesigned) ── */}
+          {/* ── STEP 3: Confirm ── */}
           {step === 3 && (
             <motion.div key="step3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-
-              {/* Transfer Visual */}
               <motion.div
                 style={{ background: 'linear-gradient(135deg, #1A73E8, #0052CC)', borderRadius: '20px', padding: '24px', marginBottom: '14px', position: 'relative', overflow: 'hidden' }}
                 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               >
                 <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
-
-                {/* Amount */}
                 <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                   <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: '600', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>You are sending</p>
                   <h2 style={{ color: '#fff', fontSize: '36px', fontWeight: 'bold', margin: 0, letterSpacing: '-1px' }}>
                     PKR {parseFloat(amount).toLocaleString()}
                   </h2>
                 </div>
-
-                {/* Sender → Receiver */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  {/* Sender */}
                   <div style={{ flex: 1, background: 'rgba(255,255,255,0.12)', borderRadius: '14px', padding: '12px', textAlign: 'center' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
                       {senderInfo?.full_name?.charAt(0).toUpperCase()}
@@ -445,15 +658,9 @@ export default function SendMoney() {
                     <p style={{ color: '#fff', fontSize: '13px', fontWeight: '600', margin: '0 0 2px 0' }}>{senderInfo?.full_name?.split(' ')[0]}</p>
                     <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px', margin: 0 }}>You</p>
                   </div>
-
-                  {/* Arrow */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <ArrowRight size={18} color="#fff" />
-                    </div>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ArrowRight size={18} color="#fff" />
                   </div>
-
-                  {/* Receiver */}
                   <div style={{ flex: 1, background: 'rgba(255,255,255,0.12)', borderRadius: '14px', padding: '12px', textAlign: 'center' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
                       {recipient?.full_name?.charAt(0).toUpperCase()}
@@ -464,7 +671,6 @@ export default function SendMoney() {
                 </div>
               </motion.div>
 
-              {/* Transaction Details */}
               <motion.div
                 style={{ background: colors.card, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden', marginBottom: '14px' }}
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -473,10 +679,10 @@ export default function SendMoney() {
                   <p style={{ color: colors.text, fontSize: '13px', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Transaction Details</p>
                 </div>
                 {[
-                  { label: 'Full Name',  value: recipient?.full_name,    icon: <User size={14} color="#1A73E8" /> },
-                  { label: 'Phone',      value: recipient?.phone,        icon: <Phone size={14} color="#16A34A" /> },
-                  { label: 'Wallet ID',  value: recipient?.wallet_number, icon: <Wallet size={14} color="#7C3AED" /> },
-                  { label: 'Amount',     value: `PKR ${parseFloat(amount).toLocaleString()}`, icon: <CreditCard size={14} color="#EA580C" />, highlight: true },
+                  { label: 'Full Name', value: recipient?.full_name,     icon: <User size={14} color="#1A73E8" /> },
+                  { label: 'Phone',     value: recipient?.phone,         icon: <Phone size={14} color="#16A34A" /> },
+                  { label: 'Wallet ID', value: recipient?.wallet_number, icon: <Wallet size={14} color="#7C3AED" /> },
+                  { label: 'Amount',    value: `PKR ${parseFloat(amount).toLocaleString()}`, icon: <CreditCard size={14} color="#EA580C" />, highlight: true },
                   description && { label: 'Note', value: description, icon: <FileText size={14} color="#6B7280" /> },
                 ].filter(Boolean).map((row, i, arr) => (
                   <motion.div
@@ -495,7 +701,6 @@ export default function SendMoney() {
                 ))}
               </motion.div>
 
-              {/* Security Note */}
               <motion.div
                 style={{ background: 'rgba(26,115,232,0.06)', border: '1px solid rgba(26,115,232,0.15)', borderRadius: '12px', padding: '12px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
@@ -532,7 +737,6 @@ export default function SendMoney() {
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
             >
               <div style={{ width: '40px', height: '4px', background: colors.border, borderRadius: '2px', margin: '0 auto 20px' }} />
-
               <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                 <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(26,115,232,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
                   <Lock size={26} color="#1A73E8" />
@@ -541,7 +745,6 @@ export default function SendMoney() {
                 <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>Enter your 4-digit security PIN to confirm</p>
               </div>
 
-              {/* Summary */}
               <div style={{ background: colors.actionBg, borderRadius: '14px', padding: '14px 16px', marginBottom: '20px', border: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'linear-gradient(135deg, #1A73E8, #0052CC)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>
@@ -557,7 +760,6 @@ export default function SendMoney() {
                 </p>
               </div>
 
-              {/* PIN Boxes */}
               <p style={{ color: colors.text, fontSize: '12px', fontWeight: '600', margin: '0 0 8px 0', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.5px' }}>4-Digit PIN</p>
               <div style={{ position: 'relative', marginBottom: '6px' }}>
                 <input
@@ -595,9 +797,7 @@ export default function SendMoney() {
                 <motion.button
                   style={{ flex: 1, padding: '14px', background: 'transparent', color: colors.textSecondary, border: `1.5px solid ${colors.border}`, borderRadius: '12px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}
                   whileTap={{ scale: 0.97 }} onClick={() => { setShowPinModal(false); setPin(''); setError(''); }}
-                >
-                  Cancel
-                </motion.button>
+                >Cancel</motion.button>
                 <motion.button
                   style={{ flex: 2, padding: '14px', background: pin.length === 4 && !loading ? 'linear-gradient(135deg, #1A73E8, #0052CC)' : colors.actionBg, color: pin.length === 4 && !loading ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold', cursor: pin.length === 4 ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: pin.length === 4 ? '0 6px 20px rgba(26,115,232,0.3)' : 'none', transition: 'all 0.2s' }}
                   whileTap={pin.length === 4 ? { scale: 0.97 } : {}} onClick={handleSend} disabled={loading || pin.length !== 4}
