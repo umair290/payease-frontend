@@ -316,10 +316,10 @@ export default function QRCodePage() {
 
                   {/* Corner brackets */}
                   {[
-                    { top: '52px',  left: '52px',  bT: true,  bL: true,  bR: false, bB: false, rTL: '4px 0 0 0' },
-                    { top: '52px',  right: '52px', bT: true,  bL: false, bR: true,  bB: false, rTL: '0 4px 0 0' },
-                    { bottom: '52px', left: '52px',  bT: false, bL: true,  bR: false, bB: true,  rTL: '0 0 0 4px' },
-                    { bottom: '52px', right: '52px', bT: false, bL: false, bR: true,  bB: true,  rTL: '0 0 4px 0' },
+                    { top: '22px',  left: '22px',  bT: true,  bL: true,  bR: false, bB: false, rTL: '4px 0 0 0' },
+                    { top: '22px',  right: '22px', bT: true,  bL: false, bR: true,  bB: false, rTL: '0 4px 0 0' },
+                    { bottom: '22px', left: '22px',  bT: false, bL: true,  bR: false, bB: true,  rTL: '0 0 0 4px' },
+                    { bottom: '22px', right: '22px', bT: false, bL: false, bR: true,  bB: true,  rTL: '0 0 4px 0' },
                   ].map((c, i) => (
                     <div key={i} style={{ position: 'absolute', top: c.top, bottom: c.bottom, left: c.left, right: c.right, width: '32px', height: '32px', borderTop: c.bT ? '3px solid #1A73E8' : 'none', borderLeft: c.bL ? '3px solid #1A73E8' : 'none', borderRight: c.bR ? '3px solid #1A73E8' : 'none', borderBottom: c.bB ? '3px solid #1A73E8' : 'none', borderRadius: c.rTL, zIndex: 2, pointerEvents: 'none' }} />
                   ))}
