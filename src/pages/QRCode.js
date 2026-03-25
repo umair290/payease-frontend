@@ -336,7 +336,37 @@ export default function QRCodePage() {
                     #html5-qrcode-button-camera-start, #html5-qrcode-button-camera-stop { background: linear-gradient(135deg,#1A73E8,#7C3AED) !important; color: #fff !important; border: none !important; border-radius: 12px !important; padding: 10px 20px !important; font-weight: 700 !important; cursor: pointer !important; font-size: 13px !important; }
                   `}</style>
 
-                  <div id="qr-reader" style={{ width: '100%' }} />
+                  <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}>
+                    <div id="qr-reader" style={{ width: '100%', height: '100%' }} />
+
+                    {/* Corner brackets */}
+                    {[
+                      { top: '10px', left: '10px',  bT: true,  bL: true,  bR: false, bB: false, rTL: '4px 0 0 0' },
+                      { top: '10px', right: '10px', bT: true,  bL: false, bR: true,  bB: false, rTL: '0 4px 0 0' },
+                      { bottom: '10px', left: '10px',  bT: false, bL: true,  bR: false, bB: true,  rTL: '0 0 0 4px' },
+                      { bottom: '10px', right: '10px', bT: false, bL: false, bR: true,  bB: true,  rTL: '0 0 4px 0' },
+                    ].map((c, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          position: 'absolute',
+                          top: c.top,
+                          bottom: c.bottom,
+                          left: c.left,
+                          right: c.right,
+                          width: '32px',
+                          height: '32px',
+                          borderTop: c.bT ? '3px solid #1A73E8' : 'none',
+                          borderLeft: c.bL ? '3px solid #1A73E8' : 'none',
+                          borderRight: c.bR ? '3px solid #1A73E8' : 'none',
+                          borderBottom: c.bB ? '3px solid #1A73E8' : 'none',
+                          borderRadius: c.rTL,
+                          zIndex: 5,
+                          pointerEvents: 'none'
+                        }}
+                      />
+                    ))}
+                  </div>
                 </motion.div>
 
                 <p style={{ color: textSec, fontSize: '12px', textAlign: 'center', margin: 0, lineHeight: '1.6', fontWeight: '500' }}>
