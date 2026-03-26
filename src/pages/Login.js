@@ -25,7 +25,6 @@ const LocationPopup = ({ onAllow, onDeny }) => (
       exit={{ scale: 0.82, opacity: 0, y: 50 }}
       transition={{ type: 'spring', stiffness: 280, damping: 26 }}
     >
-      {/* Header */}
       <div style={{ background: 'linear-gradient(135deg,#1A1FEF,#1A73E8,#7C3AED)', padding: '28px 24px 22px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent)' }} />
@@ -39,13 +38,11 @@ const LocationPopup = ({ onAllow, onDeny }) => (
         <h3 style={{ color: '#fff', fontSize: '19px', fontWeight: '800', margin: '0 0 4px 0', letterSpacing: '-0.3px' }}>Allow Location</h3>
         <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0, fontWeight: '500' }}>For your account security</p>
       </div>
-
-      {/* Body */}
       <div style={{ padding: '20px 20px 24px' }}>
         <div style={{ marginBottom: '16px' }}>
           {[
-            { icon: <Shield size={14} color="#1A73E8" />,    bg: 'rgba(26,115,232,0.07)',  text: 'Verify your login location for security' },
-            { icon: <MapPin size={14} color="#16A34A" />,    bg: 'rgba(22,163,74,0.07)',   text: 'Detect suspicious logins from new places' },
+            { icon: <Shield size={14} color="#1A73E8" />,      bg: 'rgba(26,115,232,0.07)',  text: 'Verify your login location for security' },
+            { icon: <MapPin size={14} color="#16A34A" />,      bg: 'rgba(22,163,74,0.07)',   text: 'Detect suspicious logins from new places' },
             { icon: <CheckCircle size={14} color="#7C3AED" />, bg: 'rgba(124,58,237,0.07)', text: 'Your location is never shared with others' },
           ].map((item, i) => (
             <motion.div key={i}
@@ -57,21 +54,18 @@ const LocationPopup = ({ onAllow, onDeny }) => (
             </motion.div>
           ))}
         </div>
-
         <motion.button
           style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', color: '#fff', border: 'none', borderRadius: '14px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', marginBottom: '8px', boxShadow: '0 6px 20px rgba(26,115,232,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           whileTap={{ scale: 0.97 }} onClick={onAllow}
         >
           <MapPin size={15} color="#fff" /> Allow Location Access
         </motion.button>
-
         <motion.button
           style={{ width: '100%', padding: '12px', background: 'transparent', color: '#94A3B8', border: '1.5px solid #E2E8F0', borderRadius: '12px', fontSize: '13px', cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
           whileTap={{ scale: 0.97 }} onClick={onDeny}
         >
           <X size={13} color="#94A3B8" /> Not Now
         </motion.button>
-
         <p style={{ color: '#94A3B8', fontSize: '10px', textAlign: 'center', margin: '10px 0 0 0', lineHeight: '1.6' }}>
           You can change this anytime in your browser settings
         </p>
@@ -98,7 +92,7 @@ const ForgotModal = ({ show, onClose }) => {
     if (countdown > 0) { const t = setTimeout(() => setCountdown(c => c - 1), 1000); return () => clearTimeout(t); }
   }, [countdown]);
 
-  const resetForm = () => { setStep(1); setEmail(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); setError(''); setCountdown(0); setSuccess(false); };
+  const resetForm  = () => { setStep(1); setEmail(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); setError(''); setCountdown(0); setSuccess(false); };
   const handleClose = () => { resetForm(); onClose(); };
 
   const sendOtp = async () => {
@@ -138,9 +132,7 @@ const ForgotModal = ({ show, onClose }) => {
       {show && (
         <motion.div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9998, padding: '20px', boxSizing: 'border-box' }}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <motion.div style={{ position: 'absolute', inset: 0, background: 'rgba(5,10,25,0.9)', backdropFilter: 'blur(12px)' }}
-            onClick={handleClose} />
-
+          <motion.div style={{ position: 'absolute', inset: 0, background: 'rgba(5,10,25,0.9)', backdropFilter: 'blur(12px)' }} onClick={handleClose} />
           <motion.div
             style={{ background: '#fff', borderRadius: '26px', width: '100%', maxWidth: '360px', overflow: 'hidden', boxShadow: '0 40px 80px rgba(0,0,0,0.5)', position: 'relative', zIndex: 1 }}
             initial={{ scale: 0.82, opacity: 0, y: 50 }}
@@ -216,8 +208,10 @@ const ForgotModal = ({ show, onClose }) => {
                       </motion.div>}
                       <motion.button style={{ width: '100%', padding: '13px', marginTop: '12px', background: email ? 'linear-gradient(135deg,#1A73E8,#7C3AED)' : '#F1F5F9', color: email ? '#fff' : '#94A3B8', border: 'none', borderRadius: '13px', fontSize: '14px', fontWeight: '800', cursor: email ? 'pointer' : 'default', boxShadow: email ? '0 6px 20px rgba(26,115,232,0.35)' : 'none', marginBottom: '8px', transition: 'all 0.25s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px' }}
                         whileTap={email ? { scale: 0.97 } : {}} onClick={sendOtp} disabled={loading}>
-                        {loading ? <motion.span animate={{ opacity: [1,0.4,1] }} transition={{ duration: 1, repeat: Infinity }}>Sending...</motion.span>
-                          : <><Mail size={14} color={email ? '#fff' : '#94A3B8'} /> Send Code</>}
+                        {loading
+                          ? <motion.span animate={{ opacity: [1,0.4,1] }} transition={{ duration: 1, repeat: Infinity }}>Sending...</motion.span>
+                          : <><Mail size={14} color={email ? '#fff' : '#94A3B8'} /> Send Code</>
+                        }
                       </motion.button>
                       <motion.button style={{ width: '100%', padding: '11px', background: 'transparent', color: '#94A3B8', border: '1.5px solid #E2E8F0', borderRadius: '12px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
                         whileTap={{ scale: 0.97 }} onClick={handleClose}>Cancel</motion.button>
@@ -226,7 +220,6 @@ const ForgotModal = ({ show, onClose }) => {
 
                   {step === 2 && (
                     <motion.div key="f2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-                      {/* Sent banner */}
                       <div style={{ background: 'rgba(22,163,74,0.07)', border: '1px solid rgba(22,163,74,0.15)', borderRadius: '12px', padding: '10px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '34px', height: '34px', borderRadius: '11px', background: 'linear-gradient(135deg,#16A34A,#15803D)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}>
                           <CheckCircle size={16} color="#fff" />
@@ -237,7 +230,6 @@ const ForgotModal = ({ show, onClose }) => {
                         </div>
                       </div>
 
-                      {/* OTP boxes */}
                       <p style={{ color: '#0F172A', fontSize: '12px', fontWeight: '700', margin: '0 0 8px 0', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.5px' }}>6-Digit Code</p>
                       <div style={{ position: 'relative', marginBottom: '6px' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', padding: '10px', border: `2px solid ${otp.length === 6 ? '#1A73E8' : '#E2E8F0'}`, borderRadius: '14px', background: '#F8FAFF', transition: 'all 0.2s', boxShadow: otp.length === 6 ? '0 0 0 4px rgba(26,115,232,0.1)' : 'none' }}>
@@ -263,7 +255,6 @@ const ForgotModal = ({ show, onClose }) => {
                         }
                       </div>
 
-                      {/* New password */}
                       <div style={{ ...iStyle(!!newPassword), marginBottom: '8px' }}>
                         <Lock size={14} color={newPassword ? '#1A73E8' : '#94A3B8'} style={{ marginRight: '8px', flexShrink: 0 }} />
                         <input style={{ flex: 1, padding: '12px 0', border: 'none', background: 'transparent', color: '#0F172A', fontSize: '13px', outline: 'none', fontWeight: '500' }}
@@ -300,7 +291,10 @@ const ForgotModal = ({ show, onClose }) => {
                       <motion.button
                         style={{ width: '100%', padding: '13px', background: otp.length === 6 && newPassword && confirmPassword === newPassword ? 'linear-gradient(135deg,#1A73E8,#7C3AED)' : '#F1F5F9', color: otp.length === 6 && newPassword && confirmPassword === newPassword ? '#fff' : '#94A3B8', border: 'none', borderRadius: '13px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.25s', boxShadow: otp.length === 6 && newPassword && confirmPassword === newPassword ? '0 6px 20px rgba(26,115,232,0.35)' : 'none' }}
                         whileTap={{ scale: 0.97 }} onClick={resetPassword} disabled={loading}>
-                        {loading ? <motion.span animate={{ opacity: [1,0.4,1] }} transition={{ duration: 1, repeat: Infinity }}>Resetting...</motion.span> : 'Reset Password'}
+                        {loading
+                          ? <motion.span animate={{ opacity: [1,0.4,1] }} transition={{ duration: 1, repeat: Infinity }}>Resetting...</motion.span>
+                          : 'Reset Password'
+                        }
                       </motion.button>
                     </motion.div>
                   )}
@@ -327,8 +321,9 @@ export default function Login() {
   const [showPassword,      setShowPassword]      = useState(false);
   const [focusedField,      setFocusedField]      = useState(null);
   const [showForgot,        setShowForgot]        = useState(false);
-  const { login }  = useAuth();
-  const navigate   = useNavigate();
+
+  const { login } = useAuth();
+  const navigate  = useNavigate();
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -344,7 +339,10 @@ export default function Login() {
     sessionStorage.setItem('payease_location_asked', 'true');
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => { setLocationData({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }); setLocationGranted(true); },
+        (pos) => {
+          setLocationData({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+          setLocationGranted(true);
+        },
         () => setLocationGranted(false),
         { timeout: 8000 }
       );
@@ -356,19 +354,33 @@ export default function Login() {
     sessionStorage.setItem('payease_location_asked', 'true');
   };
 
+  // ── UPDATED: passes refresh token to AuthContext ──
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      const res      = await authService.login({ email, password, ...(locationData && locationData) });
-      const userData = res.data.user;
-      const token    = res.data.access_token;
-      login(userData, token);
+      const res          = await authService.login({
+        email,
+        password,
+        ...(locationData && locationData),
+      });
+      const userData     = res.data.user;
+      const accessToken  = res.data.access_token;
+      const refreshToken = res.data.refresh_token;  // ← new
+
+      // Pass refresh token to AuthContext
+      login(userData, accessToken, refreshToken);   // ← updated
+
       setTimeout(() => {
-        const loc = locationData ? `${locationData.latitude.toFixed(4)}, ${locationData.longitude.toFixed(4)}` : 'not shared';
+        const loc = locationData
+          ? `${locationData.latitude.toFixed(4)}, ${locationData.longitude.toFixed(4)}`
+          : 'not shared';
         logActivity('User Login', `Logged in from web — Location: ${loc}`);
       }, 600);
+
       if (userData?.is_admin) { navigate('/admin'); return; }
+
+      // Onboarding check (will be moved to DB in next phase)
       const onboardingKey = `payease_onboarded_${email.toLowerCase().trim()}`;
       if (!localStorage.getItem(onboardingKey)) {
         localStorage.setItem('payease_pending_onboard_email', email.toLowerCase().trim());
@@ -376,19 +388,12 @@ export default function Login() {
       } else {
         navigate('/dashboard');
       }
+
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
     }
     setLoading(false);
   };
-
-  const iStyle = (field) => ({
-    display: 'flex', alignItems: 'center',
-    border: `2px solid ${focusedField === field ? '#1A73E8' : '#E2E8F0'}`,
-    borderRadius: '14px', padding: '0 16px',
-    background: '#F8FAFF', transition: 'all 0.2s',
-    boxShadow: focusedField === field ? '0 0 0 4px rgba(26,115,232,0.1)' : 'none',
-  });
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg,#060B18 0%,#0D1B35 50%,#0A0F1E 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', position: 'relative' }}>
@@ -397,12 +402,10 @@ export default function Login() {
       <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle,rgba(26,115,232,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '-100px', left: '-100px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle,rgba(124,58,237,0.1) 0%,transparent 70%)', pointerEvents: 'none' }} />
 
-      {/* Location popup */}
       <AnimatePresence>
         {showLocationPopup && <LocationPopup onAllow={handleAllowLocation} onDeny={handleDenyLocation} />}
       </AnimatePresence>
 
-      {/* Forgot modal */}
       <ForgotModal show={showForgot} onClose={() => setShowForgot(false)} />
 
       <AnimatePresence mode="wait">
@@ -420,13 +423,12 @@ export default function Login() {
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
             >
               <motion.div
-                style={{ width: '96px', height: '96px', borderRadius: '30px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '22px', boxShadow: '0 20px 60px rgba(26,115,232,0.5)' }}
+                style={{ width: '96px', height: '96px', borderRadius: '30px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '22px' }}
                 animate={{ boxShadow: ['0 20px 50px rgba(26,115,232,0.5)','0 20px 80px rgba(26,115,232,0.8)','0 20px 50px rgba(26,115,232,0.5)'] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
                 <span style={{ color: '#fff', fontSize: '48px', fontWeight: '800' }}>P</span>
               </motion.div>
-
               <motion.h1 style={{ color: '#fff', fontSize: '36px', fontWeight: '800', margin: '0 0 8px 0', letterSpacing: '-1px' }}
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
                 PayEase
@@ -435,7 +437,6 @@ export default function Login() {
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
                 Smart Wallet System
               </motion.p>
-
               <div style={{ display: 'flex', gap: '8px' }}>
                 {[0,1,2].map(i => (
                   <motion.div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#1A73E8' }}
@@ -556,7 +557,7 @@ export default function Login() {
 
                 <Link to="/register" style={{ textDecoration: 'none' }}>
                   <motion.button type="button"
-                    style={{ width: '100%', padding: '14px', background: 'transparent', color: 'rgba(255,255,255,0.7)', border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: '14px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', boxSizing: 'border-box', transition: 'all 0.2s' }}
+                    style={{ width: '100%', padding: '14px', background: 'transparent', color: 'rgba(255,255,255,0.7)', border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: '14px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', boxSizing: 'border-box' }}
                     whileTap={{ scale: 0.97 }}
                   >
                     Create an Account
