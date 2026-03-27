@@ -2,6 +2,14 @@ import axios from 'axios';
 
 const API_URL = 'https://web-production-91d7.up.railway.app';
 
+// ── Generate a unique idempotency key per transaction attempt ──
+// Uses built-in crypto — no extra npm package needed
+export const generateIdempotencyKey = () => {
+  const arr = new Uint8Array(16);
+  window.crypto.getRandomValues(arr);
+  return 'PAY-' + Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase().slice(0, 24);
+};
+
 const api = axios.create({ baseURL: API_URL });
 
 api.interceptors.request.use(
@@ -128,10 +136,6 @@ export const authService = {
 export const accountService = {
   getBalance: () => api.get('/api/account/balance'),
 
-  // ── Paginated transactions ──
-  // page: page number (default 1)
-  // perPage: items per page (default 20, max 100)
-  // filters: { type: 'transfer'|'deposit'|'bill', direction: 'credit'|'debit' }
   getTransactions: (page = 1, perPage = 20, filters = {}) => {
     const params = new URLSearchParams({ page, per_page: perPage });
     if (filters.type)      params.append('type',      filters.type);
@@ -139,12 +143,12 @@ export const accountService = {
     return api.get(`/api/account/transactions?${params.toString()}`);
   },
 
-  // Convenience shortcut — load all (for PDF export / charts)
   getAllTransactions: () =>
     api.get('/api/account/transactions?per_page=100&page=1'),
 
-  deposit:    (data) => api.post('/api/account/deposit', data),
-  sendMoney:  (data) => api.post('/api/account/send',    data),
+  deposit:   (data) => api.post('/api/account/deposit', data),
+  sendMoney: (data) => api.post('/api/account/send',    data),
+
   lookupWallet: (wallet_number) => api.post('/api/account/lookup',       { wallet_number }),
   lookupPhone:  (phone)         => api.post('/api/account/lookup-phone', { phone }),
 };
@@ -205,14 +209,14 @@ export const preferencesService = {
 export const adminService = {
   getDashboard:    ()     => api.get('/api/admin/dashboard'),
   getUsers:        ()     => api.get('/api/admin/users'),
-  blockUser:       (data) => api.post('/api/admin/block-user',   data),
-  deleteUser:      (data) => api.post('/api/admin/delete-user',  data),
-  updateUser:      (data) => api.post('/api/admin/update-user',  data),
+  blockUser:       (data) => api.post('/api/admin/block-user',  data),
+  deleteUser:      (data) => api.post('/api/admin/delete-user', data),
+  updateUser:      (data) => api.post('/api/admin/update-user', data),
   getPendingKYC:   ()     => api.get('/api/admin/kyc/pending'),
-  approveKYC:      (data) => api.post('/api/admin/kyc/approve',  data),
-  rejectKYC:       (data) => api.post('/api/admin/kyc/reject',   data),
+  approveKYC:      (data) => api.post('/api/admin/kyc/approve', data),
+  rejectKYC:       (data) => api.post('/api/admin/kyc/reject',  data),
   getTransactions: ()     => api.get('/api/admin/transactions'),
-  getLogs:         (params = {}) => {
+  getLogs: (params = {}) => {
     const p = new URLSearchParams(params);
     return api.get(`/api/admin/logs?${p.toString()}`);
   },
