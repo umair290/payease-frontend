@@ -2,10 +2,8 @@ import axios from 'axios';
 
 const API_URL = 'https://web-production-91d7.up.railway.app';
 
-// ── Base axios instance ──
 const api = axios.create({ baseURL: API_URL });
 
-// ── Attach access token to every request ──
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -15,7 +13,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ── Auto-refresh on 401 ──
 let isRefreshing = false;
 let failedQueue  = [];
 
@@ -34,7 +31,6 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
 
-      // If the refresh endpoint itself returned 401 — full logout
       if (originalRequest.url?.includes('/api/auth/refresh')) {
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
@@ -43,7 +39,6 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // If another request is already refreshing — queue this one
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -60,7 +55,6 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem('refresh_token');
         if (!refreshToken) throw new Error('No refresh token available');
 
-        // Call refresh endpoint using plain axios (not our intercepted instance)
         const res = await axios.post(
           `${API_URL}/api/auth/refresh`,
           {},
@@ -68,19 +62,12 @@ api.interceptors.response.use(
         );
 
         const newAccessToken = res.data.access_token;
-
-        // Update stored token
         localStorage.setItem('token', newAccessToken);
-
-        // Update user data if returned
         if (res.data.user) {
           localStorage.setItem('user', JSON.stringify(res.data.user));
         }
 
-        // Flush the queue with new token
         processQueue(null, newAccessToken);
-
-        // Retry original request
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
 
@@ -108,24 +95,16 @@ export default api;
 export const authService = {
   login: async (credentials) => {
     const res = await api.post('/api/auth/login', credentials);
-    if (res.data.access_token) {
-      localStorage.setItem('token', res.data.access_token);
-    }
-    if (res.data.refresh_token) {
-      localStorage.setItem('refresh_token', res.data.refresh_token);
-    }
-    if (res.data.user) {
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-    }
+    if (res.data.access_token)  localStorage.setItem('token',         res.data.access_token);
+    if (res.data.refresh_token) localStorage.setItem('refresh_token', res.data.refresh_token);
+    if (res.data.user)          localStorage.setItem('user',          JSON.stringify(res.data.user));
     return res;
   },
 
   logout: async () => {
-    try {
-      await api.post('/api/auth/logout');
-    } catch (e) {
-      console.log('Logout API error:', e);
-    } finally {
+    try { await api.post('/api/auth/logout'); }
+    catch (e) { console.log('Logout API error:', e); }
+    finally {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
@@ -133,11 +112,9 @@ export const authService = {
   },
 
   logoutAll: async () => {
-    try {
-      await api.post('/api/auth/logout-all');
-    } catch (e) {
-      console.log('Logout-all error:', e);
-    } finally {
+    try { await api.post('/api/auth/logout-all'); }
+    catch (e) { console.log('Logout-all error:', e); }
+    finally {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
@@ -149,29 +126,44 @@ export const authService = {
 // ACCOUNT SERVICE
 // ─────────────────────────────────────────
 export const accountService = {
-  getBalance:      ()       => api.get('/api/account/balance'),
-  getTransactions: ()       => api.get('/api/account/transactions'),
-  deposit:         (data)   => api.post('/api/account/deposit', data),
-  sendMoney:       (data)   => api.post('/api/account/send', data),
-  changePassword:  (data)   => api.post('/api/account/change-password', data),
-  changePin:       (data)   => api.post('/api/account/change-pin', data),
+  getBalance: () => api.get('/api/account/balance'),
+
+  // ── Paginated transactions ──
+  // page: page number (default 1)
+  // perPage: items per page (default 20, max 100)
+  // filters: { type: 'transfer'|'deposit'|'bill', direction: 'credit'|'debit' }
+  getTransactions: (page = 1, perPage = 20, filters = {}) => {
+    const params = new URLSearchParams({ page, per_page: perPage });
+    if (filters.type)      params.append('type',      filters.type);
+    if (filters.direction) params.append('direction', filters.direction);
+    return api.get(`/api/account/transactions?${params.toString()}`);
+  },
+
+  // Convenience shortcut — load all (for PDF export / charts)
+  getAllTransactions: () =>
+    api.get('/api/account/transactions?per_page=100&page=1'),
+
+  deposit:    (data) => api.post('/api/account/deposit', data),
+  sendMoney:  (data) => api.post('/api/account/send',    data),
+  lookupWallet: (wallet_number) => api.post('/api/account/lookup',       { wallet_number }),
+  lookupPhone:  (phone)         => api.post('/api/account/lookup-phone', { phone }),
 };
 
 // ─────────────────────────────────────────
 // BILL SERVICE
 // ─────────────────────────────────────────
 export const billService = {
-  getProviders: ()      => api.get('/api/bills/providers'),
-  payBill:      (data)  => api.post('/api/bills/pay', data),
-  getHistory:   ()      => api.get('/api/bills/history'),
+  getProviders: ()     => api.get('/api/bills/providers'),
+  payBill:      (data) => api.post('/api/bills/pay',     data),
+  getHistory:   ()     => api.get('/api/bills/history'),
 };
 
 // ─────────────────────────────────────────
 // KYC SERVICE
 // ─────────────────────────────────────────
 export const kycService = {
-  getStatus:  ()           => api.get('/api/kyc/status'),
-  submit:     (formData)   => api.post('/api/kyc/submit', formData, {
+  getStatus: ()         => api.get('/api/kyc/status'),
+  submit:    (formData) => api.post('/api/kyc/submit', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
 };
@@ -180,21 +172,19 @@ export const kycService = {
 // NOTIFICATION SERVICE
 // ─────────────────────────────────────────
 export const notificationService = {
-  getAll:      ()     => api.get('/api/notifications'),
-  markRead:    (id)   => api.post(`/api/notifications/${id}/read`),
-  markAllRead: ()     => api.post('/api/notifications/mark-all-read'),
-  clear:       ()     => api.delete('/api/notifications/clear'),
+  getAll:      ()    => api.get('/api/notifications'),
+  markRead:    (id)  => api.post(`/api/notifications/${id}/read`),
+  markAllRead: ()    => api.post('/api/notifications/mark-all-read'),
+  clear:       ()    => api.delete('/api/notifications/clear'),
 };
 
 // ─────────────────────────────────────────
 // PREFERENCES SERVICE
 // ─────────────────────────────────────────
 export const preferencesService = {
-  // Onboarding
-  completeOnboarding:  ()      => api.post('/api/preferences/onboarding/complete'),
-  getOnboardingStatus: ()      => api.get('/api/preferences/onboarding/status'),
+  completeOnboarding:  ()     => api.post('/api/preferences/onboarding/complete'),
+  getOnboardingStatus: ()     => api.get('/api/preferences/onboarding/status'),
 
-  // Avatar
   uploadAvatar: (file) => {
     const formData = new FormData();
     formData.append('avatar', file);
@@ -204,10 +194,31 @@ export const preferencesService = {
   },
   removeAvatar: () => api.delete('/api/preferences/avatar/remove'),
 
-  // Beneficiaries
-  getBeneficiaries:   ()      => api.get('/api/preferences/beneficiaries'),
-  saveBeneficiary:    (data)  => api.post('/api/preferences/beneficiaries', data),
-  deleteBeneficiary:  (id)    => api.delete(`/api/preferences/beneficiaries/${id}`),
+  getBeneficiaries:  ()     => api.get('/api/preferences/beneficiaries'),
+  saveBeneficiary:   (data) => api.post('/api/preferences/beneficiaries', data),
+  deleteBeneficiary: (id)   => api.delete(`/api/preferences/beneficiaries/${id}`),
+};
+
+// ─────────────────────────────────────────
+// ADMIN SERVICE
+// ─────────────────────────────────────────
+export const adminService = {
+  getDashboard:    ()     => api.get('/api/admin/dashboard'),
+  getUsers:        ()     => api.get('/api/admin/users'),
+  blockUser:       (data) => api.post('/api/admin/block-user',   data),
+  deleteUser:      (data) => api.post('/api/admin/delete-user',  data),
+  updateUser:      (data) => api.post('/api/admin/update-user',  data),
+  getPendingKYC:   ()     => api.get('/api/admin/kyc/pending'),
+  approveKYC:      (data) => api.post('/api/admin/kyc/approve',  data),
+  rejectKYC:       (data) => api.post('/api/admin/kyc/reject',   data),
+  getTransactions: ()     => api.get('/api/admin/transactions'),
+  getLogs:         (params = {}) => {
+    const p = new URLSearchParams(params);
+    return api.get(`/api/admin/logs?${p.toString()}`);
+  },
+  getChangeRequests:    ()     => api.get('/api/admin/change-requests'),
+  approveChangeRequest: (data) => api.post('/api/admin/change-requests/approve', data),
+  rejectChangeRequest:  (data) => api.post('/api/admin/change-requests/reject',  data),
 };
 
 // ─────────────────────────────────────────
@@ -215,8 +226,8 @@ export const preferencesService = {
 // ─────────────────────────────────────────
 export const logActivity = (action, detail = '') => {
   try {
-    api.post('/api/admin/log-activity', { action, detail }).catch(() => {});
+    api.post('/api/admin/logs/add', { action, detail }).catch(() => {});
   } catch (e) {
-    // Silent fail — logging should never break the app
+    // Silent fail
   }
 };
