@@ -20,28 +20,37 @@ import useSessionTimeout from './hooks/useSessionTimeout';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
 
 const LoadingSpinner = () => (
-  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0F4FF' }}>
-    <div style={{ width: '40px', height: '40px', border: '3px solid #E0E6F0', borderTop: '3px solid #1A73E8', borderRadius: '50%' }} />
+  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0A0F1E' }}>
+    <div style={{ width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTop: '3px solid #1A73E8', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
 
+// ── Use 'user' from AuthContext, plus token from localStorage as fallback ──
 const PrivateRoute = ({ children }) => {
-  const { token, loading } = useAuth();
+  const { user, loading } = useAuth();
+  const hasToken = !!localStorage.getItem('token');
+
   if (loading) return <LoadingSpinner />;
-  return token ? children : <Navigate to="/login" />;
+
+  // Allow if either user state is set OR token exists in storage
+  return (user || hasToken) ? children : <Navigate to="/login" replace />;
 };
 
 const AdminRoute = ({ children }) => {
-  const { token, loading } = useAuth();
+  const { user, loading } = useAuth();
+  const hasToken = !!localStorage.getItem('token');
+
   if (loading) return <LoadingSpinner />;
-  if (!token) return <Navigate to="/login" />;
-  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-  return storedUser?.is_admin ? children : <Navigate to="/dashboard" />;
+  if (!user && !hasToken) return <Navigate to="/login" replace />;
+
+  const storedUser = user || JSON.parse(localStorage.getItem('user') || '{}');
+  return storedUser?.is_admin ? children : <Navigate to="/dashboard" replace />;
 };
 
 // ── Session Manager ──
 function SessionManager({ children }) {
-  const { logout, token } = useAuth();
+  const { logout, user } = useAuth();
   const [showWarning, setShowWarning] = useState(false);
   const [countdown,   setCountdown]   = useState(300);
   const countdownRef = useRef(null);
@@ -87,7 +96,9 @@ function SessionManager({ children }) {
     return () => clearInterval(countdownRef.current);
   }, []);
 
-  if (!token) return <>{children}</>;
+  // ── Only show session modal when logged in ──
+  const isLoggedIn = !!user || !!localStorage.getItem('token');
+  if (!isLoggedIn) return <>{children}</>;
 
   return (
     <>
@@ -106,25 +117,25 @@ function AppRoutes() {
   return (
     <SessionManager>
       <Routes>
-        {/* ── Public routes — no login required ── */}
+        {/* ── Public ── */}
         <Route path="/login"      element={<Login />} />
         <Route path="/register"   element={<Register />} />
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/"           element={<Navigate to="/login" />} />
+        <Route path="/"           element={<Navigate to="/login" replace />} />
 
-        {/* ── Private routes — login required ── */}
-        <Route path="/dashboard"    element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/profile"      element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/bills"        element={<PrivateRoute><Bills /></PrivateRoute>} />
-        <Route path="/send"         element={<PrivateRoute><SendMoney /></PrivateRoute>} />
-        <Route path="/kyc"          element={<PrivateRoute><KYC /></PrivateRoute>} />
-        <Route path="/qr"           element={<PrivateRoute><QRCodePage /></PrivateRoute>} />
-        <Route path="/history"      element={<PrivateRoute><History /></PrivateRoute>} />
-        <Route path="/notifications"element={<PrivateRoute><Notifications /></PrivateRoute>} />
-        <Route path="/insights"     element={<PrivateRoute><Insights /></PrivateRoute>} />
-        <Route path="/virtual-card" element={<PrivateRoute><VirtualCard /></PrivateRoute>} />
+        {/* ── Private ── */}
+        <Route path="/dashboard"     element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/profile"       element={<PrivateRoute><Profile /></PrivateRoute>} />
+        <Route path="/bills"         element={<PrivateRoute><Bills /></PrivateRoute>} />
+        <Route path="/send"          element={<PrivateRoute><SendMoney /></PrivateRoute>} />
+        <Route path="/kyc"           element={<PrivateRoute><KYC /></PrivateRoute>} />
+        <Route path="/qr"            element={<PrivateRoute><QRCodePage /></PrivateRoute>} />
+        <Route path="/history"       element={<PrivateRoute><History /></PrivateRoute>} />
+        <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
+        <Route path="/insights"      element={<PrivateRoute><Insights /></PrivateRoute>} />
+        <Route path="/virtual-card"  element={<PrivateRoute><VirtualCard /></PrivateRoute>} />
 
-        {/* ── Admin route ── */}
+        {/* ── Admin ── */}
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       </Routes>
     </SessionManager>
