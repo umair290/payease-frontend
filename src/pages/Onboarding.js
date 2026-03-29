@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { Shield, Zap, CreditCard, ArrowRight, Check } from 'lucide-react';
 
 const SLIDES = [
@@ -9,9 +10,8 @@ const SLIDES = [
     id:      1,
     grad:    'linear-gradient(160deg,#1A1FEF 0%,#1A73E8 50%,#0EA5E9 100%)',
     shadow:  'rgba(26,115,232,0.5)',
-    iconBg:  'rgba(255,255,255,0.15)',
     accent:  '#1A73E8',
-    emoji:   '⚡',
+    icon:    <Zap size={52} color="#fff" strokeWidth={1.5} />,
     title:   'Fast & Secure Transfers',
     subtitle:'Send money instantly to anyone in Pakistan with real-time confirmation and full transaction history.',
     features:[
@@ -24,9 +24,8 @@ const SLIDES = [
     id:      2,
     grad:    'linear-gradient(160deg,#134E5E 0%,#16A34A 60%,#15803D 100%)',
     shadow:  'rgba(22,163,74,0.5)',
-    iconBg:  'rgba(255,255,255,0.15)',
     accent:  '#16A34A',
-    emoji:   '🛡️',
+    icon:    <Shield size={52} color="#fff" strokeWidth={1.5} />,
     title:   'Bank-Grade Security',
     subtitle:'Protected with PIN verification, KYC identity checks, OTP confirmation, and real-time fraud monitoring.',
     features:[
@@ -39,9 +38,8 @@ const SLIDES = [
     id:      3,
     grad:    'linear-gradient(160deg,#3B1F8C 0%,#7C3AED 60%,#EC4899 100%)',
     shadow:  'rgba(124,58,237,0.5)',
-    iconBg:  'rgba(255,255,255,0.15)',
     accent:  '#7C3AED',
-    emoji:   '💳',
+    icon:    <CreditCard size={52} color="#fff" strokeWidth={1.5} />,
     title:   'All-in-One Wallet',
     subtitle:'Pay bills, top up mobile balance, scan QR codes, track spending insights, and manage a virtual card.',
     features:[
@@ -54,14 +52,13 @@ const SLIDES = [
 
 export default function Onboarding() {
   const { isDark }                = useTheme();
+  const { completeOnboarding }    = useAuth();
   const navigate                  = useNavigate();
   const [current,   setCurrent]   = useState(0);
   const [direction, setDirection] = useState(1);
+  const [finishing, setFinishing] = useState(false);
 
-  const text    = isDark ? '#F0F6FC' : '#0F172A';
-  const textSec = isDark ? 'rgba(255,255,255,0.5)' : '#64748B';
-  const card    = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.15)';
-  const border  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.2)';
+  const border = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.2)';
 
   useEffect(() => {
     if (current < SLIDES.length - 1) {
@@ -73,18 +70,25 @@ export default function Onboarding() {
   const goTo = (i) => { setDirection(i > current ? 1 : -1); setCurrent(i); };
 
   const goNext = () => {
-    if (current < SLIDES.length - 1) { setDirection(1); setCurrent(c => c + 1); }
-    else finish();
+    if (current < SLIDES.length - 1) {
+      setDirection(1);
+      setCurrent(c => c + 1);
+    } else {
+      finish();
+    }
   };
 
-  const finish = () => {
-    const pendingEmail = localStorage.getItem('payease_pending_onboard_email');
-    if (pendingEmail) {
-      localStorage.setItem(`payease_onboarded_${pendingEmail}`, 'true');
-      localStorage.removeItem('payease_pending_onboard_email');
+  // ── CRITICAL FIX: call completeOnboarding() before navigating ──
+  const finish = async () => {
+    if (finishing) return; // prevent double-tap
+    setFinishing(true);
+    try {
+      await completeOnboarding(); // marks done in context + localStorage + DB
+    } catch (e) {
+      // completeOnboarding is already safe — it sets state optimistically
     }
-    const token = localStorage.getItem('token');
-    navigate(token ? '/dashboard' : '/login');
+    // Navigate after state is committed
+    navigate('/dashboard', { replace: true });
   };
 
   const slide = SLIDES[current];
@@ -113,8 +117,10 @@ export default function Onboarding() {
       {/* ── SKIP BUTTON ── */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '52px 24px 0', position: 'relative', zIndex: 2 }}>
         <motion.button
-          style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '20px', padding: '7px 18px', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', opacity: 0.85 }}
-          whileTap={{ scale: 0.92 }} onClick={finish}
+          style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '20px', padding: '7px 18px', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', opacity: finishing ? 0.6 : 0.85 }}
+          whileTap={{ scale: 0.92 }}
+          onClick={finish}
+          disabled={finishing}
         >
           Skip
         </motion.button>
@@ -128,16 +134,15 @@ export default function Onboarding() {
             transition={{ duration: 0.35, ease: 'easeInOut' }}
             style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
           >
-            {/* Emoji icon */}
+            {/* Icon container — Lucide vector, no emoji */}
             <motion.div
-              style={{ width: '120px', height: '120px', borderRadius: '36px', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '28px', border: '1px solid rgba(255,255,255,0.25)', boxShadow: `0 20px 60px rgba(0,0,0,0.2)`, position: 'relative' }}
+              style={{ width: '120px', height: '120px', borderRadius: '36px', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '28px', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', position: 'relative' }}
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             >
-              {/* Outer ring */}
               <div style={{ position: 'absolute', inset: '-14px', borderRadius: '46px', border: '2px solid rgba(255,255,255,0.12)' }} />
-              <span style={{ fontSize: '52px' }}>{slide.emoji}</span>
+              {slide.icon}
             </motion.div>
 
             <motion.h1
@@ -178,7 +183,7 @@ export default function Onboarding() {
       {/* ── BOTTOM ── */}
       <div style={{ padding: '0 28px 52px', position: 'relative', zIndex: 2 }}>
 
-        {/* Dots */}
+        {/* Progress dots */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '20px' }}>
           {SLIDES.map((_, i) => (
             <motion.div key={i}
@@ -190,23 +195,34 @@ export default function Onboarding() {
           ))}
         </div>
 
-        {/* Next / Get Started button */}
+        {/* Next / Get Started */}
         <motion.button
-          style={{ width: '100%', padding: '16px', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.35)', borderRadius: '16px', fontSize: '15px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '14px', letterSpacing: '0.2px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}
-          whileTap={{ scale: 0.97 }} onClick={goNext}
+          style={{ width: '100%', padding: '16px', background: finishing ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.35)', borderRadius: '16px', fontSize: '15px', fontWeight: '800', cursor: finishing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '14px', letterSpacing: '0.2px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)', opacity: finishing ? 0.7 : 1 }}
+          whileTap={finishing ? {} : { scale: 0.97 }}
+          onClick={goNext}
+          disabled={finishing}
         >
-          {current === SLIDES.length - 1 ? '🚀 Get Started' : 'Next'}
-          {current < SLIDES.length - 1 && <ArrowRight size={17} color="#fff" />}
+          {finishing
+            ? 'Setting up your wallet...'
+            : current === SLIDES.length - 1
+              ? 'Get Started'
+              : 'Next'
+          }
+          {!finishing && current < SLIDES.length - 1 && <ArrowRight size={17} color="#fff" />}
         </motion.button>
 
         {/* Sign in link on last slide */}
         <AnimatePresence>
-          {current === SLIDES.length - 1 && (
-            <motion.p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: '13px', margin: 0, fontWeight: '500' }}
+          {current === SLIDES.length - 1 && !finishing && (
+            <motion.p
+              style={{ textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: '13px', margin: 0, fontWeight: '500' }}
               initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             >
               Already have an account?{' '}
-              <span style={{ color: '#fff', fontWeight: '800', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '3px' }} onClick={finish}>
+              <span
+                style={{ color: '#fff', fontWeight: '800', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+                onClick={finish}
+              >
                 Sign In
               </span>
             </motion.p>

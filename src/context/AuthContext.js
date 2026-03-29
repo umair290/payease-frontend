@@ -6,7 +6,7 @@ export function AuthProvider({ children }) {
   const [user,           setUser]           = useState(null);
   const [loading,        setLoading]        = useState(true);
   const [avatarUrl,      setAvatarUrl]      = useState(null);
-  const [onboardingDone, setOnboardingDone] = useState(true); // true by default — avoid flash
+  const [onboardingDone, setOnboardingDone] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -17,15 +17,17 @@ export function AuthProvider({ children }) {
         const parsed = JSON.parse(storedUser);
         setUser(parsed);
 
-        // ── Restore avatar immediately from cache (no flash) ──
         const savedAvatar = localStorage.getItem('payease_avatar');
         if (savedAvatar) setAvatarUrl(savedAvatar);
 
-        // ── Set onboarding from cached user data ──
+        // ── Read onboarding from cached user data immediately ──
+        // This prevents flash of onboarding for returning users
         setOnboardingDone(parsed.onboarding_done !== false);
 
-        // ── Refresh from server in background ──
-        loadUserProfile();
+        setLoading(false); // ← set loading false RIGHT AWAY from cache
+
+        // ── Then refresh from server silently in background ──
+        silentRefresh();
       } catch (e) {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
@@ -37,7 +39,8 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const loadUserProfile = async () => {
+  // ── Silent background refresh — never blocks UI, never redirects ──
+  const silentRefresh = async () => {
     try {
       const { accountService } = await import('../services/api');
       const res  = await accountService.getBalance();
@@ -48,7 +51,6 @@ export function AuthProvider({ children }) {
         localStorage.setItem('payease_avatar', data.avatar_url);
       }
 
-      // ── onboarding_done comes from DB via /balance ──
       setOnboardingDone(data.onboarding_done === true);
 
       const existing = localStorage.getItem('user');
@@ -57,21 +59,20 @@ export function AuthProvider({ children }) {
       setUser(merged);
 
     } catch (err) {
-      console.error('loadUserProfile error:', err);
-      // ── Don't clear tokens here — interceptor handles real 401s ──
-    } finally {
-      setLoading(false);
+      // ── Silent fail — don't redirect, don't clear tokens ──
+      // The interceptor handles real 401s separately
+      console.warn('Background profile refresh failed:', err?.response?.status || err?.message);
     }
   };
 
   const login = (userData, accessToken, refreshToken) => {
-    // ── CRITICAL: store tokens FIRST before ANY API calls ──
+    // ── Store tokens FIRST ──
     localStorage.setItem('token',         accessToken);
     localStorage.setItem('refresh_token', refreshToken);
     localStorage.setItem('user',          JSON.stringify(userData));
 
-    // ── Set state from login response immediately ──
     setUser(userData);
+    setLoading(false);
 
     if (userData.avatar_url) {
       setAvatarUrl(userData.avatar_url);
@@ -79,21 +80,15 @@ export function AuthProvider({ children }) {
     }
 
     // ── Set onboarding from login response ──
-    // login response includes onboarding_done from user.to_dict()
     setOnboardingDone(userData.onboarding_done !== false);
-
-    // ── Do NOT call loadUserProfile() here ──
-    // Dashboard calls refreshProfile() after mounting safely
-    setLoading(false);
   };
 
   const logout = async () => {
     try {
       const { authService } = await import('../services/api');
       await authService.logout();
-    } catch (e) {
-      // Silent — always clear state
-    } finally {
+    } catch (e) {}
+    finally {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
@@ -105,7 +100,20 @@ export function AuthProvider({ children }) {
   };
 
   const completeOnboarding = async () => {
-    setOnboardingDone(true); // optimistic
+    // ── Mark done immediately — prevent any re-show ──
+    setOnboardingDone(true);
+
+    // ── Update cached user ──
+    const existing = localStorage.getItem('user');
+    if (existing) {
+      try {
+        const parsed = JSON.parse(existing);
+        parsed.onboarding_done = true;
+        localStorage.setItem('user', JSON.stringify(parsed));
+      } catch (e) {}
+    }
+
+    // ── Persist to DB ──
     try {
       const { preferencesService } = await import('../services/api');
       await preferencesService.completeOnboarding();
@@ -136,7 +144,7 @@ export function AuthProvider({ children }) {
       completeOnboarding,
       updateAvatar,
       removeAvatar,
-      refreshProfile: loadUserProfile,
+      refreshProfile: silentRefresh,
     }}>
       {children}
     </AuthContext.Provider>
