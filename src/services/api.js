@@ -2,8 +2,6 @@ import axios from 'axios';
 
 const API_URL = 'https://web-production-91d7.up.railway.app';
 
-// ── Generate a unique idempotency key per transaction attempt ──
-// Uses built-in crypto — no extra npm package needed
 export const generateIdempotencyKey = () => {
   const arr = new Uint8Array(16);
   window.crypto.getRandomValues(arr);
@@ -61,7 +59,7 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken) throw new Error('No refresh token available');
+        if (!refreshToken) throw new Error('No refresh token');
 
         const res = await axios.post(
           `${API_URL}/api/auth/refresh`,
@@ -71,9 +69,7 @@ api.interceptors.response.use(
 
         const newAccessToken = res.data.access_token;
         localStorage.setItem('token', newAccessToken);
-        if (res.data.user) {
-          localStorage.setItem('user', JSON.stringify(res.data.user));
-        }
+        if (res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user));
 
         processQueue(null, newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -108,20 +104,16 @@ export const authService = {
     if (res.data.user)          localStorage.setItem('user',          JSON.stringify(res.data.user));
     return res;
   },
-
   logout: async () => {
-    try { await api.post('/api/auth/logout'); }
-    catch (e) { console.log('Logout API error:', e); }
+    try { await api.post('/api/auth/logout'); } catch (e) {}
     finally {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
     }
   },
-
   logoutAll: async () => {
-    try { await api.post('/api/auth/logout-all'); }
-    catch (e) { console.log('Logout-all error:', e); }
+    try { await api.post('/api/auth/logout-all'); } catch (e) {}
     finally {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
@@ -143,12 +135,13 @@ export const accountService = {
     return api.get(`/api/account/transactions?${params.toString()}`);
   },
 
-  getAllTransactions: () =>
-    api.get('/api/account/transactions?per_page=100&page=1'),
+  getAllTransactions: () => api.get('/api/account/transactions?per_page=100&page=1'),
 
   deposit:   (data) => api.post('/api/account/deposit', data),
+  send:      (data) => api.post('/api/account/send',    data),
   sendMoney: (data) => api.post('/api/account/send',    data),
 
+  // ── Fixed: lookupWallet takes string, lookupPhone added ──
   lookupWallet: (wallet_number) => api.post('/api/account/lookup',       { wallet_number }),
   lookupPhone:  (phone)         => api.post('/api/account/lookup-phone', { phone }),
 };
@@ -176,10 +169,10 @@ export const kycService = {
 // NOTIFICATION SERVICE
 // ─────────────────────────────────────────
 export const notificationService = {
-  getAll:      ()    => api.get('/api/notifications'),
-  markRead:    (id)  => api.post(`/api/notifications/${id}/read`),
-  markAllRead: ()    => api.post('/api/notifications/mark-all-read'),
-  clear:       ()    => api.delete('/api/notifications/clear'),
+  getAll:      ()   => api.get('/api/notifications'),
+  markRead:    (id) => api.post(`/api/notifications/${id}/read`),
+  markAllRead: ()   => api.post('/api/notifications/mark-all-read'),
+  clear:       ()   => api.delete('/api/notifications/clear'),
 };
 
 // ─────────────────────────────────────────
@@ -199,7 +192,7 @@ export const preferencesService = {
   removeAvatar: () => api.delete('/api/preferences/avatar/remove'),
 
   getBeneficiaries:  ()     => api.get('/api/preferences/beneficiaries'),
-  saveBeneficiary:   (data) => api.post('/api/preferences/beneficiaries', data),
+  saveBeneficiary:   (data) => api.post('/api/preferences/beneficiaries',      data),
   deleteBeneficiary: (id)   => api.delete(`/api/preferences/beneficiaries/${id}`),
 };
 
@@ -231,7 +224,5 @@ export const adminService = {
 export const logActivity = (action, detail = '') => {
   try {
     api.post('/api/admin/logs/add', { action, detail }).catch(() => {});
-  } catch (e) {
-    // Silent fail
-  }
+  } catch (e) {}
 };
