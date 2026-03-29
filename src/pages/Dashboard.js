@@ -8,24 +8,12 @@ import {
   Home, Send, QrCode, Clock, User, Eye, EyeOff,
   ArrowUpRight, ArrowDownLeft, ChevronRight,
   Sun, Moon, Bell, FileText, CheckCircle,
-  Download, Share2, Printer, X, Wallet,
+  Share2, Printer, X, Wallet,
   Plus, BarChart2, CreditCard as CardIco,
-  Zap, TrendingUp, Shield, Sparkles
+  Zap, Shield, Sparkles, RefreshCw,
+  DollarSign, Bolt, Lock, Star,
+  TrendingUp, TrendingDown, Activity
 } from 'lucide-react';
-
-// ── Skeleton shimmer component ──
-function Skeleton({ width = '100%', height = '16px', radius = '8px', style = {} }) {
-  return (
-    <div style={{
-      width, height,
-      borderRadius: radius,
-      background: 'linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 75%)',
-      backgroundSize: '200% 100%',
-      animation: 'shimmer 1.5s infinite',
-      ...style
-    }} />
-  );
-}
 
 // ── Animated Counter ──
 function AnimatedNumber({ value, duration = 1200 }) {
@@ -49,24 +37,23 @@ function AnimatedNumber({ value, duration = 1200 }) {
 }
 
 export default function Dashboard() {
-  const { logout, avatarUrl, onboardingDone, completeOnboarding } = useAuth();
+  const { logout, avatarUrl, onboardingDone, completeOnboarding, refreshProfile } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
-  const [balance,       setBalance]       = useState(null);
-  const [transactions,  setTransactions]  = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [hideBalance,   setHideBalance]   = useState(false);
-  const [activeTab,     setActiveTab]     = useState('home');
-  const [showDeposit,   setShowDeposit]   = useState(false);
-  const [depositAmount, setDepositAmount] = useState('');
-  const [actionLoading, setActionLoading] = useState(false);
-  const [toast,         setToast]         = useState({ msg: '', type: '' });
-  const [unreadCount,   setUnreadCount]   = useState(0);
-  const [showReceipt,   setShowReceipt]   = useState(false);
-  const [receiptData,   setReceiptData]   = useState(null);
-  const [greeting,      setGreeting]      = useState('');
-  // ── Show onboarding only if not done AND this is truly a new user ──
+  const [balance,        setBalance]        = useState(null);
+  const [transactions,   setTransactions]   = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [hideBalance,    setHideBalance]    = useState(false);
+  const [activeTab,      setActiveTab]      = useState('home');
+  const [showDeposit,    setShowDeposit]    = useState(false);
+  const [depositAmount,  setDepositAmount]  = useState('');
+  const [actionLoading,  setActionLoading]  = useState(false);
+  const [toast,          setToast]          = useState({ msg: '', type: '' });
+  const [unreadCount,    setUnreadCount]    = useState(0);
+  const [showReceipt,    setShowReceipt]    = useState(false);
+  const [receiptData,    setReceiptData]    = useState(null);
+  const [greeting,       setGreeting]       = useState('');
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
@@ -74,10 +61,15 @@ export default function Dashboard() {
     if (h < 12)      setGreeting('Good morning');
     else if (h < 17) setGreeting('Good afternoon');
     else             setGreeting('Good evening');
+
     loadData();
+
+    // ── Refresh avatar + onboarding from DB after mount ──
+    if (refreshProfile) {
+      setTimeout(() => { refreshProfile().catch(() => {}); }, 500);
+    }
   }, []);
 
-  // ── Show onboarding only when we know for sure it's not done ──
   useEffect(() => {
     if (!loading && onboardingDone === false) {
       setShowOnboarding(true);
@@ -152,8 +144,8 @@ export default function Dashboard() {
     if (!receiptData) return;
     const html = `<html><head><title>PayEase Receipt</title>
     <style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:-apple-system,sans-serif;background:#f0f4ff;display:flex;justify-content:center;padding:40px 20px;}.r{background:#fff;border-radius:20px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.12);}.h{background:linear-gradient(135deg,#1A73E8,#0052CC);padding:28px;text-align:center;}.logo{color:#fff;font-size:22px;font-weight:bold;margin-bottom:12px;}.check{color:#fff;font-size:32px;margin-bottom:8px;}.status{color:#fff;font-size:17px;font-weight:bold;}.amt{color:#fff;font-size:32px;font-weight:bold;margin-top:10px;}.b{padding:20px;}.row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f0f4ff;}.row:last-child{border-bottom:none;}.l{color:#888;font-size:13px;}.v{font-weight:600;font-size:13px;color:#1A1A2E;}.f{background:#f8faff;border-top:1px solid #e0e6f0;padding:14px;text-align:center;}.f p{color:#888;font-size:11px;margin-bottom:3px;}@media print{body{background:white;}.r{box-shadow:none;}}</style></head>
-    <body><div class="r"><div class="h"><div class="logo">PayEase</div><div class="check">✓</div><div class="status">${receiptData.status}</div><div class="amt">PKR ${receiptData.amount?.toLocaleString()}</div></div>
-    <div class="b"><div class="row"><span class="l">Type</span><span class="v">${receiptData.type}</span></div><div class="row"><span class="l">To</span><span class="v">${receiptData.toName || receiptData.to}</span></div><div class="row"><span class="l">Reference</span><span class="v">${receiptData.ref}</span></div><div class="row"><span class="l">Date</span><span class="v">${receiptData.date}</span></div><div class="row"><span class="l">Status</span><span class="v" style="color:#00C853">✓ ${receiptData.status}</span></div></div>
+    <body><div class="r"><div class="h"><div class="logo">PayEase</div><div class="check">&#10003;</div><div class="status">${receiptData.status}</div><div class="amt">PKR ${receiptData.amount?.toLocaleString()}</div></div>
+    <div class="b"><div class="row"><span class="l">Type</span><span class="v">${receiptData.type}</span></div><div class="row"><span class="l">To</span><span class="v">${receiptData.toName || receiptData.to}</span></div><div class="row"><span class="l">Reference</span><span class="v">${receiptData.ref}</span></div><div class="row"><span class="l">Date</span><span class="v">${receiptData.date}</span></div><div class="row"><span class="l">Status</span><span class="v" style="color:#00C853">&#10003; ${receiptData.status}</span></div></div>
     <div class="f"><p>Thank you for using PayEase</p><p style="color:#1A73E8;font-weight:bold">payease.space</p></div></div></body></html>`;
     const win = window.open('', '_blank');
     win.document.write(html);
@@ -205,21 +197,20 @@ export default function Dashboard() {
   };
 
   // ── Theme shortcuts ──
-  const bg         = isDark ? '#0A0F1E' : '#F0F4FF';
-  const card       = isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF';
-  const cardSolid  = isDark ? '#0F1629' : '#FFFFFF';
-  const border     = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const text       = isDark ? '#F0F6FC' : '#0F172A';
-  const textSec    = isDark ? 'rgba(255,255,255,0.4)' : '#94A3B8';
-  const skelBase   = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const skelShine  = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
+  const bg        = isDark ? '#0A0F1E' : '#F0F4FF';
+  const card      = isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF';
+  const cardSolid = isDark ? '#0F1629' : '#FFFFFF';
+  const border    = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const text      = isDark ? '#F0F6FC' : '#0F172A';
+  const textSec   = isDark ? 'rgba(255,255,255,0.4)' : '#94A3B8';
+  const skelBase  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const skelShine = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
 
   // ── Loading skeleton ──
   if (loading) return (
     <div style={{ minHeight: '100vh', background: bg, maxWidth: '480px', margin: '0 auto', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
       <style>{`@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }`}</style>
 
-      {/* Header skeleton */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 20px 16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ width: '80px', height: '11px', borderRadius: '6px', background: `linear-gradient(90deg,${skelBase} 25%,${skelShine} 50%,${skelBase} 75%)`, backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
@@ -232,12 +223,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Balance card skeleton */}
       <div style={{ padding: '0 16px 4px' }}>
         <div style={{ borderRadius: '24px', background: `linear-gradient(90deg,${skelBase} 25%,${skelShine} 50%,${skelBase} 75%)`, backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite', height: '200px' }} />
       </div>
 
-      {/* Quick actions skeleton */}
       <div style={{ padding: '16px 16px 0' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '8px' }}>
           {[...Array(6)].map((_, i) => (
@@ -249,7 +238,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent transactions skeleton */}
       <div style={{ margin: '16px 16px 0', borderRadius: '20px', background: card, border: `1px solid ${border}`, overflow: 'hidden' }}>
         <div style={{ padding: '16px 18px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ width: '120px', height: '15px', borderRadius: '6px', background: `linear-gradient(90deg,${skelBase} 25%,${skelShine} 50%,${skelBase} 75%)`, backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
@@ -274,10 +262,10 @@ export default function Dashboard() {
 
       <style>{`
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
+        @keyframes float   { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
       `}</style>
 
-      {/* ── ONBOARDING OVERLAY — only for brand new users ── */}
+      {/* ── ONBOARDING OVERLAY ── */}
       <AnimatePresence>
         {showOnboarding && (
           <motion.div
@@ -289,6 +277,7 @@ export default function Dashboard() {
               initial={{ y: 500 }} animate={{ y: 0 }} exit={{ y: 500 }}
               transition={{ type: 'spring', damping: 28, stiffness: 260 }}
             >
+              {/* Header */}
               <div style={{ textAlign: 'center', marginBottom: '28px' }}>
                 <motion.div
                   style={{ width: '72px', height: '72px', borderRadius: '22px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 12px 36px rgba(26,115,232,0.4)' }}
@@ -297,17 +286,33 @@ export default function Dashboard() {
                   <Sparkles size={32} color="#fff" />
                 </motion.div>
                 <h2 style={{ color: text, fontSize: '24px', fontWeight: '800', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>
-                  Welcome to PayEase! 🎉
+                  Welcome to PayEase
                 </h2>
                 <p style={{ color: textSec, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
                   Your digital wallet is ready. Send money, pay bills, and manage your finances — all in one place.
                 </p>
               </div>
 
+              {/* Feature list — professional icons */}
               {[
-                { icon: '💸', title: 'Send & Receive Money',   desc: 'Transfer instantly to any PayEase wallet' },
-                { icon: '⚡', title: 'Pay Bills',              desc: 'Electricity, gas, internet and more' },
-                { icon: '🔒', title: 'Bank-Grade Security',    desc: 'Your money is protected at every step' },
+                {
+                  icon: <Send size={20} color="#1A73E8" />,
+                  iconBg: 'rgba(26,115,232,0.1)',
+                  title: 'Send & Receive Money',
+                  desc:  'Transfer instantly to any PayEase wallet'
+                },
+                {
+                  icon: <Zap size={20} color="#EA580C" />,
+                  iconBg: 'rgba(234,88,12,0.1)',
+                  title: 'Pay Bills',
+                  desc:  'Electricity, gas, internet and more'
+                },
+                {
+                  icon: <Shield size={20} color="#16A34A" />,
+                  iconBg: 'rgba(22,163,74,0.1)',
+                  title: 'Bank-Grade Security',
+                  desc:  'Your money is protected at every step'
+                },
               ].map((item, i) => (
                 <motion.div
                   key={i}
@@ -315,7 +320,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.15 + i * 0.1 }}
                 >
-                  <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: item.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {item.icon}
                   </div>
                   <div>
@@ -326,11 +331,12 @@ export default function Dashboard() {
               ))}
 
               <motion.button
-                style={{ width: '100%', marginTop: '24px', padding: '17px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', color: '#fff', border: 'none', borderRadius: '16px', fontSize: '16px', fontWeight: '800', cursor: 'pointer', boxShadow: '0 8px 28px rgba(26,115,232,0.4)', letterSpacing: '0.2px' }}
+                style={{ width: '100%', marginTop: '24px', padding: '17px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', color: '#fff', border: 'none', borderRadius: '16px', fontSize: '16px', fontWeight: '800', cursor: 'pointer', boxShadow: '0 8px 28px rgba(26,115,232,0.4)', letterSpacing: '0.2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleCompleteOnboarding}
               >
-                Get Started 🚀
+                <CheckCircle size={18} color="#fff" />
+                Get Started
               </motion.button>
             </motion.div>
           </motion.div>
@@ -359,7 +365,7 @@ export default function Dashboard() {
       >
         <div>
           <p style={{ color: textSec, fontSize: '12px', margin: '0 0 3px 0', fontWeight: '500', letterSpacing: '0.3px' }}>
-            {greeting} 👋
+            {greeting}
           </p>
           <p style={{ color: text, fontSize: '22px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>
             {balance?.full_name?.split(' ')[0]}
@@ -384,7 +390,6 @@ export default function Dashboard() {
             )}
           </motion.div>
 
-          {/* ── Avatar from AuthContext (cloud-synced) ── */}
           <motion.div
             style={{ width: '40px', height: '40px', borderRadius: '13px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 16px rgba(26,115,232,0.35)', overflow: 'hidden' }}
             whileTap={{ scale: 0.88 }} onClick={() => navigate('/profile')}
@@ -436,7 +441,7 @@ export default function Dashboard() {
               <div style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', borderRadius: '14px', padding: '12px', border: '1px solid rgba(255,255,255,0.12)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                   <div style={{ width: '20px', height: '20px', borderRadius: '6px', background: 'rgba(74,222,128,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ArrowDownLeft size={11} color="#4ADE80" />
+                    <TrendingUp size={11} color="#4ADE80" />
                   </div>
                   <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Money In</span>
                 </div>
@@ -445,7 +450,7 @@ export default function Dashboard() {
               <div style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', borderRadius: '14px', padding: '12px', border: '1px solid rgba(255,255,255,0.12)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                   <div style={{ width: '20px', height: '20px', borderRadius: '6px', background: 'rgba(251,191,36,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ArrowUpRight size={11} color="#FBBF24" />
+                    <TrendingDown size={11} color="#FBBF24" />
                   </div>
                   <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Money Out</span>
                 </div>
@@ -508,7 +513,7 @@ export default function Dashboard() {
               style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'linear-gradient(135deg,#6366F1,#4F46E5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.4)', flexShrink: 0 }}
               animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 3, repeat: Infinity }}
             >
-              <Sparkles size={18} color="#fff" />
+              <Shield size={18} color="#fff" />
             </motion.div>
             <div>
               <p style={{ color: isDark ? '#C7D2FE' : '#4338CA', fontSize: '12px', fontWeight: '700', margin: '0 0 2px 0' }}>Complete KYC Verification</p>
@@ -529,7 +534,7 @@ export default function Dashboard() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 18px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: isDark ? 'rgba(26,115,232,0.15)' : 'rgba(26,115,232,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Clock size={14} color="#1A73E8" />
+              <Activity size={14} color="#1A73E8" />
             </div>
             <h3 style={{ color: text, fontSize: '15px', fontWeight: '700', margin: 0 }}>Recent Activity</h3>
           </div>
@@ -553,10 +558,10 @@ export default function Dashboard() {
             <p style={{ color: text, margin: '0 0 4px 0', fontWeight: '700', fontSize: '15px' }}>No transactions yet</p>
             <p style={{ color: textSec, fontSize: '12px', margin: '0 0 18px 0' }}>Add money to get started</p>
             <motion.button
-              style={{ padding: '11px 24px', background: 'linear-gradient(135deg,#1A73E8,#0052CC)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 16px rgba(26,115,232,0.35)' }}
+              style={{ padding: '11px 24px', background: 'linear-gradient(135deg,#1A73E8,#0052CC)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 16px rgba(26,115,232,0.35)', display: 'inline-flex', alignItems: 'center', gap: '7px' }}
               whileTap={{ scale: 0.96 }} onClick={() => setShowDeposit(true)}
             >
-              Add Money
+              <Plus size={14} color="#fff" /> Add Money
             </motion.button>
           </div>
         ) : (
@@ -712,18 +717,20 @@ export default function Dashboard() {
                 ))}
               </div>
               <motion.button
-                style={{ width: '100%', padding: '17px', background: depositAmount ? 'linear-gradient(135deg,#16A34A,#15803D)' : isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9', color: depositAmount ? '#fff' : textSec, border: 'none', borderRadius: '16px', fontSize: '15px', fontWeight: '800', cursor: depositAmount ? 'pointer' : 'not-allowed', marginBottom: '10px', boxShadow: depositAmount ? '0 8px 24px rgba(22,163,74,0.35)' : 'none', transition: 'all 0.25s' }}
+                style={{ width: '100%', padding: '17px', background: depositAmount ? 'linear-gradient(135deg,#16A34A,#15803D)' : isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9', color: depositAmount ? '#fff' : textSec, border: 'none', borderRadius: '16px', fontSize: '15px', fontWeight: '800', cursor: depositAmount ? 'pointer' : 'not-allowed', marginBottom: '10px', boxShadow: depositAmount ? '0 8px 24px rgba(22,163,74,0.35)' : 'none', transition: 'all 0.25s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 whileTap={depositAmount ? { scale: 0.97 } : {}} onClick={handleDeposit} disabled={actionLoading}
               >
                 {actionLoading
-                  ? <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1, repeat: Infinity }}>Processing...</motion.span>
-                  : `Deposit PKR ${depositAmount ? parseFloat(depositAmount).toLocaleString() : '0'}`
+                  ? <><RefreshCw size={16} color={depositAmount ? '#fff' : textSec} style={{ animation: 'spin 1s linear infinite' }} /> Processing...</>
+                  : <><Plus size={16} color={depositAmount ? '#fff' : textSec} /> Deposit PKR {depositAmount ? parseFloat(depositAmount).toLocaleString() : '0'}</>
                 }
               </motion.button>
               <motion.button
-                style={{ width: '100%', padding: '14px', background: 'transparent', color: textSec, border: `1.5px solid ${border}`, borderRadius: '14px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}
+                style={{ width: '100%', padding: '14px', background: 'transparent', color: textSec, border: `1.5px solid ${border}`, borderRadius: '14px', fontSize: '14px', cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 whileTap={{ scale: 0.97 }} onClick={() => setShowDeposit(false)}
-              >Cancel</motion.button>
+              >
+                <X size={14} color={textSec} /> Cancel
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
@@ -766,7 +773,7 @@ export default function Dashboard() {
                   PKR {receiptData.amount?.toLocaleString()}
                 </motion.p>
                 <span style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.2)' }}>
-                  ✓ {receiptData.status}
+                  &#10003; {receiptData.status}
                 </span>
               </div>
               <div style={{ padding: '16px 20px' }}>

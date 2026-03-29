@@ -92,7 +92,7 @@ const ForgotModal = ({ show, onClose }) => {
     if (countdown > 0) { const t = setTimeout(() => setCountdown(c => c - 1), 1000); return () => clearTimeout(t); }
   }, [countdown]);
 
-  const resetForm  = () => { setStep(1); setEmail(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); setError(''); setCountdown(0); setSuccess(false); };
+  const resetForm   = () => { setStep(1); setEmail(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); setError(''); setCountdown(0); setSuccess(false); };
   const handleClose = () => { resetForm(); onClose(); };
 
   const sendOtp = async () => {
@@ -141,7 +141,6 @@ const ForgotModal = ({ show, onClose }) => {
             transition={{ type: 'spring', stiffness: 280, damping: 26 }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div style={{ background: success ? 'linear-gradient(135deg,#134E5E,#16A34A)' : 'linear-gradient(135deg,#1A1FEF,#1A73E8,#7C3AED)', padding: '22px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)' }} />
               {step === 2 && !success && (
@@ -176,7 +175,6 @@ const ForgotModal = ({ show, onClose }) => {
               )}
             </div>
 
-            {/* Body */}
             <div style={{ padding: '18px' }}>
               {success ? (
                 <motion.div style={{ textAlign: 'center', padding: '8px 0' }} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
@@ -354,36 +352,43 @@ export default function Login() {
     sessionStorage.setItem('payease_location_asked', 'true');
   };
 
-  // ── UPDATED: passes refresh token to AuthContext ──
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
     try {
-      const res          = await authService.login({
+      const res = await authService.login({
         email,
         password,
         ...(locationData && locationData),
       });
+
       const userData     = res.data.user;
       const accessToken  = res.data.access_token;
-      const refreshToken = res.data.refresh_token;  // ← new
+      const refreshToken = res.data.refresh_token;
 
-      // Pass refresh token to AuthContext
-      login(userData, accessToken, refreshToken);   // ← updated
+      // ── Store tokens + set state ──
+      login(userData, accessToken, refreshToken);
 
+      // ── Log activity after short delay ──
       setTimeout(() => {
-        const loc = locationData
-          ? `${locationData.latitude.toFixed(4)}, ${locationData.longitude.toFixed(4)}`
-          : 'not shared';
-        logActivity('User Login', `Logged in from web — Location: ${loc}`);
-      }, 600);
+        try {
+          const loc = locationData
+            ? `${locationData.latitude.toFixed(4)}, ${locationData.longitude.toFixed(4)}`
+            : 'not shared';
+          logActivity('User Login', `Logged in from web — Location: ${loc}`);
+        } catch (e) {}
+      }, 1000);
 
-      if (userData?.is_admin) { navigate('/admin'); return; }
+      // ── Route based on user type ──
+      if (userData?.is_admin) {
+        navigate('/admin');
+        return;
+      }
 
-      // Onboarding check (will be moved to DB in next phase)
-      const onboardingKey = `payease_onboarded_${email.toLowerCase().trim()}`;
-      if (!localStorage.getItem(onboardingKey)) {
-        localStorage.setItem('payease_pending_onboard_email', email.toLowerCase().trim());
+      // ── Use onboarding_done from DB (in userData from login response) ──
+      // userData.onboarding_done comes from User.to_dict() in the backend
+      if (userData?.onboarding_done === false) {
         navigate('/onboarding');
       } else {
         navigate('/dashboard');
@@ -398,7 +403,6 @@ export default function Login() {
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg,#060B18 0%,#0D1B35 50%,#0A0F1E 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', position: 'relative' }}>
 
-      {/* Background blobs */}
       <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle,rgba(26,115,232,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '-100px', left: '-100px', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle,rgba(124,58,237,0.1) 0%,transparent 70%)', pointerEvents: 'none' }} />
 
@@ -410,7 +414,6 @@ export default function Login() {
 
       <AnimatePresence mode="wait">
 
-        {/* ── SPLASH ── */}
         {showSplash ? (
           <motion.div key="splash"
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%', position: 'relative', zIndex: 1 }}
@@ -450,7 +453,6 @@ export default function Login() {
 
         ) : (
 
-          // ── LOGIN FORM ──
           <motion.div key="login"
             style={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box', position: 'relative', zIndex: 1 }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
@@ -461,7 +463,6 @@ export default function Login() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              {/* Logo */}
               <motion.div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', justifyContent: 'center' }}
                 initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                 <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(26,115,232,0.4)' }}>
@@ -479,7 +480,6 @@ export default function Login() {
                 Sign in to your account
               </motion.p>
 
-              {/* Location badge */}
               <AnimatePresence>
                 {locationGranted && (
                   <motion.div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: '20px', padding: '6px 14px', marginBottom: '16px', width: 'fit-content', margin: '0 auto 16px' }}
@@ -490,7 +490,6 @@ export default function Login() {
                 )}
               </AnimatePresence>
 
-              {/* Error */}
               <AnimatePresence>
                 {error && (
                   <motion.div style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', color: '#FCA5A5', padding: '11px 14px', borderRadius: '12px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500' }}
@@ -503,7 +502,6 @@ export default function Login() {
 
               <motion.form onSubmit={handleLogin} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
 
-                {/* Email */}
                 <div style={{ marginBottom: '14px' }}>
                   <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '700', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Email Address</label>
                   <div style={{ display: 'flex', alignItems: 'center', border: `2px solid ${focusedField === 'email' ? '#1A73E8' : 'rgba(255,255,255,0.08)'}`, borderRadius: '14px', padding: '0 16px', background: 'rgba(255,255,255,0.04)', transition: 'all 0.2s', boxShadow: focusedField === 'email' ? '0 0 0 4px rgba(26,115,232,0.15)' : 'none' }}>
@@ -515,7 +513,6 @@ export default function Login() {
                   </div>
                 </div>
 
-                {/* Password */}
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Password</label>
@@ -537,7 +534,6 @@ export default function Login() {
                   </div>
                 </div>
 
-                {/* Login button */}
                 <motion.button
                   style={{ width: '100%', padding: '15px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', color: '#fff', border: 'none', borderRadius: '16px', fontSize: '15px', fontWeight: '800', cursor: 'pointer', boxShadow: '0 8px 28px rgba(26,115,232,0.4)', marginBottom: '16px', opacity: loading ? 0.85 : 1, letterSpacing: '0.2px' }}
                   type="submit" disabled={loading} whileTap={{ scale: 0.97 }}
@@ -548,7 +544,6 @@ export default function Login() {
                   }
                 </motion.button>
 
-                {/* Divider */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                   <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
                   <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px', fontWeight: '600' }}>New to PayEase?</span>
