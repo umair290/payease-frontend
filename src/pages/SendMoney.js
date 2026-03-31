@@ -87,13 +87,15 @@ export default function SendMoney() {
   const lookupWalletByNumber = async (wNumber) => {
     setLoading(true); setError('');
     try {
-      const res    = await accountService.lookupWallet({ wallet_number: wNumber });
+      const res    = await accountService.lookupWallet(wNumber);  // string, not object
       const balRes = await accountService.getBalance();
       setRecipient(res.data);
       setWalletNumber(res.data.wallet_number);
       setSenderInfo(balRes.data);
       setStep(2);
-    } catch (err) { setError(err.response?.data?.error || 'Wallet not found'); }
+    } catch (err) {
+      setError(err.response?.data?.error || 'Wallet not found');
+    }
     setLoading(false);
   };
 
@@ -106,13 +108,15 @@ export default function SendMoney() {
     if (!phoneNumber.trim()) { setError('Please enter a phone number'); return; }
     setLoading(true); setError('');
     try {
-      const res    = await accountService.lookupByPhone({ phone: phoneNumber });
+      const res    = await accountService.lookupPhone(phoneNumber);  // correct method name
       const balRes = await accountService.getBalance();
       setRecipient(res.data);
       setWalletNumber(res.data.wallet_number);
       setSenderInfo(balRes.data);
       setStep(2);
-    } catch (err) { setError(err.response?.data?.error || 'No account found with this phone number'); }
+    } catch (err) {
+      setError(err.response?.data?.error || 'No account found with this phone number');
+    }
     setLoading(false);
   };
 

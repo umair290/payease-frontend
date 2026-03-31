@@ -135,13 +135,20 @@ export const accountService = {
     return api.get(`/api/account/transactions?${params.toString()}`);
   },
 
-  getAllTransactions: () => api.get('/api/account/transactions?per_page=100&page=1'),
+  getAllTransactions: () =>
+    api.get('/api/account/transactions?per_page=100&page=1'),
 
-  deposit:   (data) => api.post('/api/account/deposit', data),
-  send:      (data) => api.post('/api/account/send',    data),
-  sendMoney: (data) => api.post('/api/account/send',    data),
+  // ── Deposit: send amount as plain number ──
+  deposit: (data) => api.post('/api/account/deposit', {
+    amount:          Number(data.amount),
+    idempotency_key: data.idempotency_key || generateIdempotencyKey(),
+  }),
 
-  // ── Fixed: lookupWallet takes string, lookupPhone added ──
+  // ── Send money ──
+  send:      (data) => api.post('/api/account/send', data),
+  sendMoney: (data) => api.post('/api/account/send', data),
+
+  // ── Lookups ──
   lookupWallet: (wallet_number) => api.post('/api/account/lookup',       { wallet_number }),
   lookupPhone:  (phone)         => api.post('/api/account/lookup-phone', { phone }),
 };
@@ -151,7 +158,7 @@ export const accountService = {
 // ─────────────────────────────────────────
 export const billService = {
   getProviders: ()     => api.get('/api/bills/providers'),
-  payBill:      (data) => api.post('/api/bills/pay',     data),
+  payBill:      (data) => api.post('/api/bills/pay',  data),
   getHistory:   ()     => api.get('/api/bills/history'),
 };
 
