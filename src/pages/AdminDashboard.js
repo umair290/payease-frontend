@@ -65,6 +65,17 @@ const TX_ID = (id, created_at) => {
   return `TXN-${pad}-${String(ts).slice(-6)}`;
 };
 
+// ── Detect if a Cloudinary URL is a video (liveness recording) ──
+const isVideoUrl = (url) => {
+  if (!url) return false;
+  return (
+    url.includes('.webm') ||
+    url.includes('.mp4')  ||
+    url.includes('.mov')  ||
+    url.includes('/video/upload/')
+  );
+};
+
 const printReceipt = (tx) => {
   const txId = TX_ID(tx.id, tx.created_at);
   const date = tx.created_at
@@ -86,7 +97,6 @@ const printReceipt = (tx) => {
     .lbl{color:#888;font-size:12px;font-weight:500}
     .val{font-size:12px;font-weight:700;color:#1A1A2E;text-align:right;max-width:220px;word-break:break-all}
     .txid{color:#1A73E8;font-family:monospace;font-size:11px;letter-spacing:0.3px}
-    .divider{height:1px;background:linear-gradient(90deg,transparent,#e0e6f0,transparent);margin:4px 0}
     .f{background:#f8faff;border-top:1px solid #e0e6f0;padding:16px;text-align:center;color:#aab;font-size:10px;line-height:1.6}
     @media print{body{background:white;padding:0}.r{box-shadow:none;border-radius:0}}
   </style></head>
@@ -195,14 +205,10 @@ const TxModal = ({ tx, onClose, c }) => {
     : tx.type === 'transfer'
     ? 'linear-gradient(135deg,#1A1FEF,#1A73E8)'
     : 'linear-gradient(135deg,#9A3412,#EA580C)';
-
   const copy = (text) => { try { navigator.clipboard.writeText(text); } catch(e) {} };
-
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.88)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }} onClick={onClose}>
       <div style={{ background: c.card, borderRadius: '20px', width: '100%', maxWidth: '480px', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,.6)', border: `1px solid ${c.border}` }} onClick={e => e.stopPropagation()}>
-
-        {/* Header */}
         <div style={{ background: grad, padding: '22px 24px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent)' }} />
           <div style={{ position: 'absolute', top: '-30px', right: '-30px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
@@ -212,9 +218,7 @@ const TxModal = ({ tx, onClose, c }) => {
               <p style={{ color: '#fff', fontSize: '28px', fontWeight: '800', margin: '0 0 6px', letterSpacing: '-1px' }}>{fmtPKR(tx.amount)}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <code style={{ color: 'rgba(255,255,255,.6)', fontSize: '11px', background: 'rgba(0,0,0,.2)', padding: '2px 8px', borderRadius: '5px' }}>{txId}</code>
-                <button onClick={() => copy(txId)} style={{ background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.2)', borderRadius: '4px', padding: '2px 7px', cursor: 'pointer', color: '#fff', fontSize: '10px', fontWeight: '700' }}>
-                  Copy
-                </button>
+                <button onClick={() => copy(txId)} style={{ background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.2)', borderRadius: '4px', padding: '2px 7px', cursor: 'pointer', color: '#fff', fontSize: '10px', fontWeight: '700' }}>Copy</button>
               </div>
             </div>
             <button onClick={onClose} style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -222,19 +226,17 @@ const TxModal = ({ tx, onClose, c }) => {
             </button>
           </div>
         </div>
-
-        {/* Rows */}
         <div>
           {[
-            { label: 'Transaction ID', value: txId,                      mono: true,  copy: true  },
-            { label: 'Type',           value: tx.type?.toUpperCase()                              },
-            { label: 'Direction',      value: (tx.direction || 'debit').toUpperCase(), dir: true  },
-            { label: 'From Wallet',    value: tx.from_wallet || '—',     mono: true              },
-            { label: 'To Wallet',      value: tx.to_wallet   || '—',     mono: true              },
-            { label: 'Amount',         value: fmtPKR(tx.amount),         highlight: true         },
-            { label: 'Status',         value: tx.status || 'success',    isStatus: true          },
-            { label: 'Description',    value: tx.description || '—'                              },
-            { label: 'Date & Time',    value: date                                               },
+            { label: 'Transaction ID', value: txId,                     mono: true, copy: true },
+            { label: 'Type',           value: tx.type?.toUpperCase()                           },
+            { label: 'Direction',      value: (tx.direction || 'debit').toUpperCase(), dir: true },
+            { label: 'From Wallet',    value: tx.from_wallet || '—',    mono: true             },
+            { label: 'To Wallet',      value: tx.to_wallet   || '—',    mono: true             },
+            { label: 'Amount',         value: fmtPKR(tx.amount),        highlight: true        },
+            { label: 'Status',         value: tx.status || 'success',   isStatus: true         },
+            { label: 'Description',    value: tx.description || '—'                            },
+            { label: 'Date & Time',    value: date                                             },
           ].map((row, i, arr) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 24px', borderBottom: i < arr.length - 1 ? `1px solid ${c.border}` : 'none' }}>
               <span style={{ color: c.textSec, fontSize: '12px', fontWeight: '500', flexShrink: 0, minWidth: '110px' }}>{row.label}</span>
@@ -251,16 +253,12 @@ const TxModal = ({ tx, onClose, c }) => {
                   )
                 }
                 {row.copy && (
-                  <button onClick={() => copy(row.value)} style={{ background: c.cardAlt, border: `1px solid ${c.border}`, borderRadius: '5px', padding: '2px 7px', cursor: 'pointer', color: c.textSec, fontSize: '10px', fontWeight: '600' }}>
-                    Copy
-                  </button>
+                  <button onClick={() => copy(row.value)} style={{ background: c.cardAlt, border: `1px solid ${c.border}`, borderRadius: '5px', padding: '2px 7px', cursor: 'pointer', color: c.textSec, fontSize: '10px', fontWeight: '600' }}>Copy</button>
                 )}
               </div>
             </div>
           ))}
         </div>
-
-        {/* Actions */}
         <div style={{ padding: '14px 24px', display: 'flex', gap: '8px', borderTop: `1px solid ${c.border}`, background: c.cardAlt }}>
           <button onClick={() => printReceipt(tx)} style={{ flex: 1, padding: '11px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', color: '#fff', border: 'none', borderRadius: '11px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 14px rgba(26,115,232,.3)' }}>
             <Printer size={14} /> Print Receipt
@@ -281,12 +279,9 @@ const UserProfileModal = ({ user, transactions, onClose, onBlock, onEdit, onDele
   if (!user) return null;
   const userTxs  = transactions.filter(t => t.from_wallet === user.wallet_number || t.to_wallet === user.wallet_number).slice(0, 5);
   const initials = user.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
-
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.88)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }} onClick={onClose}>
       <div style={{ background: c.card, borderRadius: '20px', width: '100%', maxWidth: '560px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,.6)', border: `1px solid ${c.border}` }} onClick={e => e.stopPropagation()}>
-
-        {/* Hero */}
         <div style={{ background: 'linear-gradient(135deg,#1A1FEF,#1A73E8,#7C3AED)', padding: '24px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent)' }} />
           <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
@@ -312,12 +307,10 @@ const UserProfileModal = ({ user, transactions, onClose, onBlock, onEdit, onDele
             </div>
           </div>
         </div>
-
-        {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', borderBottom: `1px solid ${c.border}` }}>
           {[
-            { label: 'Balance',     value: fmtPKR(user.balance || 0), color: '#1A73E8' },
-            { label: 'Logins',      value: user.login_count || 0,      color: c.text   },
+            { label: 'Balance',      value: fmtPKR(user.balance || 0), color: '#1A73E8' },
+            { label: 'Logins',       value: user.login_count || 0,     color: c.text   },
             { label: 'Member Since', value: user.created_at ? new Date(user.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: '2-digit' }) : 'N/A', color: c.text },
           ].map((s, i, arr) => (
             <div key={i} style={{ padding: '14px 16px', textAlign: 'center', borderRight: i < arr.length - 1 ? `1px solid ${c.border}` : 'none' }}>
@@ -326,15 +319,13 @@ const UserProfileModal = ({ user, transactions, onClose, onBlock, onEdit, onDele
             </div>
           ))}
         </div>
-
-        {/* Account details */}
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${c.border}` }}>
           <p style={{ color: c.textSec, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 10px' }}>Account Details</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             {[
               { label: 'Wallet Number', value: user.wallet_number || 'N/A', mono: true },
               { label: 'Last Login',    value: user.last_login_at ? new Date(user.last_login_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Never' },
-              { label: 'KYC Status',    value: user.kyc_verified  ? 'Approved' : 'Pending', color: user.kyc_verified ? '#16A34A' : '#CA8A04' },
+              { label: 'KYC Status',    value: user.kyc_verified ? 'Approved' : 'Pending', color: user.kyc_verified ? '#16A34A' : '#CA8A04' },
               { label: 'Onboarding',    value: user.onboarding_done ? 'Complete' : 'Pending', color: user.onboarding_done ? '#16A34A' : '#CA8A04' },
             ].map((row, i) => (
               <div key={i} style={{ background: c.cardAlt, borderRadius: '10px', padding: '10px 12px', border: `1px solid ${c.border}` }}>
@@ -344,8 +335,6 @@ const UserProfileModal = ({ user, transactions, onClose, onBlock, onEdit, onDele
             ))}
           </div>
         </div>
-
-        {/* Recent transactions */}
         {userTxs.length > 0 && (
           <div style={{ padding: '16px 20px', borderBottom: `1px solid ${c.border}` }}>
             <p style={{ color: c.textSec, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 10px' }}>Recent Transactions</p>
@@ -365,8 +354,6 @@ const UserProfileModal = ({ user, transactions, onClose, onBlock, onEdit, onDele
             </div>
           </div>
         )}
-
-        {/* Actions */}
         {!user.is_admin && (
           <div style={{ padding: '14px 20px', display: 'flex', gap: '8px' }}>
             <button onClick={() => { onEdit(user); onClose(); }} style={{ flex: 1, padding: '10px', background: 'rgba(124,58,237,.1)', color: '#7C3AED', border: '1px solid rgba(124,58,237,.2)', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
@@ -455,11 +442,11 @@ const EditUserModal = ({ show, user, onClose, onSave, c }) => {
         </div>
         <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {[
-            { key: 'full_name',         label: 'Full Name',       ph: 'Full name'         },
-            { key: 'phone',             label: 'Phone',           ph: 'Phone number'      },
-            { key: 'date_of_birth',     label: 'Date of Birth',   ph: '01-01-1995'        },
-            { key: 'cnic_number',       label: 'CNIC Number',     ph: '12345-1234567-1'   },
-            { key: 'full_name_on_card', label: 'Name on Card',    ph: 'Name as on CNIC'  },
+            { key: 'full_name',         label: 'Full Name',    ph: 'Full name'            },
+            { key: 'phone',             label: 'Phone',        ph: 'Phone number'         },
+            { key: 'date_of_birth',     label: 'Date of Birth',ph: '01-01-1995'           },
+            { key: 'cnic_number',       label: 'CNIC Number',  ph: '12345-1234567-1'      },
+            { key: 'full_name_on_card', label: 'Name on Card', ph: 'Name as on CNIC'      },
           ].map(f => (
             <div key={f.key}>
               <label style={lS}>{f.label}</label>
@@ -492,7 +479,7 @@ const EditUserModal = ({ show, user, onClose, onSave, c }) => {
 // MAIN DASHBOARD
 // ─────────────────────────────────────────────
 export default function AdminDashboard() {
-  const { logout }              = useAuth();
+  const { logout }          = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const c = isDark ? C.dark : C.light;
 
@@ -502,22 +489,21 @@ export default function AdminDashboard() {
   const [pendingKyc,     setPendingKyc]     = useState([]);
   const [logs,           setLogs]           = useState([]);
   const [changeRequests, setChangeRequests] = useState([]);
-
-  const [activeTab,   setActiveTab]   = useState('dashboard');
-  const [loading,     setLoading]     = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [toast,       setToast]       = useState(null);
-  const [chartView,   setChartView]   = useState('week');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab,      setActiveTab]      = useState('dashboard');
+  const [loading,        setLoading]        = useState(true);
+  const [sidebarOpen,    setSidebarOpen]    = useState(true);
+  const [toast,          setToast]          = useState(null);
+  const [chartView,      setChartView]      = useState('week');
+  const [searchQuery,    setSearchQuery]    = useState('');
   const searchRef = useRef(null);
 
-  const [selectedImage,  setSelectedImage]  = useState(null);
-  const [selectedTx,     setSelectedTx]     = useState(null);
-  const [selectedUser,   setSelectedUser]   = useState(null);
-  const [deleteDialog,   setDeleteDialog]   = useState({ show: false, user: null, reason: '' });
-  const [editModal,      setEditModal]      = useState({ show: false, user: null });
-  const [kycRejectModal, setKycRejectModal] = useState({ show: false, kycId: null, reason: '' });
-  const [crRejectModal,  setCrRejectModal]  = useState({ show: false, id: null,    reason: '' });
+  const [selectedImage,    setSelectedImage]    = useState(null);
+  const [selectedTx,       setSelectedTx]       = useState(null);
+  const [selectedUser,     setSelectedUser]      = useState(null);
+  const [deleteDialog,     setDeleteDialog]      = useState({ show: false, user: null, reason: '' });
+  const [editModal,        setEditModal]         = useState({ show: false, user: null });
+  const [kycRejectModal,   setKycRejectModal]    = useState({ show: false, kycId: null, reason: '' });
+  const [crRejectModal,    setCrRejectModal]     = useState({ show: false, id: null, reason: '' });
 
   useEffect(() => { loadDashboard(); }, []);
 
@@ -599,20 +585,20 @@ export default function AdminDashboard() {
     } catch { showToast('Failed', 'error'); }
   };
 
-  const q           = searchQuery.toLowerCase();
-  const fUsers      = users.filter(u  => !q || u.full_name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.phone?.includes(q));
-  const fTx         = transactions.filter(tx => !q || TX_ID(tx.id, tx.created_at).toLowerCase().includes(q) || tx.description?.toLowerCase().includes(q) || tx.from_wallet?.includes(q) || tx.to_wallet?.includes(q) || tx.type?.includes(q));
-  const fLogs       = logs.filter(l   => !q || l.user_name?.toLowerCase().includes(q) || l.action?.toLowerCase().includes(q) || l.detail?.toLowerCase().includes(q) || l.ip?.includes(q));
+  const q      = searchQuery.toLowerCase();
+  const fUsers = users.filter(u => !q || u.full_name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.phone?.includes(q));
+  const fTx    = transactions.filter(tx => !q || TX_ID(tx.id, tx.created_at).toLowerCase().includes(q) || tx.description?.toLowerCase().includes(q) || tx.from_wallet?.includes(q) || tx.to_wallet?.includes(q) || tx.type?.includes(q));
+  const fLogs  = logs.filter(l => !q || l.user_name?.toLowerCase().includes(q) || l.action?.toLowerCase().includes(q) || l.detail?.toLowerCase().includes(q) || l.ip?.includes(q));
 
   const navItems = [
-    { id: 'dashboard',       icon: LayoutDashboard, label: 'Overview'        },
-    { id: 'users',           icon: Users,            label: 'Users',           count: users.length },
-    { id: 'kyc',             icon: FileCheck,        label: 'KYC Review',      badge: pendingKyc.length },
-    { id: 'transactions',    icon: ArrowLeftRight,   label: 'Transactions',    count: transactions.length },
-    { id: 'change-requests', icon: ClipboardList,    label: 'Change Requests', badge: changeRequests.filter(r => r.status === 'pending').length },
-    { id: 'logs',            icon: ActivityIcon,     label: 'Activity Logs',   count: logs.length },
-    { id: 'security',        icon: Shield,           label: 'Security'        },
-    { id: 'settings',        icon: Settings,         label: 'Settings'        },
+    { id: 'dashboard',       icon: LayoutDashboard, label: 'Overview' },
+    { id: 'users',           icon: Users,           label: 'Users',           count: users.length },
+    { id: 'kyc',             icon: FileCheck,       label: 'KYC Review',      badge: pendingKyc.length },
+    { id: 'transactions',    icon: ArrowLeftRight,  label: 'Transactions',    count: transactions.length },
+    { id: 'change-requests', icon: ClipboardList,   label: 'Change Requests', badge: changeRequests.filter(r => r.status === 'pending').length },
+    { id: 'logs',            icon: ActivityIcon,    label: 'Activity Logs',   count: logs.length },
+    { id: 'security',        icon: Shield,          label: 'Security' },
+    { id: 'settings',        icon: Settings,        label: 'Settings' },
   ];
 
   if (loading) return (
@@ -626,7 +612,8 @@ export default function AdminDashboard() {
   );
 
   const card = { background: c.card, borderRadius: '14px', border: `1px solid ${c.border}`, overflow: 'hidden' };
-  const SH   = ({ title, sub, right }) => (
+
+  const SH = ({ title, sub, right }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: `1px solid ${c.border}` }}>
       <div>
         <h3 style={{ fontSize: '14px', fontWeight: '700', color: c.text, margin: 0 }}>{title}</h3>
@@ -635,15 +622,16 @@ export default function AdminDashboard() {
       {right}
     </div>
   );
+
   const TH = ({ label }) => (
     <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: '10px', fontWeight: '700', color: c.textSec, textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: `1px solid ${c.border}`, whiteSpace: 'nowrap', background: c.cardAlt }}>{label}</th>
   );
 
   const metricCards = [
-    { label: 'Total Volume', value: `PKR ${((stats?.total_volume || 0)/1000).toFixed(1)}K`, sub: 'All time',     icon: <DollarSign size={16} color="#fff" />, grad: 'linear-gradient(135deg,#1A1FEF,#1A73E8)', sh: 'rgba(26,115,232,.35)' },
-    { label: 'Transactions', value: stats?.total_transactions || 0,                          sub: 'Total',        icon: <Activity size={16} color="#fff" />,    grad: 'linear-gradient(135deg,#134E5E,#16A34A)', sh: 'rgba(22,163,74,.35)'  },
-    { label: 'Total Users',  value: stats?.total_users || 0,                                 sub: 'Registered',   icon: <Users size={16} color="#fff" />,        grad: 'linear-gradient(135deg,#9A3412,#EA580C)', sh: 'rgba(234,88,12,.35)'  },
-    { label: 'Pending KYC',  value: stats?.pending_kyc || 0,                                 sub: 'Needs review', icon: <UserCheck size={16} color="#fff" />,    grad: 'linear-gradient(135deg,#3B1F8C,#7C3AED)', sh: 'rgba(124,58,237,.35)' },
+    { label: 'Total Volume',   value: `PKR ${((stats?.total_volume || 0)/1000).toFixed(1)}K`, sub: 'All time',  icon: <DollarSign size={16} color="#fff" />, grad: 'linear-gradient(135deg,#1A1FEF,#1A73E8)', sh: 'rgba(26,115,232,.35)'  },
+    { label: 'Transactions',   value: stats?.total_transactions || 0,                          sub: 'Total',     icon: <Activity   size={16} color="#fff" />, grad: 'linear-gradient(135deg,#134E5E,#16A34A)', sh: 'rgba(22,163,74,.35)'   },
+    { label: 'Total Users',    value: stats?.total_users || 0,                                 sub: 'Registered',icon: <Users      size={16} color="#fff" />, grad: 'linear-gradient(135deg,#9A3412,#EA580C)', sh: 'rgba(234,88,12,.35)'   },
+    { label: 'Pending KYC',    value: stats?.pending_kyc || 0,                                 sub: 'Needs review',icon:<UserCheck size={16} color="#fff" />, grad: 'linear-gradient(135deg,#3B1F8C,#7C3AED)', sh: 'rgba(124,58,237,.35)' },
   ];
 
   return (
@@ -664,8 +652,8 @@ export default function AdminDashboard() {
       )}
 
       {/* ── MODALS ── */}
-      {selectedTx   && <TxModal tx={selectedTx} onClose={() => setSelectedTx(null)} c={c} />}
-      {selectedUser && <UserProfileModal user={selectedUser} transactions={transactions} onClose={() => setSelectedUser(null)} onBlock={blockUser} onEdit={u => setEditModal({ show: true, user: u })} onDelete={u => setDeleteDialog({ show: true, user: u, reason: '' })} c={c} />}
+      {selectedTx    && <TxModal tx={selectedTx} onClose={() => setSelectedTx(null)} c={c} />}
+      {selectedUser  && <UserProfileModal user={selectedUser} transactions={transactions} onClose={() => setSelectedUser(null)} onBlock={blockUser} onEdit={u => setEditModal({ show: true, user: u })} onDelete={u => setDeleteDialog({ show: true, user: u, reason: '' })} c={c} />}
 
       <ConfirmDialog show={deleteDialog.show} title="Delete User Account" message="This is permanent and cannot be undone."
         onConfirm={deleteUser} onCancel={() => setDeleteDialog({ show: false, user: null, reason: '' })}
@@ -715,7 +703,6 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
-
         <nav style={{ flex: 1, padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: '1px', overflowY: 'auto' }}>
           {navItems.map(item => {
             const Icon     = item.icon;
@@ -740,7 +727,6 @@ export default function AdminDashboard() {
             );
           })}
         </nav>
-
         <div style={{ padding: '8px 6px', borderTop: '1px solid rgba(255,255,255,.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: sidebarOpen ? '8px 10px' : '8px', justifyContent: sidebarOpen ? 'flex-start' : 'center', borderRadius: '8px', cursor: 'pointer' }}
             onClick={logout}
@@ -767,18 +753,13 @@ export default function AdminDashboard() {
               <p style={{ color: c.textSec, fontSize: '10px', margin: 0 }}>{new Date().toLocaleDateString('en-PK', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</p>
             </div>
           </div>
-
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {/* FIXED SEARCH BAR — uses ref, no re-render issue */}
             <div style={{ display: 'flex', alignItems: 'center', background: c.cardAlt, border: `1px solid ${c.border}`, borderRadius: '9px', padding: '0 10px', gap: '7px' }}>
               <Search size={12} color={c.textSec} style={{ flexShrink: 0 }} />
-              <input
-                ref={searchRef}
-                type="text"
+              <input ref={searchRef} type="text"
                 style={{ padding: '7px 0', border: 'none', background: 'transparent', color: c.text, fontSize: '12px', outline: 'none', width: '160px' }}
                 placeholder="Search users, txns, logs..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
               />
               {searchQuery && (
                 <button onClick={() => { setSearchQuery(''); searchRef.current?.focus(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 0, flexShrink: 0 }}>
@@ -786,7 +767,6 @@ export default function AdminDashboard() {
                 </button>
               )}
             </div>
-
             {[
               { icon: isDark ? <Sun size={13} color="#F59E0B" /> : <Moon size={13} color="#1A73E8" />, action: toggleTheme },
               { icon: <RefreshCw size={12} color={c.textSec} />, action: loadDashboard },
@@ -795,7 +775,6 @@ export default function AdminDashboard() {
                 {b.icon}
               </button>
             ))}
-
             <div style={{ position: 'relative' }}>
               <button onClick={() => setActiveTab('kyc')} style={{ width: '30px', height: '30px', borderRadius: '8px', background: c.cardAlt, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <Bell size={13} color={c.textSec} />
@@ -813,7 +792,6 @@ export default function AdminDashboard() {
           {/* ═══════════ OVERVIEW ═══════════ */}
           {activeTab === 'dashboard' && (
             <div>
-              {/* Metric cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '14px' }}>
                 {metricCards.map((mc, i) => (
                   <div key={i} style={{ background: mc.grad, borderRadius: '14px', padding: '16px', boxShadow: `0 8px 24px ${mc.sh}`, position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,.1)' }}>
@@ -825,8 +803,6 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
-
-              {/* Quick stats */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '14px' }}>
                 {[
                   { label: 'Verified Users',   value: users.filter(u => u.kyc_verified).length, color: '#16A34A', icon: <ShieldCheck size={14} color="#16A34A" /> },
@@ -842,8 +818,6 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
-
-              {/* Chart + Pie */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: '12px', marginBottom: '14px' }}>
                 <div style={card}>
                   <SH title="Transaction Volume" sub="PKR volume over time"
@@ -875,7 +849,6 @@ export default function AdminDashboard() {
                     </ResponsiveContainer>
                   </div>
                 </div>
-
                 <div style={card}>
                   <SH title="Revenue Mix" sub="By type" />
                   <div style={{ padding: '10px 16px' }}>
@@ -897,8 +870,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-
-              {/* Recent Transactions */}
               <div style={card}>
                 <SH title="Recent Transactions" sub="Click any row for full details + receipt"
                   right={<button style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(26,115,232,.1)', border: '1px solid rgba(26,115,232,.2)', borderRadius: '8px', padding: '5px 10px', cursor: 'pointer', color: '#1A73E8', fontSize: '11px', fontWeight: '700' }} onClick={() => setActiveTab('transactions')}>
@@ -949,7 +920,7 @@ export default function AdminDashboard() {
                       const lastIp    = lastLog?.ip || '—';
                       const rawAgent  = lastLog?.detail?.match(/Device: ([^—\n]+)/)?.[1]?.trim() || '—';
                       const isMobile  = /mobile|android|iphone/i.test(rawAgent);
-                      const agentShort = rawAgent.length > 18 ? rawAgent.slice(0, 18) + '…' : rawAgent;
+                      const agentShort = rawAgent.length > 18 ? rawAgent.slice(0, 18) + '...' : rawAgent;
                       return (
                         <tr key={i} style={{ borderBottom: `1px solid ${c.border}`, cursor: 'pointer', transition: 'background 0.1s' }}
                           onClick={() => setSelectedUser(u)}
@@ -1014,9 +985,9 @@ export default function AdminDashboard() {
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '14px' }}>
                 {[
-                  { label: 'Pending Review', value: pendingKyc.length,                      grad: 'linear-gradient(135deg,#92400E,#CA8A04)', sh: 'rgba(202,138,4,.25)',  icon: <Clock size={18} color="#fff" />      },
-                  { label: 'Verified Users', value: users.filter(u => u.kyc_verified).length, grad: 'linear-gradient(135deg,#134E5E,#16A34A)', sh: 'rgba(22,163,74,.25)',  icon: <CheckCircle size={18} color="#fff" /> },
-                  { label: 'Total Users',    value: users.length,                             grad: 'linear-gradient(135deg,#1A1FEF,#1A73E8)', sh: 'rgba(26,115,232,.25)', icon: <FileCheck size={18} color="#fff" />   },
+                  { label: 'Pending Review', value: pendingKyc.length,                       grad: 'linear-gradient(135deg,#92400E,#CA8A04)', sh: 'rgba(202,138,4,.25)', icon: <Clock        size={18} color="#fff" /> },
+                  { label: 'Verified Users', value: users.filter(u => u.kyc_verified).length, grad: 'linear-gradient(135deg,#134E5E,#16A34A)', sh: 'rgba(22,163,74,.25)', icon: <CheckCircle  size={18} color="#fff" /> },
+                  { label: 'Total Users',    value: users.length,                              grad: 'linear-gradient(135deg,#1A1FEF,#1A73E8)', sh: 'rgba(26,115,232,.25)',icon: <FileCheck    size={18} color="#fff" /> },
                 ].map((s, i) => (
                   <div key={i} style={{ background: s.grad, borderRadius: '12px', padding: '16px', boxShadow: `0 6px 20px ${s.sh}`, border: '1px solid rgba(255,255,255,.1)', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent)' }} />
@@ -1055,14 +1026,13 @@ export default function AdminDashboard() {
                         </div>
                         <span style={{ background: 'rgba(252,211,77,.2)', color: '#FCD34D', fontSize: '10px', fontWeight: '700', padding: '3px 9px', borderRadius: '20px', border: '1px solid rgba(252,211,77,.3)' }}>Pending</span>
                       </div>
-
                       <div style={{ padding: '14px 18px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
                           {[
                             { label: 'CNIC Number',  value: kyc.cnic_number },
-                            { label: 'Phone',        value: kyc.user?.phone },
+                            { label: 'Phone',         value: kyc.user?.phone },
                             { label: 'Date of Birth', value: kyc.date_of_birth || 'N/A' },
-                            { label: 'Name on Card', value: kyc.full_name_on_card || 'N/A' },
+                            { label: 'Name on Card',  value: kyc.full_name_on_card || 'N/A' },
                           ].map((row, ri) => (
                             <div key={ri} style={{ background: c.cardAlt, borderRadius: '8px', padding: '8px 10px', border: `1px solid ${c.border}` }}>
                               <p style={{ color: c.textSec, fontSize: '9px', fontWeight: '700', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{row.label}</p>
@@ -1071,21 +1041,48 @@ export default function AdminDashboard() {
                           ))}
                         </div>
 
+                        {/* ── DOCUMENTS — smart media: image for CNIC, video player for selfie ── */}
                         <p style={{ color: c.textSec, fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 6px' }}>Documents (click to enlarge)</p>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '12px' }}>
-                          {[{ label: 'ID Front', path: kyc.cnic_front }, { label: 'ID Back', path: kyc.cnic_back }, { label: 'Selfie', path: kyc.selfie }].map((doc, di) => (
+                          {[
+                            { label: 'ID Front', path: kyc.cnic_front },
+                            { label: 'ID Back',  path: kyc.cnic_back  },
+                            { label: 'Selfie',   path: kyc.selfie      },
+                          ].map((doc, di) => (
                             <div key={di} style={{ borderRadius: '8px', overflow: 'hidden', background: c.cardAlt, border: `1px solid ${c.border}` }}>
                               <p style={{ color: c.textSec, fontSize: '8px', fontWeight: '700', textAlign: 'center', padding: '4px', margin: 0, textTransform: 'uppercase' }}>{doc.label}</p>
                               {doc.path ? (
-                                <div style={{ position: 'relative', height: '72px', cursor: 'pointer', overflow: 'hidden' }} onClick={() => setSelectedImage(doc.path)}>
-                                  <img src={doc.path} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={doc.label} />
-                                  <div style={{ position: 'absolute', inset: 0, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(26,115,232,.5)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                    <Eye size={14} color="#fff" />
+                                isVideoUrl(doc.path) ? (
+                                  // ── VIDEO: liveness recording — clickable to open fullscreen ──
+                                  <div style={{ cursor: 'pointer' }} onClick={() => setSelectedImage(doc.path)}>
+                                    <video
+                                      src={doc.path}
+                                      style={{ width: '100%', height: '72px', display: 'block', objectFit: 'cover', pointerEvents: 'none' }}
+                                      preload="metadata"
+                                      muted
+                                    />
+                                    <div style={{ background: 'rgba(220,38,38,0.12)', padding: '3px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(220,38,38,0.2)' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#DC2626' }} />
+                                        <span style={{ color: '#DC2626', fontSize: '8px', fontWeight: '700', textTransform: 'uppercase' }}>Video</span>
+                                      </div>
+                                      <span style={{ color: '#DC2626', fontSize: '8px', fontWeight: '700' }}>Play</span>
+                                    </div>
                                   </div>
-                                </div>
-                              ) : <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.textSec, fontSize: '10px' }}>No image</div>}
+                                ) : (
+                                  // ── IMAGE: CNIC front/back ──
+                                  <div style={{ position: 'relative', height: '72px', cursor: 'pointer', overflow: 'hidden' }} onClick={() => setSelectedImage(doc.path)}>
+                                    <img src={doc.path} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={doc.label} />
+                                    <div style={{ position: 'absolute', inset: 0, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
+                                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(26,115,232,.5)'}
+                                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                      <Eye size={14} color="#fff" />
+                                    </div>
+                                  </div>
+                                )
+                              ) : (
+                                <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.textSec, fontSize: '10px' }}>No file</div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -1132,9 +1129,7 @@ export default function AdminDashboard() {
                         onClick={() => setSelectedTx(tx)}
                         onMouseEnter={e => e.currentTarget.style.background = c.hover}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <td style={{ padding: '10px 16px' }}>
-                          <code style={{ color: '#1A73E8', fontSize: '11px', fontWeight: '700', background: 'rgba(26,115,232,.08)', padding: '2px 7px', borderRadius: '5px', whiteSpace: 'nowrap' }}>{TX_ID(tx.id, tx.created_at)}</code>
-                        </td>
+                        <td style={{ padding: '10px 16px' }}><code style={{ color: '#1A73E8', fontSize: '11px', fontWeight: '700', background: 'rgba(26,115,232,.08)', padding: '2px 7px', borderRadius: '5px', whiteSpace: 'nowrap' }}>{TX_ID(tx.id, tx.created_at)}</code></td>
                         <td style={{ padding: '10px 16px' }}><StatusBadge status={tx.type} /></td>
                         <td style={{ padding: '10px 16px', color: c.text, fontSize: '13px', fontWeight: '800', whiteSpace: 'nowrap' }}>{fmtPKR(tx.amount)}</td>
                         <td style={{ padding: '10px 16px' }}>
@@ -1177,7 +1172,6 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
-
               {changeRequests.length === 0 ? (
                 <div style={{ ...card, padding: '48px', textAlign: 'center' }}>
                   <ClipboardList size={28} color={c.textSec} style={{ marginBottom: '10px' }} />
@@ -1291,12 +1285,12 @@ export default function AdminDashboard() {
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                 {[
-                  { title: 'Fraud Detection',       desc: 'Transfers ≥ PKR 25,000 trigger email alerts and in-app warnings',   grad: 'linear-gradient(135deg,#7F1D1D,#DC2626)', icon: <AlertCircle size={18} color="#fff" />, status: 'Active'    },
-                  { title: 'KYC Enforcement',        desc: 'Identity verification is required before any money transfer',      grad: 'linear-gradient(135deg,#134E5E,#16A34A)', icon: <ShieldCheck size={18} color="#fff" />, status: 'Enabled'   },
-                  { title: 'Transfer Limits',        desc: 'PKR 50,000 maximum per transaction, enforced server-side',         grad: 'linear-gradient(135deg,#92400E,#CA8A04)', icon: <Lock size={18} color="#fff" />,        status: 'Enforced'  },
-                  { title: 'JWT Refresh Tokens',     desc: '15-min access tokens, 30-day refresh tokens with blocklist',      grad: 'linear-gradient(135deg,#1A1FEF,#1A73E8)', icon: <Clock size={18} color="#fff" />,        status: 'Active'    },
-                  { title: 'New Device Alerts',      desc: 'Email notification sent on first login from a new device or IP',  grad: 'linear-gradient(135deg,#3B1F8C,#7C3AED)', icon: <Globe size={18} color="#fff" />,        status: 'Active'    },
-                  { title: 'Rapid Transfer Monitor', desc: '3+ transfers within 5 minutes triggers suspicious activity flag', grad: 'linear-gradient(135deg,#9A3412,#EA580C)', icon: <Zap size={18} color="#fff" />,         status: 'Active'    },
+                  { title: 'Fraud Detection',        desc: 'Transfers ≥ PKR 25,000 trigger email alerts and in-app warnings',     grad: 'linear-gradient(135deg,#7F1D1D,#DC2626)', icon: <AlertCircle  size={18} color="#fff" />, status: 'Active'   },
+                  { title: 'KYC Enforcement',         desc: 'Identity verification is required before any money transfer',         grad: 'linear-gradient(135deg,#134E5E,#16A34A)', icon: <ShieldCheck  size={18} color="#fff" />, status: 'Enabled'  },
+                  { title: 'Transfer Limits',         desc: 'PKR 50,000 maximum per transaction, enforced server-side',            grad: 'linear-gradient(135deg,#92400E,#CA8A04)', icon: <Lock         size={18} color="#fff" />, status: 'Enforced' },
+                  { title: 'JWT Refresh Tokens',      desc: '15-min access tokens, 30-day refresh tokens with blocklist',         grad: 'linear-gradient(135deg,#1A1FEF,#1A73E8)', icon: <Clock        size={18} color="#fff" />, status: 'Active'   },
+                  { title: 'New Device Alerts',       desc: 'Email notification sent on first login from a new device or IP',     grad: 'linear-gradient(135deg,#3B1F8C,#7C3AED)', icon: <Globe        size={18} color="#fff" />, status: 'Active'   },
+                  { title: 'Rapid Transfer Monitor',  desc: '3+ transfers within 5 minutes triggers suspicious activity flag',    grad: 'linear-gradient(135deg,#9A3412,#EA580C)', icon: <Zap          size={18} color="#fff" />, status: 'Active'   },
                 ].map((item, i) => (
                   <div key={i} style={card}>
                     <div style={{ padding: '16px 18px' }}>
@@ -1310,7 +1304,6 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
-
               <div style={card}>
                 <SH title={`Blocked Users (${users.filter(u => u.is_blocked).length})`} />
                 {users.filter(u => u.is_blocked).length === 0 ? (
@@ -1343,18 +1336,18 @@ export default function AdminDashboard() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               {[
                 { title: 'System Status', icon: <Activity size={15} color="#16A34A" />, items: [
-                  { label: 'API Server',       status: 'Operational', color: '#16A34A' },
+                  { label: 'API Server',          status: 'Operational', color: '#16A34A' },
                   { label: 'PostgreSQL (Railway)', status: 'Operational', color: '#16A34A' },
-                  { label: 'Resend Email',     status: 'Operational', color: '#16A34A' },
-                  { label: 'Cloudinary CDN',   status: 'Operational', color: '#16A34A' },
+                  { label: 'Resend Email',         status: 'Operational', color: '#16A34A' },
+                  { label: 'Cloudinary CDN',       status: 'Operational', color: '#16A34A' },
                 ]},
                 { title: 'App Configuration', icon: <Settings size={15} color="#1A73E8" />, items: [
-                  { label: 'Max Transfer',     status: 'PKR 50,000',  color: '#1A73E8' },
-                  { label: 'KYC Required',     status: 'Yes',         color: '#16A34A' },
-                  { label: 'OTP Expiry',       status: '10 minutes',  color: '#1A73E8' },
-                  { label: 'Access Token',     status: '15 minutes',  color: '#CA8A04' },
-                  { label: 'Refresh Token',    status: '30 days',     color: '#16A34A' },
-                  { label: 'Rate Limiting',    status: 'Enabled',     color: '#16A34A' },
+                  { label: 'Max Transfer',  status: 'PKR 50,000',  color: '#1A73E8' },
+                  { label: 'KYC Required', status: 'Yes',          color: '#16A34A' },
+                  { label: 'OTP Expiry',   status: '10 minutes',   color: '#1A73E8' },
+                  { label: 'Access Token', status: '15 minutes',   color: '#CA8A04' },
+                  { label: 'Refresh Token',status: '30 days',      color: '#16A34A' },
+                  { label: 'Rate Limiting',status: 'Enabled',      color: '#16A34A' },
                 ]},
               ].map((sec, si) => (
                 <div key={si} style={card}>
@@ -1375,17 +1368,38 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── IMAGE VIEWER ── */}
+      {/* ── MEDIA VIEWER — handles both images and liveness videos ── */}
       {selectedImage && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.96)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999, cursor: 'pointer' }} onClick={() => setSelectedImage(null)}>
-          <div style={{ background: c.card, borderRadius: '18px', padding: '18px', maxWidth: '640px', width: '90%', cursor: 'default', border: `1px solid ${c.border}`, boxShadow: '0 32px 80px rgba(0,0,0,.7)' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: c.card, borderRadius: '18px', padding: '18px', maxWidth: isVideoUrl(selectedImage) ? '700px' : '640px', width: '90%', cursor: 'default', border: `1px solid ${c.border}`, boxShadow: '0 32px 80px rgba(0,0,0,.7)' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <p style={{ color: c.text, fontSize: '13px', fontWeight: '700', margin: 0 }}>Document Preview</p>
+              <p style={{ color: c.text, fontSize: '13px', fontWeight: '700', margin: 0 }}>
+                {isVideoUrl(selectedImage) ? 'Liveness Video — Watch to verify identity' : 'Document Preview'}
+              </p>
               <button style={{ width: '30px', height: '30px', borderRadius: '8px', background: c.cardAlt, border: `1px solid ${c.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setSelectedImage(null)}>
                 <X size={13} color={c.text} />
               </button>
             </div>
-            <img src={selectedImage} style={{ width: '100%', borderRadius: '10px', maxHeight: '65vh', objectFit: 'contain' }} alt="Document" />
+
+            {isVideoUrl(selectedImage) ? (
+              <div>
+                <video
+                  src={selectedImage}
+                  controls
+                  autoPlay
+                  controlsList="nodownload"
+                  style={{ width: '100%', borderRadius: '10px', maxHeight: '65vh', background: '#000', display: 'block' }}
+                />
+                <div style={{ marginTop: '10px', padding: '10px 14px', background: 'rgba(220,38,38,0.08)', borderRadius: '10px', border: '1px solid rgba(220,38,38,0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#DC2626', flexShrink: 0 }} />
+                  <p style={{ color: c.textSec, fontSize: '12px', margin: 0 }}>
+                    Watch the full video to verify the user performed all liveness challenges: look straight, left, right, up, blink, smile.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <img src={selectedImage} style={{ width: '100%', borderRadius: '10px', maxHeight: '65vh', objectFit: 'contain' }} alt="Document" />
+            )}
           </div>
         </div>
       )}
