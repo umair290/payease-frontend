@@ -11,7 +11,7 @@ import {
   Share2, Printer, X, Wallet,
   Plus, BarChart2, CreditCard as CardIco,
   Zap, Shield, Sparkles, RefreshCw,
-  TrendingUp, TrendingDown, Activity
+  TrendingUp, TrendingDown, Activity, SplitSquareHorizontal
 } from 'lucide-react';
 
 function AnimatedNumber({ value, duration = 1200 }) {
@@ -122,7 +122,6 @@ export default function Dashboard() {
       showToast('Maximum deposit is PKR 500,000', 'error');
       return;
     }
-
     setActionLoading(true);
     try {
       await accountService.deposit({ amount: amt });
@@ -161,13 +160,16 @@ export default function Dashboard() {
     else { navigator.clipboard.writeText(text); showToast('Receipt copied!'); }
   };
 
+  // ── Quick actions: 8 items in 2 rows × 4 columns ──
   const quickActions = [
-    { icon: <Send size={20} color="#fff" />,      label: 'Send',     grad: 'linear-gradient(135deg,#1A73E8,#0052CC)', shadow: 'rgba(26,115,232,0.4)',  action: () => navigate('/send') },
-    { icon: <Plus size={20} color="#fff" />,      label: 'Deposit',  grad: 'linear-gradient(135deg,#16A34A,#15803D)', shadow: 'rgba(22,163,74,0.4)',   action: () => setShowDeposit(true) },
-    { icon: <FileText size={20} color="#fff" />,  label: 'Bills',    grad: 'linear-gradient(135deg,#EA580C,#C2410C)', shadow: 'rgba(234,88,12,0.4)',   action: () => navigate('/bills') },
-    { icon: <BarChart2 size={20} color="#fff" />, label: 'Insights', grad: 'linear-gradient(135deg,#0891B2,#0E7490)', shadow: 'rgba(8,145,178,0.4)',   action: () => navigate('/insights') },
-    { icon: <CardIco size={20} color="#fff" />,   label: 'Card',     grad: 'linear-gradient(135deg,#CA8A04,#A16207)', shadow: 'rgba(202,138,4,0.4)',   action: () => navigate('/virtual-card') },
-    { icon: <Clock size={20} color="#fff" />,     label: 'History',  grad: 'linear-gradient(135deg,#7C3AED,#5B21B6)', shadow: 'rgba(124,58,237,0.4)',  action: () => navigate('/history') },
+    { icon: <Send size={20} color="#fff" />,                  label: 'Send',     grad: 'linear-gradient(135deg,#1A73E8,#0052CC)', shadow: 'rgba(26,115,232,0.4)',  action: () => navigate('/send')         },
+    { icon: <Plus size={20} color="#fff" />,                  label: 'Deposit',  grad: 'linear-gradient(135deg,#16A34A,#15803D)', shadow: 'rgba(22,163,74,0.4)',   action: () => setShowDeposit(true)      },
+    { icon: <FileText size={20} color="#fff" />,              label: 'Bills',    grad: 'linear-gradient(135deg,#EA580C,#C2410C)', shadow: 'rgba(234,88,12,0.4)',   action: () => navigate('/bills')        },
+    { icon: <SplitSquareHorizontal size={20} color="#fff" />, label: 'Split',    grad: 'linear-gradient(135deg,#DB2777,#9D174D)', shadow: 'rgba(219,39,119,0.4)',  action: () => navigate('/split')        },
+    { icon: <BarChart2 size={20} color="#fff" />,             label: 'Insights', grad: 'linear-gradient(135deg,#0891B2,#0E7490)', shadow: 'rgba(8,145,178,0.4)',   action: () => navigate('/insights')     },
+    { icon: <CardIco size={20} color="#fff" />,               label: 'Card',     grad: 'linear-gradient(135deg,#CA8A04,#A16207)', shadow: 'rgba(202,138,4,0.4)',   action: () => navigate('/virtual-card') },
+    { icon: <Clock size={20} color="#fff" />,                 label: 'History',  grad: 'linear-gradient(135deg,#7C3AED,#5B21B6)', shadow: 'rgba(124,58,237,0.4)',  action: () => navigate('/history')      },
+    { icon: <QrCode size={20} color="#fff" />,                label: 'QR Code',  grad: 'linear-gradient(135deg,#0F172A,#334155)', shadow: 'rgba(15,23,42,0.5)',    action: () => navigate('/qr')           },
   ];
 
   const navTabs = [
@@ -225,11 +227,12 @@ export default function Dashboard() {
         <div style={{ borderRadius: '24px', background: `linear-gradient(90deg,${skelBase} 25%,${skelShine} 50%,${skelBase} 75%)`, backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite', height: '200px' }} />
       </div>
       <div style={{ padding: '16px 16px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '8px' }}>
-          {[...Array(6)].map((_,i) => (
+        {/* Skeleton: 2 rows × 4 cols */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '10px' }}>
+          {[...Array(8)].map((_,i) => (
             <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'7px' }}>
-              <div style={{ width:'48px', height:'48px', borderRadius:'16px', background:`linear-gradient(90deg,${skelBase} 25%,${skelShine} 50%,${skelBase} 75%)`, backgroundSize:'200% 100%', animation:`shimmer 1.5s ${i*0.1}s infinite` }} />
-              <div style={{ width:'32px', height:'9px', borderRadius:'4px', background:`linear-gradient(90deg,${skelBase} 25%,${skelShine} 50%,${skelBase} 75%)`, backgroundSize:'200% 100%', animation:'shimmer 1.5s infinite' }} />
+              <div style={{ width:'52px', height:'52px', borderRadius:'16px', background:`linear-gradient(90deg,${skelBase} 25%,${skelShine} 50%,${skelBase} 75%)`, backgroundSize:'200% 100%', animation:`shimmer 1.5s ${i*0.1}s infinite` }} />
+              <div style={{ width:'36px', height:'9px', borderRadius:'4px', background:`linear-gradient(90deg,${skelBase} 25%,${skelShine} 50%,${skelBase} 75%)`, backgroundSize:'200% 100%', animation:'shimmer 1.5s infinite' }} />
             </div>
           ))}
         </div>
@@ -255,7 +258,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: bg, maxWidth: '480px', margin: '0 auto', position: 'relative', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
-      <style>{`@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}`}</style>
+      <style>{`@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}} @keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* ── ONBOARDING OVERLAY ── */}
       <AnimatePresence>
@@ -371,13 +374,13 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* ── QUICK ACTIONS ── */}
+      {/* ── QUICK ACTIONS — 2 rows × 4 columns ── */}
       <motion.div style={{ padding:'16px 16px 0' }} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2 }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:'8px' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'10px' }}>
           {quickActions.map((item,i) => (
             <motion.div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'7px', cursor:'pointer' }} whileTap={{ scale:0.82 }} initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2+i*0.04, type:'spring', stiffness:300 }} onClick={item.action}>
-              <div style={{ width:'48px', height:'48px', borderRadius:'16px', background:item.grad, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 6px 16px ${item.shadow}` }}>{item.icon}</div>
-              <p style={{ color:textSec, fontSize:'9.5px', margin:0, fontWeight:'600', textAlign:'center', letterSpacing:'0.2px' }}>{item.label}</p>
+              <div style={{ width:'52px', height:'52px', borderRadius:'16px', background:item.grad, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 6px 16px ${item.shadow}` }}>{item.icon}</div>
+              <p style={{ color:textSec, fontSize:'10px', margin:0, fontWeight:'600', textAlign:'center', letterSpacing:'0.2px' }}>{item.label}</p>
             </motion.div>
           ))}
         </div>
@@ -431,13 +434,41 @@ export default function Dashboard() {
             {transactions.slice(0,5).map((tx,i) => {
               const { icon, bg:txBg, border:txBorder } = getTxIcon(tx);
               const dateField = tx.created_at || tx.date;
+              // Show counterparty name if available from enriched API
+              const txTitle = tx.counterparty_name
+                ? (tx.direction === 'credit' ? `From ${tx.counterparty_name}` : `To ${tx.counterparty_name}`)
+                : getTxLabel(tx);
               return (
                 <motion.div key={tx.id||i} style={{ display:'flex', alignItems:'center', gap:'12px', padding:'13px 18px', borderTop:`1px solid ${border}`, cursor:'pointer' }} whileHover={{ background:isDark?'rgba(255,255,255,0.02)':'rgba(0,0,0,0.01)' }} whileTap={{ scale:0.99 }} initial={{ opacity:0, x:-10 }} animate={{ opacity:1, x:0 }} transition={{ delay:0.4+i*0.05 }}
-                  onClick={() => { setReceiptData({ type:getTxLabel(tx), amount:tx.amount, to:tx.to_wallet, from:tx.from_wallet, toName:tx.description, date:dateField?new Date(String(dateField).replace(' ','T')).toLocaleString('en-PK'):'N/A', ref:'TXN'+(tx.id||Date.now().toString().slice(-8)), status:tx.status==='completed'?'Successful':tx.status, direction:tx.direction }); setShowReceipt(true); }}
+                  onClick={() => {
+                    setReceiptData({
+                      type:      getTxLabel(tx),
+                      amount:    tx.amount,
+                      to:        tx.to_wallet,
+                      from:      tx.from_wallet,
+                      toName:    tx.counterparty_name || tx.description,
+                      date:      dateField ? new Date(String(dateField).replace(' ','T')).toLocaleString('en-PK') : 'N/A',
+                      ref:       'TXN' + (tx.id || Date.now().toString().slice(-8)),
+                      status:    tx.status === 'completed' ? 'Successful' : tx.status,
+                      direction: tx.direction,
+                    });
+                    setShowReceipt(true);
+                  }}
                 >
-                  <div style={{ width:'42px', height:'42px', borderRadius:'14px', background:txBg, border:`1px solid ${txBorder}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{icon}</div>
+                  {/* Show avatar if counterparty name available */}
+                  {tx.counterparty_name && tx.counterparty_avatar ? (
+                    <div style={{ width:'42px', height:'42px', borderRadius:'50%', overflow:'hidden', flexShrink:0, border:`1px solid ${txBorder}` }}>
+                      <img src={tx.counterparty_avatar} alt={tx.counterparty_name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                    </div>
+                  ) : tx.counterparty_name ? (
+                    <div style={{ width:'42px', height:'42px', borderRadius:'50%', background:'linear-gradient(135deg,#1A73E8,#7C3AED)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, border:`1px solid ${txBorder}` }}>
+                      <span style={{ color:'#fff', fontSize:'15px', fontWeight:'800' }}>{tx.counterparty_name.charAt(0).toUpperCase()}</span>
+                    </div>
+                  ) : (
+                    <div style={{ width:'42px', height:'42px', borderRadius:'14px', background:txBg, border:`1px solid ${txBorder}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{icon}</div>
+                  )}
                   <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ color:text, fontSize:'13px', fontWeight:'600', margin:'0 0 3px 0', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{getTxLabel(tx)}</p>
+                    <p style={{ color:text, fontSize:'13px', fontWeight:'600', margin:'0 0 3px 0', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{txTitle}</p>
                     <div style={{ display:'flex', alignItems:'center', gap:'5px' }}>
                       <span style={{ color:textSec, fontSize:'10px' }}>{formatDate(dateField)}</span>
                       <span style={{ width:'3px', height:'3px', borderRadius:'50%', background:textSec }} />
@@ -494,22 +525,15 @@ export default function Dashboard() {
                 <div style={{ width:'52px', height:'52px', borderRadius:'16px', background:'linear-gradient(135deg,#16A34A,#15803D)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 6px 20px rgba(22,163,74,0.35)' }}><Plus size={24} color="#fff" /></div>
                 <div><h3 style={{ color:text, fontSize:'20px', fontWeight:'800', margin:'0 0 3px 0' }}>Add Money</h3><p style={{ color:textSec, fontSize:'13px', margin:0 }}>Deposit funds to your wallet</p></div>
               </div>
-
-              {/* ── Amount input ── */}
               <div style={{ marginBottom:'14px' }}>
                 <div style={{ display:'flex', alignItems:'center', border:`2px solid ${depositAmount?'#1A73E8':border}`, borderRadius:'18px', padding:'0 20px', background:isDark?'rgba(255,255,255,0.04)':'#F8FAFF', transition:'all 0.2s', boxShadow:depositAmount?'0 0 0 4px rgba(26,115,232,0.1)':'none' }}>
                   <span style={{ color:textSec, fontSize:'20px', fontWeight:'600', marginRight:'10px', flexShrink:0 }}>PKR</span>
                   <input
                     style={{ flex:1, padding:'18px 0', border:'none', background:'transparent', color:text, fontSize:'30px', fontWeight:'800', outline:'none', letterSpacing:'-1px', width:'100%' }}
-                    type="number"
-                    inputMode="decimal"
-                    placeholder="0"
-                    value={depositAmount}
+                    type="number" inputMode="decimal" placeholder="0" value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleDeposit()}
-                    autoFocus
-                    min="1"
-                    max="500000"
+                    autoFocus min="1" max="500000"
                   />
                 </div>
                 {depositAmount && parseFloat(depositAmount) > 0 && (
@@ -518,34 +542,26 @@ export default function Dashboard() {
                   </p>
                 )}
               </div>
-
-              {/* Quick amounts */}
               <div style={{ display:'flex', gap:'8px', marginBottom:'24px' }}>
                 {[500, 1000, 5000, 10000].map(amt => (
                   <motion.button key={amt}
                     style={{ flex:1, padding:'10px 4px', background:Number(depositAmount)===amt?'linear-gradient(135deg,#1A73E8,#0052CC)':isDark?'rgba(255,255,255,0.05)':'#F1F5F9', color:Number(depositAmount)===amt?'#fff':textSec, border:`1px solid ${Number(depositAmount)===amt?'transparent':border}`, borderRadius:'12px', fontSize:'12px', fontWeight:'700', cursor:'pointer', transition:'all 0.2s', boxShadow:Number(depositAmount)===amt?'0 4px 12px rgba(26,115,232,0.35)':'none' }}
                     whileTap={{ scale:0.93 }}
-                    onClick={() => setDepositAmount(String(amt))}
-                  >
+                    onClick={() => setDepositAmount(String(amt))}>
                     {amt >= 1000 ? `${amt/1000}K` : amt}
                   </motion.button>
                 ))}
               </div>
-
-              {/* Deposit button */}
               <motion.button
                 style={{ width:'100%', padding:'17px', background:depositAmount&&parseFloat(depositAmount)>0?'linear-gradient(135deg,#16A34A,#15803D)':isDark?'rgba(255,255,255,0.06)':'#F1F5F9', color:depositAmount&&parseFloat(depositAmount)>0?'#fff':textSec, border:'none', borderRadius:'16px', fontSize:'15px', fontWeight:'800', cursor:depositAmount&&parseFloat(depositAmount)>0&&!actionLoading?'pointer':'not-allowed', marginBottom:'10px', boxShadow:depositAmount&&parseFloat(depositAmount)>0?'0 8px 24px rgba(22,163,74,0.35)':'none', transition:'all 0.25s', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px' }}
                 whileTap={depositAmount&&parseFloat(depositAmount)>0?{ scale:0.97 }:{}}
                 onClick={handleDeposit}
-                disabled={actionLoading || !depositAmount || parseFloat(depositAmount) <= 0}
-              >
+                disabled={actionLoading || !depositAmount || parseFloat(depositAmount) <= 0}>
                 {actionLoading
                   ? <><RefreshCw size={16} color="#fff" style={{ animation:'spin 1s linear infinite' }} /> Processing...</>
                   : <><Plus size={16} color={depositAmount&&parseFloat(depositAmount)>0?'#fff':textSec} /> Deposit {depositAmount&&parseFloat(depositAmount)>0?`PKR ${parseFloat(depositAmount).toLocaleString()}`:'Amount'}</>
                 }
               </motion.button>
-              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-
               <motion.button style={{ width:'100%', padding:'14px', background:'transparent', color:textSec, border:`1.5px solid ${border}`, borderRadius:'14px', fontSize:'14px', cursor:'pointer', fontWeight:'600', display:'flex', alignItems:'center', justifyContent:'center', gap:'6px' }} whileTap={{ scale:0.97 }} onClick={() => { setShowDeposit(false); setDepositAmount(''); }}>
                 <X size={14} color={textSec} /> Cancel
               </motion.button>
