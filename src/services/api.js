@@ -136,30 +136,40 @@ export const accountService = {
   },
 
   getAllTransactions: () =>
-    api.get('/api/account/transactions?per_page=100&page=1'),
+    api.get('/api/account/transactions/all'),
 
-  // ── Deposit: send amount as plain number ──
   deposit: (data) => api.post('/api/account/deposit', {
     amount:          Number(data.amount),
     idempotency_key: data.idempotency_key || generateIdempotencyKey(),
   }),
 
-  // ── Send money ──
   send:      (data) => api.post('/api/account/send', data),
   sendMoney: (data) => api.post('/api/account/send', data),
 
-  // ── Lookups ──
   lookupWallet: (wallet_number) => api.post('/api/account/lookup',       { wallet_number }),
   lookupPhone:  (phone)         => api.post('/api/account/lookup-phone', { phone }),
 };
 
 // ─────────────────────────────────────────
-// BILL SERVICE
+// BILL SERVICE (utility bills)
 // ─────────────────────────────────────────
 export const billService = {
   getProviders: ()     => api.get('/api/bills/providers'),
   payBill:      (data) => api.post('/api/bills/pay',  data),
   getHistory:   ()     => api.get('/api/bills/history'),
+};
+
+// ─────────────────────────────────────────
+// SPLIT SERVICE (bill splitting)
+// ─────────────────────────────────────────
+export const splitService = {
+  create:   (data)    => api.post('/api/split/create',        data),
+  list:     ()        => api.get('/api/split/list'),
+  get:      (id)      => api.get(`/api/split/${id}`),
+  pay:      (data)    => api.post('/api/split/pay',           data),
+  remind:   (data)    => api.post('/api/split/remind',        data),
+  settle:   (data)    => api.post('/api/split/settle',        data),
+  delete:   (id)      => api.delete(`/api/split/${id}`),
 };
 
 // ─────────────────────────────────────────

@@ -16,6 +16,7 @@ import Notifications from './pages/Notifications';
 import Insights from './pages/Insights';
 import VirtualCard from './pages/VirtualCard';
 import Onboarding from './pages/Onboarding';
+import BillSplit from './pages/BillSplit';
 import useSessionTimeout from './hooks/useSessionTimeout';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
 
@@ -26,29 +27,22 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// ── Use 'user' from AuthContext, plus token from localStorage as fallback ──
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const hasToken = !!localStorage.getItem('token');
-
   if (loading) return <LoadingSpinner />;
-
-  // Allow if either user state is set OR token exists in storage
   return (user || hasToken) ? children : <Navigate to="/login" replace />;
 };
 
 const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const hasToken = !!localStorage.getItem('token');
-
   if (loading) return <LoadingSpinner />;
   if (!user && !hasToken) return <Navigate to="/login" replace />;
-
   const storedUser = user || JSON.parse(localStorage.getItem('user') || '{}');
   return storedUser?.is_admin ? children : <Navigate to="/dashboard" replace />;
 };
 
-// ── Session Manager ──
 function SessionManager({ children }) {
   const { logout, user } = useAuth();
   const [showWarning, setShowWarning] = useState(false);
@@ -96,7 +90,6 @@ function SessionManager({ children }) {
     return () => clearInterval(countdownRef.current);
   }, []);
 
-  // ── Only show session modal when logged in ──
   const isLoggedIn = !!user || !!localStorage.getItem('token');
   if (!isLoggedIn) return <>{children}</>;
 
@@ -134,6 +127,7 @@ function AppRoutes() {
         <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
         <Route path="/insights"      element={<PrivateRoute><Insights /></PrivateRoute>} />
         <Route path="/virtual-card"  element={<PrivateRoute><VirtualCard /></PrivateRoute>} />
+        <Route path="/split"         element={<PrivateRoute><BillSplit /></PrivateRoute>} />
 
         {/* ── Admin ── */}
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
