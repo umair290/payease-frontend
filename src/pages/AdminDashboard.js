@@ -12,7 +12,8 @@ import {
   CreditCard, ShieldCheck, AlertCircle, Trash2,
   Edit2, Activity as ActivityIcon, ClipboardList,
   Download, Printer, MapPin, Monitor, Smartphone,
-  Copy, ArrowDownLeft, ArrowUpRight as ArrowUp
+  Copy, ArrowDownLeft, ArrowUpRight as ArrowUp,
+  Palette, Upload
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -504,6 +505,10 @@ export default function AdminDashboard() {
   const [editModal,        setEditModal]         = useState({ show: false, user: null });
   const [kycRejectModal,   setKycRejectModal]    = useState({ show: false, kycId: null, reason: '' });
   const [crRejectModal,    setCrRejectModal]     = useState({ show: false, id: null, reason: '' });
+  const [wlConfig,      setWlConfig]      = useState(null);
+  const [wlForm,        setWlForm]        = useState(null);
+  const [wlSaving,      setWlSaving]      = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   useEffect(() => { loadDashboard(); }, []);
 
@@ -529,6 +534,11 @@ export default function AdminDashboard() {
       setPendingKyc(kR.data.kyc_list || []);
       setLogs(lR.data.logs || []);
       setChangeRequests(rR.data.requests || []);
+    try {
+      const wlR = await api.get('/api/admin/whitelabel');
+      setWlConfig(wlR.data.config);
+      setWlForm({ ...wlR.data.config });
+    } catch(e) {}
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -590,6 +600,50 @@ export default function AdminDashboard() {
   const fTx    = transactions.filter(tx => !q || TX_ID(tx.id, tx.created_at).toLowerCase().includes(q) || tx.description?.toLowerCase().includes(q) || tx.from_wallet?.includes(q) || tx.to_wallet?.includes(q) || tx.type?.includes(q));
   const fLogs  = logs.filter(l => !q || l.user_name?.toLowerCase().includes(q) || l.action?.toLowerCase().includes(q) || l.detail?.toLowerCase().includes(q) || l.ip?.includes(q));
 
+  const loadWhitelabel = async () => {
+    try {
+      const res = await api.get('/api/admin/whitelabel');
+      setWlConfig(res.data.config);
+      setWlForm({ ...res.data.config });
+    } catch(e) { console.error(e); }
+  };
+
+  const saveWhitelabel = async () => {
+    if (!wlForm) return;
+    setWlSaving(true);
+    try {
+      const res = await api.post('/api/admin/whitelabel', wlForm);
+      setWlConfig(res.data.config);
+      setWlForm({ ...res.data.config });
+      showToast('Branding saved!');
+    } catch(err) { showToast(err.response?.data?.error || 'Save failed', 'error'); }
+    setWlSaving(false);
+  };
+
+  const uploadLogo = async (file) => {
+    if (!file) return;
+    setLogoUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('logo', file);
+      const res = await api.post('/api/admin/whitelabel/upload-logo', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setWlForm(f => ({ ...f, logo_url: res.data.logo_url }));
+      showToast('Logo uploaded!');
+    } catch(err) { showToast(err.response?.data?.error || 'Upload failed', 'error'); }
+    setLogoUploading(false);
+  };
+
+  const exportWlConfig = () => {
+    if (!wlConfig) return;
+    const blob = new Blob([JSON.stringify(wlConfig, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `payease-whitelabel-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const navItems = [
     { id: 'dashboard',       icon: LayoutDashboard, label: 'Overview' },
     { id: 'users',           icon: Users,           label: 'Users',           count: users.length },
@@ -599,6 +653,7 @@ export default function AdminDashboard() {
     { id: 'logs',            icon: ActivityIcon,    label: 'Activity Logs',   count: logs.length },
     { id: 'security',        icon: Shield,          label: 'Security' },
     { id: 'settings',        icon: Settings,        label: 'Settings' },
+    { id: 'branding',        icon: Palette,         label: 'Branding' },
   ];
 
   if (loading) return (
@@ -1369,7 +1424,168 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── MEDIA VIEWER — handles both images and liveness videos ── */}
+
+          {/* ══ BRANDING ══ */}
+          {activeTab === 'branding' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+              {/* Brand Identity */}
+              <div style={{ background: c.card, borderRadius: '16px', border: `1px solid ${c.border}`, overflow: 'hidden' }}>
+                <div style={{ padding: '16px 20px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '10px', background: c.cardAlt }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg,#1A73E8,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Globe size={16} color="#fff" /></div>
+                  <div>
+                    <p style={{ color: c.text, fontSize: '14px', fontWeight: '700', margin: 0 }}>Brand Identity</p>
+                    <p style={{ color: c.textSec, fontSize: '11px', margin: 0 }}>App name, tagline, logo</p>
+                  </div>
+                </div>
+                <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {[{ key: 'app_name', label: 'App Name', ph: 'e.g. PayEase' }, { key: 'tagline', label: 'Tagline', ph: 'e.g. Your Digital Wallet' }].map(f => (
+                      <div key={f.key}>
+                        <label style={{ color: c.textSec, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'block', marginBottom: '5px' }}>{f.label}</label>
+                        <input style={{ width: '100%', padding: '10px 12px', border: `1.5px solid ${wlForm?.[f.key] ? '#1A73E8' : c.border}`, borderRadius: '10px', background: c.inputBg, color: c.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box', transition: 'all 0.2s' }}
+                          value={wlForm?.[f.key] || ''} onChange={e => setWlForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.ph} />
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {[{ key: 'support_email', label: 'Support Email', ph: 'support@yourapp.com' }, { key: 'website_url', label: 'Website URL', ph: 'https://yourapp.com' }].map(f => (
+                      <div key={f.key}>
+                        <label style={{ color: c.textSec, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'block', marginBottom: '5px' }}>{f.label}</label>
+                        <input style={{ width: '100%', padding: '10px 12px', border: `1.5px solid ${c.border}`, borderRadius: '10px', background: c.inputBg, color: c.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                          value={wlForm?.[f.key] || ''} onChange={e => setWlForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.ph} />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <label style={{ color: c.textSec, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'block', marginBottom: '8px' }}>Logo</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '64px', height: '64px', borderRadius: '14px', background: c.cardAlt, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                        {wlForm?.logo_url ? <img src={wlForm.logo_url} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} /> : <Palette size={24} color={c.textSec} />}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 16px', background: 'rgba(26,115,232,0.1)', color: '#1A73E8', border: '1px solid rgba(26,115,232,0.2)', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: logoUploading ? 'not-allowed' : 'pointer', opacity: logoUploading ? 0.6 : 1 }}>
+                          {logoUploading ? <><RefreshCw size={13} style={{ animation: 'spin 1s linear infinite' }} /> Uploading...</> : <><Upload size={13} /> Upload Logo</>}
+                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => uploadLogo(e.target.files[0])} disabled={logoUploading} />
+                        </label>
+                        {wlForm?.logo_url && <button onClick={() => setWlForm(p => ({ ...p, logo_url: '' }))} style={{ marginLeft: '8px', padding: '9px 14px', background: 'rgba(220,38,38,0.08)', color: '#DC2626', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>Remove</button>}
+                        <p style={{ color: c.textSec, fontSize: '10px', margin: '6px 0 0 0' }}>PNG or SVG · recommended 200×200px</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Color Palette */}
+              <div style={{ background: c.card, borderRadius: '16px', border: `1px solid ${c.border}`, overflow: 'hidden' }}>
+                <div style={{ padding: '16px 20px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '10px', background: c.cardAlt }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg,#EA580C,#CA8A04)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Palette size={16} color="#fff" /></div>
+                  <div>
+                    <p style={{ color: c.text, fontSize: '14px', fontWeight: '700', margin: 0 }}>Color Palette</p>
+                    <p style={{ color: c.textSec, fontSize: '11px', margin: 0 }}>Primary, secondary and accent colors</p>
+                  </div>
+                </div>
+                <div style={{ padding: '18px 20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '14px', marginBottom: '20px' }}>
+                    {[
+                      { key: 'primary_color',   label: 'Primary',   hint: 'Buttons, headers, links' },
+                      { key: 'secondary_color', label: 'Secondary', hint: 'Accents, gradients' },
+                      { key: 'accent_color',    label: 'Accent',    hint: 'Success states, badges' },
+                    ].map(col => (
+                      <div key={col.key}>
+                        <label style={{ color: c.textSec, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'block', marginBottom: '8px' }}>{col.label}</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', border: `1.5px solid ${c.border}`, borderRadius: '10px', background: c.inputBg }}>
+                          <input type="color" value={wlForm?.[col.key] || '#000000'} onChange={e => setWlForm(p => ({ ...p, [col.key]: e.target.value }))}
+                            style={{ width: '28px', height: '28px', border: 'none', borderRadius: '6px', padding: 0, cursor: 'pointer', background: 'transparent', flexShrink: 0 }} />
+                          <input type="text" value={wlForm?.[col.key] || ''} onChange={e => setWlForm(p => ({ ...p, [col.key]: e.target.value }))}
+                            style={{ flex: 1, border: 'none', background: 'transparent', color: c.text, fontSize: '12px', fontWeight: '700', outline: 'none', fontFamily: 'monospace' }} placeholder="#1A73E8" maxLength={7} />
+                        </div>
+                        <p style={{ color: c.textSec, fontSize: '10px', margin: '4px 0 0 0' }}>{col.hint}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <p style={{ color: c.textSec, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 10px 0' }}>Live Preview</p>
+                    <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${c.border}`, maxWidth: '320px' }}>
+                      <div style={{ background: `linear-gradient(135deg,${wlForm?.primary_color||'#1A73E8'},${wlForm?.secondary_color||'#7C3AED'})`, padding: '16px 18px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                          {wlForm?.logo_url
+                            ? <img src={wlForm.logo_url} style={{ width: '28px', height: '28px', borderRadius: '8px', objectFit: 'contain', background: 'rgba(255,255,255,0.2)', padding: '3px' }} alt="logo" />
+                            : <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Palette size={14} color="#fff" /></div>
+                          }
+                          <span style={{ color: '#fff', fontSize: '14px', fontWeight: '800' }}>{wlForm?.app_name || 'YourApp'}</span>
+                        </div>
+                        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px', margin: '0 0 4px 0' }}>Total Balance</p>
+                        <p style={{ color: '#fff', fontSize: '22px', fontWeight: '800', margin: 0 }}>PKR 50,000</p>
+                      </div>
+                      <div style={{ background: c.card, padding: '12px 16px' }}>
+                        <p style={{ color: c.textSec, fontSize: '11px', margin: '0 0 8px 0' }}>{wlForm?.tagline || 'Your digital wallet'}</p>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          {[{ label: 'Send', colorKey: 'primary_color', def: '#1A73E8' }, { label: 'Deposit', colorKey: 'accent_color', def: '#16A34A' }, { label: 'History', colorKey: 'secondary_color', def: '#7C3AED' }].map(btn => (
+                            <div key={btn.label} style={{ flex: 1, padding: '8px', background: `${wlForm?.[btn.colorKey]||btn.def}18`, borderRadius: '8px', textAlign: 'center' }}>
+                              <p style={{ color: wlForm?.[btn.colorKey] || btn.def, fontSize: '10px', fontWeight: '700', margin: 0 }}>{btn.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature Toggles */}
+              <div style={{ background: c.card, borderRadius: '16px', border: `1px solid ${c.border}`, overflow: 'hidden' }}>
+                <div style={{ padding: '16px 20px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '10px', background: c.cardAlt }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg,#16A34A,#15803D)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Settings size={16} color="#fff" /></div>
+                  <div>
+                    <p style={{ color: c.text, fontSize: '14px', fontWeight: '700', margin: 0 }}>Feature Toggles</p>
+                    <p style={{ color: c.textSec, fontSize: '11px', margin: 0 }}>Enable or disable features for this deployment</p>
+                  </div>
+                </div>
+                <div style={{ padding: '6px 0' }}>
+                  {[
+                    { key: 'bills',        label: 'Utility Bills',     desc: 'Electricity, gas, internet payments' },
+                    { key: 'bill_split',   label: 'Bill Splitting',    desc: 'Group expense splitting' },
+                    { key: 'virtual_card', label: 'Virtual Card',      desc: 'Digital debit card' },
+                    { key: 'qr_code',      label: 'QR Code',           desc: 'Send / receive via QR' },
+                    { key: 'insights',     label: 'Spending Insights', desc: 'Charts and analytics' },
+                    { key: 'kyc_required', label: 'KYC Required',      desc: 'Require verification for transfers' },
+                  ].map((feat, i, arr) => {
+                    const isOn = wlForm?.features?.[feat.key] !== false;
+                    const accent = wlForm?.accent_color || '#16A34A';
+                    return (
+                      <div key={feat.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 20px', borderBottom: i < arr.length - 1 ? `1px solid ${c.border}` : 'none' }}>
+                        <div>
+                          <p style={{ color: c.text, fontSize: '13px', fontWeight: '700', margin: '0 0 2px 0' }}>{feat.label}</p>
+                          <p style={{ color: c.textSec, fontSize: '11px', margin: 0 }}>{feat.desc}</p>
+                        </div>
+                        <button onClick={() => setWlForm(p => ({ ...p, features: { ...(p.features || {}), [feat.key]: !isOn } }))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
+                          <div style={{ width: '44px', height: '24px', borderRadius: '12px', background: isOn ? accent : c.border, position: 'relative', transition: 'all 0.25s', boxShadow: isOn ? `0 0 10px ${accent}50` : 'none' }}>
+                            <div style={{ position: 'absolute', top: '3px', left: isOn ? '23px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#fff', transition: 'all 0.25s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={exportWlConfig} style={{ flex: 1, padding: '12px', background: c.cardAlt, color: c.text, border: `1px solid ${c.border}`, borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <Download size={14} /> Export JSON
+                </button>
+                <button onClick={saveWhitelabel} disabled={wlSaving}
+                  style={{ flex: 2, padding: '12px', background: `linear-gradient(135deg,${wlForm?.primary_color||'#1A73E8'},${wlForm?.secondary_color||'#7C3AED'})`, color: '#fff', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '800', cursor: wlSaving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: wlSaving ? 0.7 : 1, boxShadow: `0 4px 16px ${wlForm?.primary_color||'#1A73E8'}40` }}>
+                  {wlSaving ? <><RefreshCw size={13} style={{ animation: 'spin 1s linear infinite' }} /> Saving...</> : <><CheckCircle size={13} /> Save Branding</>}
+                </button>
+              </div>
+
+            </div>
+          )}
+
       {selectedImage && (
+
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.96)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999, cursor: 'pointer' }} onClick={() => setSelectedImage(null)}>
           <div style={{ background: c.card, borderRadius: '18px', padding: '18px', maxWidth: isVideoUrl(selectedImage) ? '700px' : '640px', width: '90%', cursor: 'default', border: `1px solid ${c.border}`, boxShadow: '0 32px 80px rgba(0,0,0,.7)' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
